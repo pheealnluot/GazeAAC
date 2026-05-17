@@ -1,0 +1,38 @@
+{
+  "format": "open-board-0.1",
+  "root": "lamp_home.obf",
+  "paths": {
+    "boards": {
+      "lamp-eat": "lamp_eat.obf",
+      "lamp-drink": "lamp_drink.obf",
+      "lamp-go": "lamp_go.obf",
+      "lamp-play": "lamp_play.obf",
+      "lamp-make": "lamp_make.obf",
+      "lamp-look": "lamp_look.obf",
+      "lamp-talk": "lamp_talk.obf",
+      "lamp-come": "lamp_come.obf",
+      "lamp-love": "lamp_love.obf",
+      "lamp-color": "lamp_color.obf",
+      "lamp-time": "lamp_time.obf",
+      "lamp-like": "lamp_like.obf",
+      "lamp-want": "lamp_want.obf",
+      "lamp-feel": "lamp_feel.obf",
+      "lamp-have": "lamp_have.obf",
+      "lamp-read": "lamp_read.obf",
+      "lamp-work": "lamp_work.obf",
+      "lamp-do": "lamp_do.obf",
+      "lamp-get": "lamp_get.obf",
+      "lamp-hear": "lamp_hear.obf",
+      "lamp-think": "lamp_think.obf",
+      "lamp-live": "lamp_live.obf",
+      "lamp-find": "lamp_find.obf",
+      "lamp-need": "lamp_need.obf",
+      "lamp-watch": "lamp_watch.obf",
+      "lamp-sit": "lamp_sit.obf",
+      "lamp-sleep": "lamp_sleep.obf",
+      "lamp-home": "lamp_home.obf"
+    },
+    "images": {},
+    "sounds": {}
+  }
+}

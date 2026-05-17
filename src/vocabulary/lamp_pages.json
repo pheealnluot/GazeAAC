@@ -1,0 +1,3028 @@
+{
+  "_comment": "LAMP Words for Life Level-2 Verb Sub-Pages. Each sub-page is accessed by pressing the corresponding core VERB on the home grid. Structure follows authentic LAMP WFL 'Action Man' pattern: r1c1=Action Man (base verb, speaks+returns), r1c2=+s form, r1c3=-ing form, r1c4=-ed/past form, then related nouns in orange. After any selection the app auto-returns to home.",
+  "eat": {
+    "_label": "Eat",
+    "_icon": "🍽",
+    "_trigger": "EAT (r7c5) on home grid",
+    "r1c1": {
+      "label": "Eat",
+      "icon": "🍽",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Eats",
+      "icon": "🍽",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Eating",
+      "icon": "🍽",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Ate",
+      "icon": "🍽",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Banana",
+      "icon": "🍌",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Cookie",
+      "icon": "🍪",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Pizza",
+      "icon": "🍕",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Bread",
+      "icon": "🍞",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Rice",
+      "icon": "🍚",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Cheese",
+      "icon": "🧀",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Snack",
+      "icon": "🥨",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Cereal",
+      "icon": "🥣",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Pasta",
+      "icon": "🍝",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Soup",
+      "icon": "🍲",
+      "category": "noun"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r4c2": {
+      "label": "Meat",
+      "icon": "🥩",
+      "category": "noun"
+    },
+    "r4c3": {
+      "label": "Eggs",
+      "icon": "🥚",
+      "category": "noun"
+    },
+    "r4c4": {
+      "label": "Cake",
+      "icon": "🎂",
+      "category": "noun"
+    },
+    "r4c5": {
+      "label": "Fruit",
+      "icon": "🍓",
+      "category": "noun"
+    },
+    "r4c6": {
+      "label": "Sandwich",
+      "icon": "🥪",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "drink": {
+    "_label": "Drink",
+    "_icon": "🥤",
+    "_trigger": "DRINK (r7c9) on home grid",
+    "r1c1": {
+      "label": "Drink",
+      "icon": "🥤",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Drinks",
+      "icon": "🥤",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Drinking",
+      "icon": "🥤",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Drank",
+      "icon": "🥤",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Milk",
+      "icon": "🥛",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Juice",
+      "icon": "🧃",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Smoothie",
+      "icon": "🥤",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Hot Choc",
+      "icon": "☕",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Tea",
+      "icon": "🍵",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Lemonade",
+      "icon": "🍋",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Cold",
+      "icon": "🧊",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Warm",
+      "icon": "♨️",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Hot",
+      "icon": "🔥",
+      "category": "descriptor"
+    },
+    "r3c6": {
+      "label": "Small",
+      "icon": "🤏",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "go": {
+    "_label": "Go",
+    "_icon": "🏃",
+    "_trigger": "GO (r5c8) on home grid",
+    "r1c1": {
+      "label": "Go",
+      "icon": "🏃",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Goes",
+      "icon": "🏃",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Going",
+      "icon": "🏃",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Went",
+      "icon": "🏃",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "School",
+      "icon": "🏫",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Park",
+      "icon": "🏞",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Shops",
+      "icon": "🏪",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Car",
+      "icon": "🚗",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Bus",
+      "icon": "🚌",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Library",
+      "icon": "📚",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Toilet",
+      "icon": "🚽",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Bed",
+      "icon": "🛏",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Kitchen",
+      "icon": "🍳",
+      "category": "noun"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r4c2": {
+      "label": "Run",
+      "icon": "🏃",
+      "category": "noun"
+    },
+    "r4c3": {
+      "label": "Swim",
+      "icon": "🏊",
+      "category": "noun"
+    },
+    "r4c4": {
+      "label": "Bike",
+      "icon": "🚲",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "play": {
+    "_label": "Play",
+    "_icon": "🎮",
+    "_trigger": "PLAY (r4c4) on home grid",
+    "r1c1": {
+      "label": "Play",
+      "icon": "🎮",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Plays",
+      "icon": "🎮",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Playing",
+      "icon": "🎮",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Played",
+      "icon": "🎮",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Ball",
+      "icon": "⚽",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Game",
+      "icon": "🎲",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Puzzle",
+      "icon": "🧩",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Lego",
+      "icon": "🧱",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Swing",
+      "icon": "🎠",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Sand",
+      "icon": "🏖",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Cards",
+      "icon": "🃏",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Water",
+      "icon": "💧",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "make": {
+    "_label": "Make",
+    "_icon": "🛠",
+    "_trigger": "MAKE (r7c7) on home grid",
+    "r1c1": {
+      "label": "Make",
+      "icon": "🛠",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Makes",
+      "icon": "🛠",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Making",
+      "icon": "🛠",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Made",
+      "icon": "🛠",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Paint",
+      "icon": "🎨",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Craft",
+      "icon": "✂️",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Build",
+      "icon": "🧱",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Cook",
+      "icon": "👨‍🍳",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Sing",
+      "icon": "🎤",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Clay",
+      "icon": "🫙",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Glue",
+      "icon": "📎",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Paper",
+      "icon": "📄",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Card",
+      "icon": "🃏",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "look": {
+    "_label": "Look",
+    "_icon": "👀",
+    "_trigger": "LOOK (r6c2) on home grid",
+    "r1c1": {
+      "label": "Look",
+      "icon": "👀",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Looks",
+      "icon": "👀",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Looking",
+      "icon": "👀",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Looked",
+      "icon": "👀",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Video",
+      "icon": "🎬",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Photo",
+      "icon": "📷",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Movie",
+      "icon": "🎥",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Show",
+      "icon": "🎭",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Cat",
+      "icon": "🐈",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Bird",
+      "icon": "🐦",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Fish",
+      "icon": "🐟",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Animal",
+      "icon": "🐾",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Picture",
+      "icon": "🖼",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "talk": {
+    "_label": "Talk",
+    "_icon": "💬",
+    "_trigger": "TALK (r7c3) on home grid",
+    "r1c1": {
+      "label": "Talk",
+      "icon": "💬",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Talks",
+      "icon": "💬",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Talking",
+      "icon": "💬",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Talked",
+      "icon": "💬",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Dad",
+      "icon": "👨",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Baby",
+      "icon": "👶",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Friend",
+      "icon": "👫",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Teacher",
+      "icon": "🧑‍🏫",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Doctor",
+      "icon": "👨‍⚕️",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Girl",
+      "icon": "👧",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Man",
+      "icon": "👨",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Woman",
+      "icon": "👩",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Child",
+      "icon": "🧒",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Family",
+      "icon": "👨‍👩‍👧",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "come": {
+    "_label": "Come",
+    "_icon": "🚶",
+    "_trigger": "COME (r5c5) on home grid",
+    "r1c1": {
+      "label": "Come",
+      "icon": "🚶",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Comes",
+      "icon": "🚶",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Coming",
+      "icon": "🚶",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Came",
+      "icon": "🚶",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Cat",
+      "icon": "🐈",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Bird",
+      "icon": "🐦",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Fish",
+      "icon": "🐟",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Rabbit",
+      "icon": "🐰",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Bear",
+      "icon": "🐻",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Elephant",
+      "icon": "🐘",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Lion",
+      "icon": "🦁",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Monkey",
+      "icon": "🐒",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Duck",
+      "icon": "🦆",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Frog",
+      "icon": "🐸",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "love": {
+    "_label": "Love",
+    "_icon": "❤️",
+    "_trigger": "LOVE (r6c9) on home grid",
+    "r1c1": {
+      "label": "Love",
+      "icon": "❤️",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Loves",
+      "icon": "❤️",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Loving",
+      "icon": "❤️",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Loved",
+      "icon": "❤️",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Sad",
+      "icon": "😢",
+      "category": "descriptor"
+    },
+    "r2c3": {
+      "label": "Scared",
+      "icon": "😨",
+      "category": "descriptor"
+    },
+    "r2c4": {
+      "label": "Angry",
+      "icon": "😠",
+      "category": "descriptor"
+    },
+    "r2c5": {
+      "label": "Tired",
+      "icon": "😴",
+      "category": "descriptor"
+    },
+    "r2c6": {
+      "label": "Bored",
+      "icon": "😑",
+      "category": "descriptor"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Proud",
+      "icon": "😤",
+      "category": "descriptor"
+    },
+    "r3c3": {
+      "label": "Silly",
+      "icon": "🤪",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Surprised",
+      "icon": "😲",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Worried",
+      "icon": "😟",
+      "category": "descriptor"
+    },
+    "r3c6": {
+      "label": "Ok",
+      "icon": "👌",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "color": {
+    "_label": "Color",
+    "_icon": "🎨",
+    "_trigger": "COLOR (r5c11) on home grid",
+    "r1c1": {
+      "label": "Color",
+      "icon": "🎨",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Colors",
+      "icon": "🎨",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Coloring",
+      "icon": "🎨",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Colored",
+      "icon": "🎨",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "Red",
+      "icon": "🔴",
+      "category": "descriptor"
+    },
+    "r2c2": {
+      "label": "Orange",
+      "icon": "🟠",
+      "category": "descriptor"
+    },
+    "r2c3": {
+      "label": "Yellow",
+      "icon": "🟡",
+      "category": "descriptor"
+    },
+    "r2c4": {
+      "label": "Green",
+      "icon": "🟢",
+      "category": "descriptor"
+    },
+    "r2c5": {
+      "label": "Blue",
+      "icon": "🔵",
+      "category": "descriptor"
+    },
+    "r2c6": {
+      "label": "Purple",
+      "icon": "🟣",
+      "category": "descriptor"
+    },
+    "r3c1": {
+      "label": "Pink",
+      "icon": "🌸",
+      "category": "descriptor"
+    },
+    "r3c2": {
+      "label": "White",
+      "icon": "⬜",
+      "category": "descriptor"
+    },
+    "r3c3": {
+      "label": "Black",
+      "icon": "⬛",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Brown",
+      "icon": "🟫",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Grey",
+      "icon": "🩶",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    }
+  },
+  "time": {
+    "_label": "Time",
+    "_icon": "⏰",
+    "_trigger": "TIME (r5c6) on home grid",
+    "r1c1": {
+      "label": "Time",
+      "icon": "⏰",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Now",
+      "icon": "▶️",
+      "category": "descriptor"
+    },
+    "r1c3": {
+      "label": "Later",
+      "icon": "⏳",
+      "category": "descriptor"
+    },
+    "r1c4": {
+      "label": "Soon",
+      "icon": "⏱",
+      "category": "descriptor"
+    },
+    "r2c1": {
+      "label": "Morning",
+      "icon": "🌅",
+      "category": "noun"
+    },
+    "r2c2": {
+      "label": "Afternoon",
+      "icon": "☀️",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Night",
+      "icon": "🌙",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Today",
+      "icon": "📅",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Tomorrow",
+      "icon": "📆",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Yesterday",
+      "icon": "📅",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "Always",
+      "icon": "∞",
+      "category": "descriptor"
+    },
+    "r3c2": {
+      "label": "Never",
+      "icon": "🚫",
+      "category": "descriptor"
+    },
+    "r3c3": {
+      "label": "Sometimes",
+      "icon": "↕️",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "First",
+      "icon": "1️⃣",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Then",
+      "icon": "➡️",
+      "category": "descriptor"
+    },
+    "r3c6": {
+      "label": "Last",
+      "icon": "🔚",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    }
+  },
+  "like": {
+    "_label": "Like",
+    "_icon": "😊",
+    "_trigger": "LIKE (r4c5)",
+    "r1c1": {
+      "label": "Like",
+      "icon": "😊",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Likes",
+      "icon": "😊",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Liking",
+      "icon": "😊",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Liked",
+      "icon": "😊",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Ball",
+      "icon": "⚽",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "School",
+      "icon": "🏫",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Dance",
+      "icon": "💃",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Running",
+      "icon": "🏃",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Drawing",
+      "icon": "🖍️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Cooking",
+      "icon": "🍳",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Singing",
+      "icon": "🎤",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Playing",
+      "icon": "🎮",
+      "category": "noun"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r4c2": {
+      "label": "Pizza",
+      "icon": "🍕",
+      "category": "noun"
+    },
+    "r4c3": {
+      "label": "Dog",
+      "icon": "🐕",
+      "category": "noun"
+    },
+    "r4c4": {
+      "label": "Cat",
+      "icon": "🐈",
+      "category": "noun"
+    },
+    "r4c5": {
+      "label": "Bird",
+      "icon": "🐦",
+      "category": "noun"
+    },
+    "r4c6": {
+      "label": "Outside",
+      "icon": "🌳",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "want": {
+    "_label": "Want",
+    "_icon": "🤲",
+    "_trigger": "WANT (r5c3)",
+    "r1c1": {
+      "label": "Want",
+      "icon": "🤲",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Wants",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Wanting",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Wanted",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Drink",
+      "icon": "🥤",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Toy",
+      "icon": "🧸",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Tablet",
+      "icon": "📱",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Hug",
+      "icon": "🤗",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Break",
+      "icon": "⏸️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Turn",
+      "icon": "🔄",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "More",
+      "icon": "➕",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Friend",
+      "icon": "👫",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "feel": {
+    "_label": "Feel",
+    "_icon": "💭",
+    "_trigger": "FEEL (r4c8)",
+    "r1c1": {
+      "label": "Feel",
+      "icon": "💭",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Feels",
+      "icon": "💭",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Feeling",
+      "icon": "💭",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Felt",
+      "icon": "💭",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Sad",
+      "icon": "😢",
+      "category": "descriptor"
+    },
+    "r2c3": {
+      "label": "Angry",
+      "icon": "😠",
+      "category": "descriptor"
+    },
+    "r2c4": {
+      "label": "Scared",
+      "icon": "😨",
+      "category": "descriptor"
+    },
+    "r2c5": {
+      "label": "Tired",
+      "icon": "😴",
+      "category": "descriptor"
+    },
+    "r2c6": {
+      "label": "Bored",
+      "icon": "😑",
+      "category": "descriptor"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Proud",
+      "icon": "😤",
+      "category": "descriptor"
+    },
+    "r3c3": {
+      "label": "Silly",
+      "icon": "🤪",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Surprised",
+      "icon": "😲",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Worried",
+      "icon": "😟",
+      "category": "descriptor"
+    },
+    "r3c6": {
+      "label": "Ok",
+      "icon": "👌",
+      "category": "descriptor"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r4c2": {
+      "label": "Hurt",
+      "icon": "🤕",
+      "category": "descriptor"
+    },
+    "r4c3": {
+      "label": "Hot",
+      "icon": "🔥",
+      "category": "descriptor"
+    },
+    "r4c4": {
+      "label": "Cold",
+      "icon": "🥶",
+      "category": "descriptor"
+    },
+    "r4c5": {
+      "label": "Hungry",
+      "icon": "🍽",
+      "category": "descriptor"
+    },
+    "r4c6": {
+      "label": "Thirsty",
+      "icon": "💧",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "have": {
+    "_label": "Have",
+    "_icon": "🤲",
+    "_trigger": "HAVE (r4c7)",
+    "r1c1": {
+      "label": "Have",
+      "icon": "🤲",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Has",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Having",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Had",
+      "icon": "🤲",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Tablet",
+      "icon": "📱",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Pet",
+      "icon": "🐾",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Friend",
+      "icon": "👫",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Snack",
+      "icon": "🥨",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Turn",
+      "icon": "🔄",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Question",
+      "icon": "❓",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Problem",
+      "icon": "⚠️",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Fun",
+      "icon": "🎉",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Bath",
+      "icon": "🛁",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "read": {
+    "_label": "Read",
+    "_icon": "📖",
+    "_trigger": "READ (r4c9)",
+    "r1c1": {
+      "label": "Read",
+      "icon": "📖",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Reads",
+      "icon": "📖",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Reading",
+      "icon": "📖",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Read",
+      "icon": "📖",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Story",
+      "icon": "📚",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Magazine",
+      "icon": "📰",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Sign",
+      "icon": "🪧",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Card",
+      "icon": "🃏",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Letter",
+      "icon": "✉️",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "News",
+      "icon": "📰",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Menu",
+      "icon": "📋",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Label",
+      "icon": "🏷️",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Poem",
+      "icon": "📝",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Recipe",
+      "icon": "🍳",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "work": {
+    "_label": "Work",
+    "_icon": "💼",
+    "_trigger": "WORK (r4c6)",
+    "r1c1": {
+      "label": "Work",
+      "icon": "💼",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Works",
+      "icon": "💼",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Working",
+      "icon": "💼",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Worked",
+      "icon": "💼",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Computer",
+      "icon": "💻",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Tablet",
+      "icon": "📱",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Pencil",
+      "icon": "✏️",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Paper",
+      "icon": "📄",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Puzzle",
+      "icon": "🧩",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Write",
+      "icon": "✍️",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Cut",
+      "icon": "✂️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Glue",
+      "icon": "📎",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Build",
+      "icon": "🧱",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Count",
+      "icon": "🔢",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "do": {
+    "_label": "Do",
+    "_icon": "⚡",
+    "_trigger": "DO (r5c7)",
+    "r1c1": {
+      "label": "Do",
+      "icon": "⚡",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Does",
+      "icon": "⚡",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Doing",
+      "icon": "⚡",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Did",
+      "icon": "⚡",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Yoga",
+      "icon": "🧘",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Dance",
+      "icon": "💃",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Swim",
+      "icon": "🏊",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Run",
+      "icon": "🏃",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Bike",
+      "icon": "🚲",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Chores",
+      "icon": "🧹",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Craft",
+      "icon": "✂️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Cooking",
+      "icon": "🍳",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Nothing",
+      "icon": "😶",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Shopping",
+      "icon": "🛒",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "get": {
+    "_label": "Get",
+    "_icon": "🖐",
+    "_trigger": "GET (r5c9)",
+    "r1c1": {
+      "label": "Get",
+      "icon": "🖐",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Gets",
+      "icon": "🖐",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Getting",
+      "icon": "🖐",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Got",
+      "icon": "🖐",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Drink",
+      "icon": "🥤",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Toy",
+      "icon": "🧸",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Help",
+      "icon": "🙏",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Dressed",
+      "icon": "👕",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Up",
+      "icon": "⬆️",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Down",
+      "icon": "⬇️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Out",
+      "icon": "📤",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "In",
+      "icon": "📥",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Better",
+      "icon": "💪",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "hear": {
+    "_label": "Hear",
+    "_icon": "👂",
+    "_trigger": "HEAR (r6c4)",
+    "r1c1": {
+      "label": "Hear",
+      "icon": "👂",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Hears",
+      "icon": "👂",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Hearing",
+      "icon": "👂",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Heard",
+      "icon": "👂",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Song",
+      "icon": "🎶",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Story",
+      "icon": "📚",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Noise",
+      "icon": "📢",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Voice",
+      "icon": "🗣️",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Sound",
+      "icon": "🔊",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Bird",
+      "icon": "🐦",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Rain",
+      "icon": "🌧️",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Thunder",
+      "icon": "⛈️",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Bell",
+      "icon": "🔔",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Alarm",
+      "icon": "⏰",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "think": {
+    "_label": "Think",
+    "_icon": "🤔",
+    "_trigger": "THINK (r6c5)",
+    "r1c1": {
+      "label": "Think",
+      "icon": "🤔",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Thinks",
+      "icon": "🤔",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Thinking",
+      "icon": "🤔",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Thought",
+      "icon": "🤔",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "No",
+      "icon": "🚫",
+      "category": "descriptor"
+    },
+    "r2c3": {
+      "label": "Maybe",
+      "icon": "🤷",
+      "category": "descriptor"
+    },
+    "r2c4": {
+      "label": "So",
+      "icon": "💭",
+      "category": "descriptor"
+    },
+    "r2c5": {
+      "label": "Good",
+      "icon": "👍",
+      "category": "descriptor"
+    },
+    "r2c6": {
+      "label": "Bad",
+      "icon": "👎",
+      "category": "descriptor"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Wrong",
+      "icon": "❌",
+      "category": "descriptor"
+    },
+    "r3c3": {
+      "label": "Right",
+      "icon": "✔️",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Different",
+      "icon": "🔀",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Same",
+      "icon": "🟰",
+      "category": "descriptor"
+    },
+    "r3c6": {
+      "label": "Important",
+      "icon": "⭐",
+      "category": "descriptor"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "live": {
+    "_label": "Live",
+    "_icon": "🏠",
+    "_trigger": "LIVE (r6c8)",
+    "r1c1": {
+      "label": "Live",
+      "icon": "🏠",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Lives",
+      "icon": "🏠",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Living",
+      "icon": "🏠",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Lived",
+      "icon": "🏠",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "House",
+      "icon": "🏡",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Flat",
+      "icon": "🏢",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Farm",
+      "icon": "🏡",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "School",
+      "icon": "🏫",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Hospital",
+      "icon": "🏥",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Kitchen",
+      "icon": "🍳",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Bathroom",
+      "icon": "🛁",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Lounge",
+      "icon": "🛋️",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Garden",
+      "icon": "🌻",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Outside",
+      "icon": "🌳",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "find": {
+    "_label": "Find",
+    "_icon": "🔍",
+    "_trigger": "FIND (r7c6)",
+    "r1c1": {
+      "label": "Find",
+      "icon": "🔍",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Finds",
+      "icon": "🔍",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Finding",
+      "icon": "🔍",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Found",
+      "icon": "🔍",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Shoe",
+      "icon": "👟",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Book",
+      "icon": "📖",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Tablet",
+      "icon": "📱",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Key",
+      "icon": "🔑",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Bag",
+      "icon": "🎒",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Glasses",
+      "icon": "👓",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Food",
+      "icon": "🍎",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Drink",
+      "icon": "🥤",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Toilet",
+      "icon": "🚽",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Friend",
+      "icon": "👫",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "need": {
+    "_label": "Need",
+    "_icon": "❗",
+    "_trigger": "NEED (r7c8)",
+    "r1c1": {
+      "label": "Need",
+      "icon": "❗",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Needs",
+      "icon": "❗",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Needing",
+      "icon": "❗",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Needed",
+      "icon": "❗",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Toilet",
+      "icon": "🚽",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Drink",
+      "icon": "🥤",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Food",
+      "icon": "🍎",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Break",
+      "icon": "⏸️",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Hug",
+      "icon": "🤗",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Medicine",
+      "icon": "💊",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Tissue",
+      "icon": "🤧",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Blanket",
+      "icon": "🛏",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Bandaid",
+      "icon": "🩹",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Quiet",
+      "icon": "🤫",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "watch": {
+    "_label": "Watch",
+    "_icon": "📺",
+    "_trigger": "WATCH (r7c10)",
+    "r1c1": {
+      "label": "Watch",
+      "icon": "📺",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Watches",
+      "icon": "📺",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Watching",
+      "icon": "📺",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Watched",
+      "icon": "📺",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Video",
+      "icon": "🎬",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Movie",
+      "icon": "🎥",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Show",
+      "icon": "🎭",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Youtube",
+      "icon": "▶️",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Cartoon",
+      "icon": "🎨",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Animal",
+      "icon": "🐾",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "People",
+      "icon": "👥",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Dance",
+      "icon": "💃",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "News",
+      "icon": "📰",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "sit": {
+    "_label": "Sit",
+    "_icon": "🪑",
+    "_trigger": "SIT (r7c4)",
+    "r1c1": {
+      "label": "Sit",
+      "icon": "🪑",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Sits",
+      "icon": "🪑",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Sitting",
+      "icon": "🪑",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Sat",
+      "icon": "🪑",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Floor",
+      "icon": "⬜",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Couch",
+      "icon": "🛋️",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Bed",
+      "icon": "🛏",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Outside",
+      "icon": "🌳",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Car",
+      "icon": "🚗",
+      "category": "noun"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Grass",
+      "icon": "🌿",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Step",
+      "icon": "🪜",
+      "category": "noun"
+    },
+    "r3c4": {
+      "label": "Bench",
+      "icon": "🪑",
+      "category": "noun"
+    },
+    "r3c5": {
+      "label": "Mat",
+      "icon": "🟩",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Swing",
+      "icon": "🎠",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  },
+  "sleep": {
+    "_label": "Sleep",
+    "_icon": "😴",
+    "_trigger": "SLEEP (r7c12)",
+    "r1c1": {
+      "label": "Sleep",
+      "icon": "😴",
+      "category": "action-man"
+    },
+    "r1c2": {
+      "label": "Sleeps",
+      "icon": "😴",
+      "category": "conjugation"
+    },
+    "r1c3": {
+      "label": "Sleeping",
+      "icon": "😴",
+      "category": "conjugation"
+    },
+    "r1c4": {
+      "label": "Slept",
+      "icon": "😴",
+      "category": "conjugation"
+    },
+    "r2c1": {
+      "label": "I",
+      "icon": "👤",
+      "category": "pronoun"
+    },
+    "r2c2": {
+      "label": "Couch",
+      "icon": "🛋️",
+      "category": "noun"
+    },
+    "r2c3": {
+      "label": "Pillow",
+      "icon": "🛏",
+      "category": "noun"
+    },
+    "r2c4": {
+      "label": "Blanket",
+      "icon": "🛌",
+      "category": "noun"
+    },
+    "r2c5": {
+      "label": "Teddy",
+      "icon": "🧸",
+      "category": "noun"
+    },
+    "r2c6": {
+      "label": "Dark",
+      "icon": "🌑",
+      "category": "descriptor"
+    },
+    "r3c1": {
+      "label": "You",
+      "icon": "👉",
+      "category": "pronoun"
+    },
+    "r3c2": {
+      "label": "Nap",
+      "icon": "💤",
+      "category": "noun"
+    },
+    "r3c3": {
+      "label": "Tired",
+      "icon": "😴",
+      "category": "descriptor"
+    },
+    "r3c4": {
+      "label": "Quiet",
+      "icon": "🤫",
+      "category": "descriptor"
+    },
+    "r3c5": {
+      "label": "Music",
+      "icon": "🎵",
+      "category": "noun"
+    },
+    "r3c6": {
+      "label": "Story",
+      "icon": "📚",
+      "category": "noun"
+    },
+    "r7c1": {
+      "label": "CLEAR",
+      "icon": "🗑",
+      "category": "utility"
+    },
+    "r7c12": {
+      "label": "Home",
+      "icon": "🏠",
+      "category": "utility"
+    },
+    "r4c1": {
+      "label": "He",
+      "icon": "👦",
+      "category": "pronoun"
+    },
+    "r5c1": {
+      "label": "She",
+      "icon": "👧",
+      "category": "pronoun"
+    },
+    "r6c1": {
+      "label": "It",
+      "icon": "💡",
+      "category": "pronoun"
+    }
+  }
+}

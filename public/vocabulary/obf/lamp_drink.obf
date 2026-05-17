@@ -1,0 +1,478 @@
+{
+  "format": "open-board-0.1",
+  "id": "lamp-drink",
+  "locale": "en",
+  "name": "LAMP WFL — Drink",
+  "description_html": "<p>LAMP Words For Life sub-page for 'Drink'. Auto-returns to home after word selection.</p>",
+  "ext_gazeaac_auto_return_home": true,
+  "grid": {
+    "rows": 7,
+    "columns": 12,
+    "order": [
+      [
+        "btn-drink-r1c1",
+        "btn-drink-r1c2",
+        "btn-drink-r1c3",
+        "btn-drink-r1c4",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r2c1",
+        "btn-drink-r2c2",
+        "btn-drink-r2c3",
+        "btn-drink-r2c4",
+        "btn-drink-r2c5",
+        "btn-drink-r2c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r3c1",
+        "btn-drink-r3c2",
+        "btn-drink-r3c3",
+        "btn-drink-r3c4",
+        "btn-drink-r3c5",
+        "btn-drink-r3c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r4c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r5c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r6c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-drink-r7c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "btn-drink-r7c12"
+      ]
+    ]
+  },
+  "buttons": [
+    {
+      "id": "btn-drink-r1c1",
+      "label": "Drink",
+      "vocalization": "Drink",
+      "background_color": "rgb(153,204,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "action-man",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-drink-r1c1"
+    },
+    {
+      "id": "btn-drink-r1c2",
+      "label": "Drinks",
+      "vocalization": "Drinks",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-drink-r1c2"
+    },
+    {
+      "id": "btn-drink-r1c3",
+      "label": "Drinking",
+      "vocalization": "Drinking",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-drink-r1c3"
+    },
+    {
+      "id": "btn-drink-r1c4",
+      "label": "Drank",
+      "vocalization": "Drank",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-drink-r1c4"
+    },
+    {
+      "id": "btn-drink-r2c1",
+      "label": "I",
+      "vocalization": "I",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👤",
+      "image_id": "img-btn-drink-r2c1"
+    },
+    {
+      "id": "btn-drink-r2c2",
+      "label": "Milk",
+      "vocalization": "Milk",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🥛",
+      "image_id": "img-btn-drink-r2c2"
+    },
+    {
+      "id": "btn-drink-r2c3",
+      "label": "Juice",
+      "vocalization": "Juice",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🧃",
+      "image_id": "img-btn-drink-r2c3"
+    },
+    {
+      "id": "btn-drink-r2c4",
+      "label": "Smoothie",
+      "vocalization": "Smoothie",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-drink-r2c4"
+    },
+    {
+      "id": "btn-drink-r2c5",
+      "label": "Hot Choc",
+      "vocalization": "Hot Choc",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "☕",
+      "image_id": "img-btn-drink-r2c5"
+    },
+    {
+      "id": "btn-drink-r2c6",
+      "label": "Tea",
+      "vocalization": "Tea",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🍵",
+      "image_id": "img-btn-drink-r2c6"
+    },
+    {
+      "id": "btn-drink-r3c1",
+      "label": "You",
+      "vocalization": "You",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👉",
+      "image_id": "img-btn-drink-r3c1"
+    },
+    {
+      "id": "btn-drink-r3c2",
+      "label": "Lemonade",
+      "vocalization": "Lemonade",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🍋",
+      "image_id": "img-btn-drink-r3c2"
+    },
+    {
+      "id": "btn-drink-r3c3",
+      "label": "Cold",
+      "vocalization": "Cold",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "🧊",
+      "image_id": "img-btn-drink-r3c3"
+    },
+    {
+      "id": "btn-drink-r3c4",
+      "label": "Warm",
+      "vocalization": "Warm",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "♨️",
+      "image_id": "img-btn-drink-r3c4"
+    },
+    {
+      "id": "btn-drink-r3c5",
+      "label": "Hot",
+      "vocalization": "Hot",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "🔥",
+      "image_id": "img-btn-drink-r3c5"
+    },
+    {
+      "id": "btn-drink-r3c6",
+      "label": "Small",
+      "vocalization": "Small",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "🤏",
+      "image_id": "img-btn-drink-r3c6"
+    },
+    {
+      "id": "btn-drink-r4c1",
+      "label": "He",
+      "vocalization": "He",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👦",
+      "image_id": "img-btn-drink-r4c1"
+    },
+    {
+      "id": "btn-drink-r5c1",
+      "label": "She",
+      "vocalization": "She",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👧",
+      "image_id": "img-btn-drink-r5c1"
+    },
+    {
+      "id": "btn-drink-r6c1",
+      "label": "It",
+      "vocalization": "It",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "💡",
+      "image_id": "img-btn-drink-r6c1"
+    },
+    {
+      "id": "btn-drink-r7c1",
+      "label": "CLEAR",
+      "vocalization": "CLEAR",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🗑",
+      "ext_gazeaac_action": "clear",
+      "image_id": "img-btn-drink-r7c1"
+    },
+    {
+      "id": "btn-drink-r7c12",
+      "label": "Home",
+      "vocalization": "Home",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🏠",
+      "load_board": {
+        "id": "lamp-home"
+      },
+      "image_id": "img-btn-drink-r7c12"
+    }
+  ],
+  "images": [
+    {
+      "id": "img-btn-drink-r1c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r1c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r1c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r1c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥛"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🧃"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "☕"
+      }
+    },
+    {
+      "id": "img-btn-drink-r2c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🍵"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👉"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🍋"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🧊"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "♨️"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔥"
+      }
+    },
+    {
+      "id": "img-btn-drink-r3c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🤏"
+      }
+    },
+    {
+      "id": "img-btn-drink-r4c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👦"
+      }
+    },
+    {
+      "id": "img-btn-drink-r5c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👧"
+      }
+    },
+    {
+      "id": "img-btn-drink-r6c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💡"
+      }
+    },
+    {
+      "id": "img-btn-drink-r7c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🗑"
+      }
+    },
+    {
+      "id": "img-btn-drink-r7c12",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🏠"
+      }
+    }
+  ],
+  "sounds": []
+}

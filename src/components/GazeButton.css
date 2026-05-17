@@ -1,0 +1,245 @@
+/* ─── GazeButton component styles ─────────────────────────────────────────── */
+
+.gaze-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-cell-bg);
+  cursor: default;        /* Eye-gaze: pointer is not meaningful */
+  overflow: hidden;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Masked placeholder ──────────────────────────────────────────────── */
+.gaze-button--masked {
+  background: transparent;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+/* ── Gaze hover state ────────────────────────────────────────────────── */
+.gaze-button--gazed {
+  background: var(--color-cell-hover);
+  border-color: var(--color-accent);
+  transform: scale(1.02);
+}
+
+/* ── Activation flash ────────────────────────────────────────────────── */
+.gaze-button--activated {
+  animation: cell-flash 0.6s ease forwards;
+}
+
+@keyframes cell-flash {
+  0%   { background: var(--color-accent); box-shadow: 0 0 24px var(--color-accent); }
+  60%  { background: var(--color-cell-hover); box-shadow: none; }
+  100% { background: var(--color-cell-bg); }
+}
+
+/* ── Category accent colors (border-left accent stripe) ─────────────── */
+.gaze-button--interrogative{ --cell-accent: var(--color-cat-interrogative); }
+.gaze-button--verb         { --cell-accent: var(--color-cat-verb); }
+.gaze-button--spatial      { --cell-accent: var(--color-cat-spatial); }
+.gaze-button--descriptor   { --cell-accent: var(--color-cat-descriptor); }
+.gaze-button--social       { --cell-accent: var(--color-cat-social); }
+.gaze-button--temporal     { --cell-accent: var(--color-cat-temporal, #a78bfa); }
+.gaze-button--determiner   { --cell-accent: hsl(270, 55%, 58%); }   /* purple — grammar words */
+.gaze-button--utility      { --cell-accent: var(--color-cat-utility); }
+.gaze-button--noun         { --cell-accent: var(--color-cat-descriptor); }
+.gaze-button--empty        { --cell-accent: transparent; }
+/* LAMP WFL category navigation buttons — removed, restored to verb model */
+
+/* LAMP WFL fixed pronoun column — golden yellow, rows 2-6, col 1 on sub-pages */
+.gaze-button--pronoun {
+  --cell-accent: var(--color-cat-pronoun);
+  background: rgba(250, 210, 30, 0.08);
+}
+.gaze-button--pronoun.gaze-button--gazed {
+  background: rgba(250, 210, 30, 0.2);
+  border-color: hsl(48, 95%, 60%);
+  box-shadow: 0 0 14px rgba(250, 210, 30, 0.3);
+}
+.gaze-button--pronoun .gaze-button__label {
+  color: hsl(48, 95%, 70%);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* LAMP WFL Action Man button — bright lime green, top-left of every sub-page */
+.gaze-button--action-man {
+  --cell-accent: hsl(100, 80%, 45%);
+  background: rgba(80, 200, 50, 0.1);
+}
+.gaze-button--action-man.gaze-button--gazed {
+  background: rgba(80, 200, 50, 0.22);
+  border-color: hsl(100, 80%, 45%);
+  box-shadow: 0 0 14px rgba(80, 200, 50, 0.35);
+}
+.gaze-button--action-man .gaze-button__label {
+  color: hsl(100, 70%, 62%);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* LAMP WFL conjugation row — teal, slightly muted relative to action-man */
+.gaze-button--conjugation {
+  --cell-accent: hsl(175, 65%, 45%);
+  background: rgba(30, 180, 160, 0.07);
+}
+.gaze-button--conjugation.gaze-button--gazed {
+  background: rgba(30, 180, 160, 0.18);
+  border-color: hsl(175, 65%, 45%);
+}
+.gaze-button--conjugation .gaze-button__label {
+  color: hsl(175, 60%, 65%);
+  font-style: italic;
+}
+
+.gaze-button:not(.gaze-button--masked):not(.gaze-button--empty) {
+  border-left: 3px solid var(--cell-accent, var(--color-border));
+}
+
+/* ── SVG Dwell ring ──────────────────────────────────────────────────── */
+.gaze-button__ring {
+  position: absolute;
+  /* Size and position are driven by JS ringStyle props;
+     width/height/left/top/transform are all set inline. */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gaze-button--gazed .gaze-button__ring {
+  opacity: 1;
+}
+
+.gaze-button__ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.gaze-button__ring-arc {
+  stroke: var(--color-accent);
+  transition: stroke-dashoffset 0.05s linear;
+  filter: drop-shadow(0 0 4px var(--color-accent));
+}
+
+/* ── Label & icon ────────────────────────────────────────────────────── */
+.gaze-button__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* gap scales with symbol size so label never overlaps image */
+  gap: calc(2px + var(--board-symbol-scale, 1) * 2px);
+  padding: 3px 4px;
+  z-index: 1;
+  /* Absolute positioning centered on the native cell */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  /* Constrain content to cell bounds — never overflow the button */
+  max-width: 92%;
+  max-height: 92%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.gaze-button__label {
+  font-family: var(--font-ui);
+  /* Base clamp sized for scale=2.0 default: 2 × 0.4rem = 0.8rem at min */
+  font-size: calc(var(--board-font-scale, 1) * clamp(0.4rem, 0.9vw, 0.65rem));
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--color-text-primary);
+  text-transform: none;
+  line-height: 1.15;
+  text-align: center;
+  /* Never break a word mid-character — whole words must stay together.
+     Multi-word labels (e.g. "go up") may still wrap between words,
+     but single words like "upstairs" will never split across lines. */
+  white-space: normal;
+  word-break: normal;      /* ← was break-word  */
+  overflow-wrap: normal;   /* ← was break-word  */
+  /* If the whole label still can't fit, clip with ellipsis rather than wrapping */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Icon scales with available cell area; clamp is halved since scale defaults to 2.0 */
+.gaze-button__icon {
+  /* At scale=2.0: 2 × clamp(0.55rem, 1.2vw, 1rem) = clamp(1.1rem, 2.4vw, 2rem) */
+  font-size: calc(var(--board-symbol-scale, 1) * clamp(0.55rem, 1.2vw, 1rem));
+  line-height: 1;
+  flex-shrink: 0;
+  /* Prevent emoji colour bleed on Windows */
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  transform: none !important;
+}
+
+/* When an icon is present, gap is already handled by the dynamic calc above */
+
+/* ── OBF raster/SVG image symbol ─────────────────────────────────────── */
+.gaze-button__image {
+  /* Base clamp halved so at scale=2.0 it renders at a cell-friendly size.
+     Max is capped at 8vh so the image never exceeds ~57% of a 7-row grid cell. */
+  width: calc(var(--board-symbol-scale, 1) * clamp(0.55rem, 1.4vw, min(1.2rem, 8vh)));
+  height: calc(var(--board-symbol-scale, 1) * clamp(0.55rem, 1.4vw, min(1.2rem, 8vh)));
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+  border-radius: 4px;
+  transform: none !important;
+}
+
+/* When a raster image is present, keep gap tight but proportional */
+.gaze-button--has-image .gaze-button__content {
+  gap: calc(2px + var(--board-symbol-scale, 1) * 2px);
+}
+
+.gaze-button--has-image .gaze-button__label {
+  /* Slightly smaller label when paired with an image */
+  font-size: calc(var(--board-font-scale, 1) * clamp(0.35rem, 0.8vw, 0.58rem));
+}
+
+/* ── Quarter-circle link-to-board indicator ────────────────────── */
+/* A small filled quarter-circle in the top-right corner indicates that   */
+/* activating this button navigates to a sub-board (not a vocabulary word) */
+/*                                                                         */
+/* Colour strategy: color-mix() darkens the cell's own --cell-bg by ~35%  */
+/* so the badge always reads as a darker shade of the button's background. */
+/* Per-category fallbacks cover cells without an explicit OBF background.  */
+.gaze-button__link-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 20px 20px 0;
+  /* Darken the cell's own background by blending 60% of it with black */
+  border-color: transparent
+    color-mix(in srgb, var(--cell-bg, var(--cell-accent, hsl(210,30%,28%))) 58%, black 42%)
+    transparent transparent;
+  border-radius: 0 var(--radius-md) 0 0;
+  pointer-events: none;
+  z-index: 3;
+  transition: border-color 0.15s ease;
+}
+
+/* Slightly less dark on gaze hover so it remains visible */
+.gaze-button--gazed .gaze-button__link-badge {
+  border-color: transparent
+    color-mix(in srgb, var(--cell-bg, var(--cell-accent, hsl(210,30%,38%))) 68%, black 32%)
+    transparent transparent;
+}

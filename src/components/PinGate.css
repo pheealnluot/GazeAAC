@@ -1,0 +1,168 @@
+/* ─── PinGate — Milestone 5 ─────────────────────────────────────────────── */
+
+.pin-gate__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-gate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2.5rem 2rem 2rem;
+  background: linear-gradient(160deg, #171a22 0%, #0f111a 100%);
+  border: 1px solid rgba(0, 200, 255, 0.18);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 0 0 1px rgba(0,200,255,0.08),
+    0 24px 80px rgba(0,0,0,0.7),
+    0 0 60px rgba(0,200,255,0.06);
+  width: 320px;
+  max-width: 95vw;
+}
+
+/* Shake animation on wrong PIN */
+@keyframes pin-shake {
+  0%,100% { transform: translateX(0) }
+  15%      { transform: translateX(-10px) }
+  30%      { transform: translateX(10px) }
+  45%      { transform: translateX(-8px) }
+  60%      { transform: translateX(8px) }
+  75%      { transform: translateX(-4px) }
+  90%      { transform: translateX(4px) }
+}
+.pin-gate--shake {
+  animation: pin-shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Cancel button */
+.pin-gate__cancel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #8899aa);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  transition: color 0.15s, background 0.15s;
+}
+.pin-gate__cancel:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+/* Icon & heading */
+.pin-gate__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
+}
+.pin-gate__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e8f0ff;
+  letter-spacing: 0.02em;
+}
+.pin-gate__subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #8899aa);
+}
+
+/* PIN dots */
+.pin-gate__dots {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.25rem 0;
+}
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,200,255,0.35);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.pin-dot--filled {
+  background: var(--color-accent, #00c8ff);
+  border-color: var(--color-accent, #00c8ff);
+  transform: scale(1.15);
+  box-shadow: 0 0 8px rgba(0,200,255,0.6);
+}
+
+/* Error / hint text */
+.pin-gate__error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #ff5870;
+  font-weight: 600;
+  min-height: 1.1em;
+}
+.pin-gate__error--cooldown { color: #ffaa44; }
+.pin-gate__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: rgba(136,153,170,0.55);
+  min-height: 1.1em;
+}
+
+/* Numeric keypad */
+.pin-gate__keypad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+.pin-gate__keypad-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.pin-gate__key {
+  width: 72px;
+  height: 56px;
+  border: 1px solid rgba(0,200,255,0.15);
+  border-radius: 0.75rem;
+  background: rgba(255,255,255,0.05);
+  color: #e8f0ff;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s, box-shadow 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pin-gate__key:hover:not(:disabled) {
+  background: rgba(0,200,255,0.12);
+  border-color: rgba(0,200,255,0.4);
+  box-shadow: 0 0 12px rgba(0,200,255,0.15);
+}
+.pin-gate__key:active:not(:disabled) {
+  transform: scale(0.94);
+  background: rgba(0,200,255,0.22);
+}
+.pin-gate__key:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pin-gate__key--action {
+  background: rgba(0,200,255,0.07);
+  font-size: 1.1rem;
+}
+.pin-gate__key--empty {
+  background: transparent;
+  border: none;
+  pointer-events: none;
+}

@@ -1,0 +1,525 @@
+/* ─── GazeAccuracyTest — premium full-screen overlay ──────────────────────── */
+
+:root {
+  --gat-accent:    hsl(195, 100%, 55%);
+  --gat-accent-2:  hsl(260, 80%, 65%);
+  --gat-bg:        hsl(225, 35%, 7%);
+  --gat-surface:   hsl(225, 30%, 12%);
+  --gat-border:    hsl(225, 25%, 20%);
+  --gat-text:      hsl(220, 20%, 92%);
+  --gat-muted:     hsl(220, 15%, 55%);
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────────────────── */
+.gat__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--gat-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Subtle star-field texture */
+  background-image:
+    radial-gradient(ellipse at 20% 20%, hsla(260,60%,40%,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, hsla(195,80%,40%,0.18) 0%, transparent 60%);
+}
+
+/* ── Flash overlay on capture ───────────────────────────────────────────────── */
+.gat__capture-flash {
+  position: absolute;
+  inset: 0;
+  background: hsl(120, 60%, 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.05s ease;
+  z-index: 1;
+}
+.gat__capture-flash--active {
+  opacity: 0.18;
+}
+
+/* ─── Centered screens (intro / results) ────────────────────────────────────── */
+.gat__screen {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4rem;
+  max-width: 560px;
+  width: 100%;
+  padding: 2.4rem 2rem;
+  animation: gat-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes gat-fade-up {
+  from { opacity: 0; transform: translateY(24px) }
+  to   { opacity: 1; transform: translateY(0)    }
+}
+
+/* ─── Intro screen ──────────────────────────────────────────────────────────── */
+.gat__intro-eye {
+  font-size: clamp(3rem, 8vw, 5rem);
+  animation: gat-eye-blink 3s ease-in-out infinite;
+}
+
+@keyframes gat-eye-blink {
+  0%, 85%, 100% { transform: scaleY(1)   }
+  90%           { transform: scaleY(0.1) }
+}
+
+.gat__intro-title {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 800;
+  color: var(--gat-text);
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--gat-accent), var(--gat-accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gat__intro-desc {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: var(--gat-muted);
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+.gat__intro-desc strong { color: var(--gat-text); }
+
+/* Miniature screen diagram in intro */
+.gat__intro-diagram {
+  position: relative;
+  width: min(280px, 70vw);
+  aspect-ratio: 16/9;
+  background: var(--gat-surface);
+  border: 1.5px solid var(--gat-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.gat__intro-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gat-accent);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px 2px var(--gat-accent);
+  animation: gat-dot-pulse 2s ease-in-out infinite;
+}
+.gat__intro-dot:nth-child(2) { animation-delay: 0.4s }
+.gat__intro-dot:nth-child(3) { animation-delay: 0.8s }
+.gat__intro-dot:nth-child(4) { animation-delay: 1.2s }
+.gat__intro-dot:nth-child(5) { animation-delay: 1.6s }
+
+@keyframes gat-dot-pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1) }
+  50%       { opacity: 1;   transform: translate(-50%,-50%) scale(1.3) }
+}
+
+.gat__intro-points-label {
+  font-size: 0.78rem;
+  color: var(--gat-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────────────────── */
+.gat__btn {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 2.2rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  letter-spacing: 0.01em;
+}
+.gat__btn:hover  { transform: translateY(-2px) }
+.gat__btn:active { transform: translateY(0)    }
+
+.gat__btn--primary {
+  background: linear-gradient(135deg, var(--gat-accent), var(--gat-accent-2));
+  color: #fff;
+  box-shadow: 0 4px 20px hsla(195, 100%, 55%, 0.35);
+}
+.gat__btn--primary:hover {
+  box-shadow: 0 6px 28px hsla(195, 100%, 55%, 0.5);
+}
+
+.gat__btn--outline {
+  background: transparent;
+  color: var(--gat-accent);
+  border: 1.5px solid var(--gat-accent);
+}
+.gat__btn--outline:hover {
+  background: hsla(195, 100%, 55%, 0.08);
+}
+
+.gat__btn--ghost {
+  background: transparent;
+  color: var(--gat-muted);
+  border: 1.5px solid var(--gat-border);
+  font-size: 0.88rem;
+  padding: 0.6rem 1.6rem;
+}
+.gat__btn--ghost:hover { color: var(--gat-text) }
+
+/* ─── Testing phase chrome ──────────────────────────────────────────────────── */
+
+/* Top progress bar */
+.gat__progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: hsla(220, 30%, 30%, 0.5);
+  z-index: 10;
+}
+.gat__progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gat-accent), var(--gat-accent-2));
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 8px var(--gat-accent);
+}
+
+/* Counter */
+.gat__counter {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gat-muted);
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono, monospace);
+  background: var(--gat-surface);
+  border: 1px solid var(--gat-border);
+  padding: 0.28rem 0.9rem;
+  border-radius: 99px;
+}
+
+/* Cancel button */
+.gat__cancel-btn {
+  position: fixed;
+  top: 12px;
+  right: 18px;
+  z-index: 10;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--gat-muted);
+  background: var(--gat-surface);
+  border: 1px solid var(--gat-border);
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.gat__cancel-btn:hover { color: var(--gat-text); border-color: var(--gat-muted) }
+
+/* Minimap */
+.gat__minimap {
+  position: fixed;
+  top: 14px;
+  left: 18px;
+  z-index: 10;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.gat__minimap-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gat-border);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+.gat__minimap-dot--done   { background: #22c55e; }
+.gat__minimap-dot--active {
+  background: var(--gat-accent);
+  transform: scale(1.4);
+  box-shadow: 0 0 6px var(--gat-accent);
+}
+
+/* ─── Target dots ───────────────────────────────────────────────────────────── */
+.gat__target {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.gat__target--waiting {
+  opacity: 0.12;
+}
+.gat__target--active {
+  opacity: 1;
+  filter: drop-shadow(0 0 18px var(--gat-accent));
+  animation: gat-target-arrive 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.gat__target--done {
+  opacity: 0.55;
+  filter: drop-shadow(0 0 8px #22c55e);
+}
+
+@keyframes gat-target-arrive {
+  from { transform: translate(-50%,-50%) scale(0.4); opacity: 0 }
+  to   { transform: translate(-50%,-50%) scale(1);   opacity: 1 }
+}
+
+.gat__target-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gat__target-emoji {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+  user-select: none;
+}
+
+/* Outer pulse ring animation */
+.gat__target-pulse {
+  animation: gat-pulse-ring 1s ease-out infinite;
+  transform-origin: center;
+}
+
+@keyframes gat-pulse-ring {
+  0%   { r: 48; opacity: 0.5 }
+  100% { r: 65; opacity: 0   }
+}
+
+/* Label under active target */
+.gat__target-label {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 6;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gat-muted);
+  letter-spacing: 0.05em;
+  text-align: center;
+  background: hsla(225, 35%, 7%, 0.7);
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: gat-fade-up 0.3s ease both;
+}
+
+/* ─── Results screen ────────────────────────────────────────────────────────── */
+.gat__screen--results {
+  max-width: 640px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--gat-surface);
+  border: 1px solid var(--gat-border);
+  border-radius: 20px;
+  padding: 0;
+  gap: 0;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gat-border) transparent;
+}
+
+/* Results header */
+.gat__results-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 2rem 1.5rem;
+  background: linear-gradient(180deg,
+    hsla(var(--gat-tier-color, 195), 100%, 15%, 0.4) 0%,
+    transparent 100%
+  );
+  border-bottom: 1px solid var(--gat-border);
+}
+
+.gat__results-emoji {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  animation: gat-bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes gat-bounce-in {
+  from { transform: scale(0); opacity: 0 }
+  to   { transform: scale(1); opacity: 1 }
+}
+
+.gat__results-title {
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  font-weight: 800;
+  color: var(--gat-text);
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.gat__results-stars {
+  display: flex;
+  gap: 0.3rem;
+}
+.gat__star {
+  font-size: 1.6rem;
+  filter: grayscale(1) brightness(0.4);
+  transition: filter 0.3s ease;
+}
+.gat__star--lit {
+  filter: none;
+  animation: gat-star-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.gat__star--lit:nth-child(1) { animation-delay: 0.1s }
+.gat__star--lit:nth-child(2) { animation-delay: 0.2s }
+.gat__star--lit:nth-child(3) { animation-delay: 0.3s }
+.gat__star--lit:nth-child(4) { animation-delay: 0.4s }
+.gat__star--lit:nth-child(5) { animation-delay: 0.5s }
+
+@keyframes gat-star-pop {
+  0%  { transform: scale(0) rotate(-20deg) }
+  70% { transform: scale(1.3) rotate(5deg)  }
+  100%{ transform: scale(1)   rotate(0deg)  }
+}
+
+.gat__results-score {
+  font-size: 0.85rem;
+  color: var(--gat-muted);
+}
+.gat__results-score strong { color: var(--gat-text) }
+
+/* ── Breakdown section ──────────────────────────────────────────────────────── */
+.gat__results-breakdown {
+  padding: 1.4rem 1.8rem;
+  border-bottom: 1px solid var(--gat-border);
+}
+.gat__results-breakdown-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--gat-muted);
+  margin: 0 0 1rem;
+}
+.gat__results-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+/* Miniature screen diagram in results */
+.gat__results-diagram {
+  position: relative;
+  width: 120px;
+  aspect-ratio: 16/10;
+  background: hsl(225, 35%, 9%);
+  border: 1px solid var(--gat-border);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.gat__results-diagram-target {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.8);
+  transform: translate(-50%, -50%);
+}
+.gat__results-diagram-gaze {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.85;
+}
+
+/* Score table */
+.gat__results-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.gat__results-row {
+  display: grid;
+  grid-template-columns: 1.4rem 7rem 1fr 3rem 1.4rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gat__results-row__num {
+  font-size: 0.72rem;
+  color: var(--gat-muted);
+  font-family: var(--font-mono, monospace);
+  text-align: right;
+}
+.gat__results-row__label {
+  font-size: 0.8rem;
+  color: var(--gat-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gat__results-row__bar-wrap {
+  background: hsla(220,30%,20%,0.6);
+  border-radius: 4px;
+  height: 7px;
+  overflow: hidden;
+}
+.gat__results-row__bar {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 2px;
+}
+.gat__results-row__val {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  text-align: right;
+}
+.gat__results-row__tier {
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* ── Commentary ─────────────────────────────────────────────────────────────── */
+.gat__results-commentary {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  margin: 1.2rem 1.8rem;
+  padding: 1rem 1.1rem;
+  background: hsla(220,30%,15%,0.6);
+  border: 1px solid;
+  border-radius: 10px;
+}
+.gat__results-commentary__icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.gat__results-commentary p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--gat-muted);
+  line-height: 1.55;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────────── */
+.gat__results-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  padding: 1.2rem 1.8rem 1.8rem;
+}

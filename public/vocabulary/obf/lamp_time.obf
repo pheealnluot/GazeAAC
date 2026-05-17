@@ -1,0 +1,427 @@
+{
+  "format": "open-board-0.1",
+  "id": "lamp-time",
+  "locale": "en",
+  "name": "LAMP WFL — Time",
+  "description_html": "<p>LAMP Words For Life sub-page for 'Time'. Auto-returns to home after word selection.</p>",
+  "ext_gazeaac_auto_return_home": true,
+  "grid": {
+    "rows": 7,
+    "columns": 12,
+    "order": [
+      [
+        "btn-time-r1c1",
+        "btn-time-r1c2",
+        "btn-time-r1c3",
+        "btn-time-r1c4",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-time-r2c1",
+        "btn-time-r2c2",
+        "btn-time-r2c3",
+        "btn-time-r2c4",
+        "btn-time-r2c5",
+        "btn-time-r2c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-time-r3c1",
+        "btn-time-r3c2",
+        "btn-time-r3c3",
+        "btn-time-r3c4",
+        "btn-time-r3c5",
+        "btn-time-r3c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-time-r7c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "btn-time-r7c12"
+      ]
+    ]
+  },
+  "buttons": [
+    {
+      "id": "btn-time-r1c1",
+      "label": "Time",
+      "vocalization": "Time",
+      "background_color": "rgb(153,204,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "action-man",
+      "ext_gazeaac_icon": "⏰",
+      "image_id": "img-btn-time-r1c1"
+    },
+    {
+      "id": "btn-time-r1c2",
+      "label": "Now",
+      "vocalization": "Now",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "▶️",
+      "image_id": "img-btn-time-r1c2"
+    },
+    {
+      "id": "btn-time-r1c3",
+      "label": "Later",
+      "vocalization": "Later",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "⏳",
+      "image_id": "img-btn-time-r1c3"
+    },
+    {
+      "id": "btn-time-r1c4",
+      "label": "Soon",
+      "vocalization": "Soon",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "⏱",
+      "image_id": "img-btn-time-r1c4"
+    },
+    {
+      "id": "btn-time-r2c1",
+      "label": "Morning",
+      "vocalization": "Morning",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🌅",
+      "image_id": "img-btn-time-r2c1"
+    },
+    {
+      "id": "btn-time-r2c2",
+      "label": "Afternoon",
+      "vocalization": "Afternoon",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "☀️",
+      "image_id": "img-btn-time-r2c2"
+    },
+    {
+      "id": "btn-time-r2c3",
+      "label": "Night",
+      "vocalization": "Night",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🌙",
+      "image_id": "img-btn-time-r2c3"
+    },
+    {
+      "id": "btn-time-r2c4",
+      "label": "Today",
+      "vocalization": "Today",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📅",
+      "image_id": "img-btn-time-r2c4"
+    },
+    {
+      "id": "btn-time-r2c5",
+      "label": "Tomorrow",
+      "vocalization": "Tomorrow",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📆",
+      "image_id": "img-btn-time-r2c5"
+    },
+    {
+      "id": "btn-time-r2c6",
+      "label": "Yesterday",
+      "vocalization": "Yesterday",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📅",
+      "image_id": "img-btn-time-r2c6"
+    },
+    {
+      "id": "btn-time-r3c1",
+      "label": "Always",
+      "vocalization": "Always",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "∞",
+      "image_id": "img-btn-time-r3c1"
+    },
+    {
+      "id": "btn-time-r3c2",
+      "label": "Never",
+      "vocalization": "Never",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "🚫",
+      "image_id": "img-btn-time-r3c2"
+    },
+    {
+      "id": "btn-time-r3c3",
+      "label": "Sometimes",
+      "vocalization": "Sometimes",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "↕️",
+      "image_id": "img-btn-time-r3c3"
+    },
+    {
+      "id": "btn-time-r3c4",
+      "label": "First",
+      "vocalization": "First",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "1️⃣",
+      "image_id": "img-btn-time-r3c4"
+    },
+    {
+      "id": "btn-time-r3c5",
+      "label": "Then",
+      "vocalization": "Then",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "➡️",
+      "image_id": "img-btn-time-r3c5"
+    },
+    {
+      "id": "btn-time-r3c6",
+      "label": "Last",
+      "vocalization": "Last",
+      "background_color": "rgb(178,255,178)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "descriptor",
+      "ext_gazeaac_icon": "🔚",
+      "image_id": "img-btn-time-r3c6"
+    },
+    {
+      "id": "btn-time-r7c1",
+      "label": "CLEAR",
+      "vocalization": "CLEAR",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🗑",
+      "ext_gazeaac_action": "clear",
+      "image_id": "img-btn-time-r7c1"
+    },
+    {
+      "id": "btn-time-r7c12",
+      "label": "Home",
+      "vocalization": "Home",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🏠",
+      "load_board": {
+        "id": "lamp-home"
+      },
+      "image_id": "img-btn-time-r7c12"
+    }
+  ],
+  "images": [
+    {
+      "id": "img-btn-time-r1c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "⏰"
+      }
+    },
+    {
+      "id": "img-btn-time-r1c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "▶️"
+      }
+    },
+    {
+      "id": "img-btn-time-r1c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "⏳"
+      }
+    },
+    {
+      "id": "img-btn-time-r1c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "⏱"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🌅"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "☀️"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🌙"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📅"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📆"
+      }
+    },
+    {
+      "id": "img-btn-time-r2c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📅"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "∞"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🚫"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "↕️"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "1️⃣"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "➡️"
+      }
+    },
+    {
+      "id": "img-btn-time-r3c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔚"
+      }
+    },
+    {
+      "id": "img-btn-time-r7c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🗑"
+      }
+    },
+    {
+      "id": "img-btn-time-r7c12",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🏠"
+      }
+    }
+  ],
+  "sounds": []
+}

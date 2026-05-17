@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   GazeAAC – Global Design System
+   Offline-first, high-contrast dark UI optimised for eye-gaze AAC use.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Google Fonts ──────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Colour palette */
+  --color-bg-base:          hsl(225, 20%, 7%);
+  --color-bg-surface:       hsl(225, 18%, 11%);
+  --color-bg-elevated:      hsl(225, 16%, 15%);
+
+  --color-cell-bg:          hsl(225, 18%, 13%);
+  --color-cell-hover:       hsl(225, 22%, 20%);
+
+  --color-border:           hsl(225, 14%, 22%);
+
+  --color-accent:           hsl(195, 100%, 55%);  /* Cyan-blue */
+  --color-accent-alt:       hsl(260, 85%, 70%);   /* Soft violet */
+  --color-success:          hsl(145, 70%, 55%);
+
+  --color-text-primary:     hsl(210, 30%, 94%);
+  --color-text-secondary:   hsl(210, 15%, 58%);
+
+  /* Category accent colours (column block anchors) */
+  --color-cat-pronoun:      hsl(48, 95%, 60%);   /* LAMP WFL yellow for pronouns */
+  --color-cat-interrogative:hsl(210, 80%, 65%);
+  --color-cat-verb:         hsl(35,  90%, 62%);
+  --color-cat-spatial:      hsl(280, 65%, 68%);
+  --color-cat-descriptor:   hsl(160, 60%, 55%);
+  --color-cat-social:       hsl(350, 70%, 65%);
+  --color-cat-utility:      hsl(225, 30%, 55%);
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Spacing scale */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  40px;
+  --space-2xl: 64px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Grid */
+  --grid-gap: 5px;
+}
+
+/* ── CSS Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;           /* AAC UI is full-screen; no scrolling */
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar (for settings panels only) ──────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* ── Focus ring (keyboard / switch access fallback) ────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Utility classes ───────────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

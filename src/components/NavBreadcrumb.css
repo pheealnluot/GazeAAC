@@ -1,0 +1,64 @@
+/* ─── NavBreadcrumb ──────────────────────────────────────────────────────────
+   Milestone 4: Page context indicator in the title bar.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.nav-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #8899aa);
+  /* Prevent from grabbing too much titlebar space */
+  max-width: 220px;
+  overflow: hidden;
+}
+
+.nav-breadcrumb__segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  outline: none;
+}
+
+/* Home segment is clickable when on a sub-page */
+.nav-breadcrumb__segment--home:not(.nav-breadcrumb__segment--active) {
+  cursor: pointer;
+  color: rgba(0, 200, 255, 0.75);
+}
+.nav-breadcrumb__segment--home:not(.nav-breadcrumb__segment--active):hover,
+.nav-breadcrumb__segment--home:not(.nav-breadcrumb__segment--active):focus-visible {
+  background: rgba(0, 200, 255, 0.1);
+  border-color: rgba(0, 200, 255, 0.3);
+  color: #fff;
+}
+
+/* Active / current segment */
+.nav-breadcrumb__segment--active {
+  background: rgba(0, 200, 255, 0.1);
+  border-color: rgba(0, 200, 255, 0.2);
+  color: rgba(0, 200, 255, 0.9);
+  font-weight: 600;
+}
+
+.nav-breadcrumb__separator {
+  font-size: 0.8rem;
+  opacity: 0.4;
+  user-select: none;
+}
+
+.nav-breadcrumb__label {
+  /* May be clipped if title bar is narrow */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

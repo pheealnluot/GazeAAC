@@ -1,0 +1,11 @@
+
+in the board settings: 
+a. all settings should take up the entire browser space available instead of just a narrow box
+b. rearrange the options in this order: 
+1. Board selection. the user can open up another page which will allow him to select and load any available board. or he can upload a new open board format board. all uploaded boards will be available for future use. Any board opened can be edited. Original boards cannot be saved over, they have to be saved as a new board. Boards that have been created by edits or upload can be overwritten. 
+2. Custom Vocabulary - this should load the selected board and allow the user to display only selected boxes. the user can also choose which boxes to display in the layer 2 and layer 3 etc
+3. remove Vocabulary layout. Whether the app reads out the word on the first screen or not should be determined by the board OBF configurations.
+4. add in font size adjustment (relative) 
+5. display the board in the settings that is defined in the OBF including foreground and background colour, symbol, link to 2nd page, symbols. 
+
+in eye tracker settings, add a new setting between show cursor and cursor colour -> Cursor size. Allow the user to select visually the size and shape of the cursor 

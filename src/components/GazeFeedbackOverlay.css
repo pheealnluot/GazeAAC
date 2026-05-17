@@ -1,0 +1,83 @@
+/* ─── GazeFeedbackOverlay — Ocular Feedback Visualizer (M3) ──────────────── */
+
+/* ── Base overlay container ─────────────────────────────────────────────── */
+.gfo {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;        /* Never intercept gaze hit-testing */
+  -webkit-app-region: no-drag; /* Don't block Electron titlebar drag */
+  /* Above ALL grid content (GazeButton z-index: 1, grid stacking contexts).
+     Below modals (SettingsModal z-index: 200, CaregiverPanel: 8000). */
+  z-index: 150;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ─── Pattern A: Ring Pulse ─────────────────────────────────────────────── */
+.gfo--ring-pulse {
+  overflow: visible;
+}
+
+.gfo__ring-svg {
+  /* Fixed at viewport origin; positioned via transform (GPU composited).
+     left/top transitions added ~40ms of extra visual lag on saccades. */
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  will-change: transform;
+}
+
+/* ─── Pattern B: Spotlight ──────────────────────────────────────────────── */
+.gfo--spotlight {
+  /* Background is set inline via JS radial-gradient */
+  mix-blend-mode: multiply;
+  transition: background 0.06s ease;
+}
+
+/* ─── Pattern C: Heat Trail ─────────────────────────────────────────────── */
+.gfo--heat-trail {
+  /* canvas fills the overlay div */
+}
+
+.gfo__heat-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Pattern D: Border ─────────────────────────────────────────────────── */
+.gfo--border {
+  /* No additional container styles */
+}
+
+/* The highlight box that snaps to the gazed cell's DOM rect */
+.gfo__border-box {
+  position: fixed;
+  border-style: solid;
+  pointer-events: none;
+  transition:
+    left         0.06s linear,
+    top          0.06s linear,
+    width        0.06s linear,
+    height       0.06s linear,
+    border-color 0.08s ease,
+    box-shadow   0.08s ease,
+    opacity      0.12s ease;
+  will-change: left, top, width, height;
+}
+
+/* Discreet gaze dot for border pattern — GPU composited via transform */
+.gfo__border-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  transform: translate(0, 0);
+  /* Slight glow matching cursor colour — set inline */
+  filter: blur(1px);
+}

@@ -1,0 +1,188 @@
+/* ─── App shell styles ─────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-bg-base);
+  overflow: hidden;
+}
+
+/* ── Frameless title bar ─────────────────────────────────────────────── */
+.app__titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 var(--space-md);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  -webkit-app-region: drag; /* Electron drag region */
+  user-select: none;
+}
+
+.app__titlebar-logo {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-alt));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+/* M4: Nav breadcrumb slot */
+.app__titlebar-nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+}
+
+.app__titlebar-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.app__titlebar-controls {
+  display: flex;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+}
+
+
+.titlebar-btn {
+  width: 28px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.titlebar-btn:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
+.titlebar-btn--close:hover { background: hsl(0, 70%, 45%); color: white; }
+.titlebar-btn--settings { font-size: 0.85rem; margin-right: 6px; }
+.titlebar-btn--settings:hover { background: hsl(260, 50%, 28%); color: var(--color-accent-alt); }
+
+/* ── Main content ────────────────────────────────────────────────────── */
+.app__main {
+  flex: 1;
+  overflow: hidden;
+  /* 2-row grid: TopBar (1fr) + vocabulary grid (7fr).
+     Each "fr" is the same size as one grid cell row, so the TopBar
+     always matches the height of a single grid cell. */
+  display: grid;
+  grid-template-rows: 1fr 7fr;
+}
+
+/* ── Speech output bar ───────────────────────────────────────────────── */
+.app__speech-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 52px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.app__speech-text {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.app__speech-clear {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.app__speech-clear:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+
+/* ── Gaze cursor ─────────────────────────────────────────────────────── */
+.app__gaze-cursor {
+  /* Fixed at viewport origin — positioned via transform (GPU composited).
+     Using left/top at 90 Hz triggers layout reflow on every frame.
+     transform: translate() bypasses layout entirely and goes straight
+     to the compositor thread, matching what the Tobii Experience app does. */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-app-region: no-drag;
+  z-index: 9999;
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  will-change: transform;
+  box-shadow: 0 0 12px 4px currentColor;
+}
+
+/* ── Gear popover menu ───────────────────────────────────────────── */
+.app__gear-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 7000;
+  min-width: 210px;
+  background: #1a1d28;
+  border: 1px solid rgba(0,200,255,0.18);
+  border-radius: 0.65rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,255,0.06);
+  overflow: hidden;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: gear-popover-in 0.12s ease-out;
+}
+@keyframes gear-popover-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.app__gear-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.45rem;
+  color: #c8d8f0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.app__gear-popover-it

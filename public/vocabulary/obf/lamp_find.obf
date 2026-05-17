@@ -1,0 +1,478 @@
+{
+  "format": "open-board-0.1",
+  "id": "lamp-find",
+  "locale": "en",
+  "name": "LAMP WFL — Find",
+  "description_html": "<p>LAMP Words For Life sub-page for 'Find'. Auto-returns to home after word selection.</p>",
+  "ext_gazeaac_auto_return_home": true,
+  "grid": {
+    "rows": 7,
+    "columns": 12,
+    "order": [
+      [
+        "btn-find-r1c1",
+        "btn-find-r1c2",
+        "btn-find-r1c3",
+        "btn-find-r1c4",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r2c1",
+        "btn-find-r2c2",
+        "btn-find-r2c3",
+        "btn-find-r2c4",
+        "btn-find-r2c5",
+        "btn-find-r2c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r3c1",
+        "btn-find-r3c2",
+        "btn-find-r3c3",
+        "btn-find-r3c4",
+        "btn-find-r3c5",
+        "btn-find-r3c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r4c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r5c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r6c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-find-r7c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "btn-find-r7c12"
+      ]
+    ]
+  },
+  "buttons": [
+    {
+      "id": "btn-find-r1c1",
+      "label": "Find",
+      "vocalization": "Find",
+      "background_color": "rgb(153,204,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "action-man",
+      "ext_gazeaac_icon": "🔍",
+      "image_id": "img-btn-find-r1c1"
+    },
+    {
+      "id": "btn-find-r1c2",
+      "label": "Finds",
+      "vocalization": "Finds",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🔍",
+      "image_id": "img-btn-find-r1c2"
+    },
+    {
+      "id": "btn-find-r1c3",
+      "label": "Finding",
+      "vocalization": "Finding",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🔍",
+      "image_id": "img-btn-find-r1c3"
+    },
+    {
+      "id": "btn-find-r1c4",
+      "label": "Found",
+      "vocalization": "Found",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🔍",
+      "image_id": "img-btn-find-r1c4"
+    },
+    {
+      "id": "btn-find-r2c1",
+      "label": "I",
+      "vocalization": "I",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👤",
+      "image_id": "img-btn-find-r2c1"
+    },
+    {
+      "id": "btn-find-r2c2",
+      "label": "Shoe",
+      "vocalization": "Shoe",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👟",
+      "image_id": "img-btn-find-r2c2"
+    },
+    {
+      "id": "btn-find-r2c3",
+      "label": "Book",
+      "vocalization": "Book",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📖",
+      "image_id": "img-btn-find-r2c3"
+    },
+    {
+      "id": "btn-find-r2c4",
+      "label": "Tablet",
+      "vocalization": "Tablet",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📱",
+      "image_id": "img-btn-find-r2c4"
+    },
+    {
+      "id": "btn-find-r2c5",
+      "label": "Key",
+      "vocalization": "Key",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🔑",
+      "image_id": "img-btn-find-r2c5"
+    },
+    {
+      "id": "btn-find-r2c6",
+      "label": "Bag",
+      "vocalization": "Bag",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🎒",
+      "image_id": "img-btn-find-r2c6"
+    },
+    {
+      "id": "btn-find-r3c1",
+      "label": "You",
+      "vocalization": "You",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👉",
+      "image_id": "img-btn-find-r3c1"
+    },
+    {
+      "id": "btn-find-r3c2",
+      "label": "Glasses",
+      "vocalization": "Glasses",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👓",
+      "image_id": "img-btn-find-r3c2"
+    },
+    {
+      "id": "btn-find-r3c3",
+      "label": "Food",
+      "vocalization": "Food",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🍎",
+      "image_id": "img-btn-find-r3c3"
+    },
+    {
+      "id": "btn-find-r3c4",
+      "label": "Drink",
+      "vocalization": "Drink",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-find-r3c4"
+    },
+    {
+      "id": "btn-find-r3c5",
+      "label": "Toilet",
+      "vocalization": "Toilet",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🚽",
+      "image_id": "img-btn-find-r3c5"
+    },
+    {
+      "id": "btn-find-r3c6",
+      "label": "Friend",
+      "vocalization": "Friend",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👫",
+      "image_id": "img-btn-find-r3c6"
+    },
+    {
+      "id": "btn-find-r4c1",
+      "label": "He",
+      "vocalization": "He",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👦",
+      "image_id": "img-btn-find-r4c1"
+    },
+    {
+      "id": "btn-find-r5c1",
+      "label": "She",
+      "vocalization": "She",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👧",
+      "image_id": "img-btn-find-r5c1"
+    },
+    {
+      "id": "btn-find-r6c1",
+      "label": "It",
+      "vocalization": "It",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "💡",
+      "image_id": "img-btn-find-r6c1"
+    },
+    {
+      "id": "btn-find-r7c1",
+      "label": "CLEAR",
+      "vocalization": "CLEAR",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🗑",
+      "ext_gazeaac_action": "clear",
+      "image_id": "img-btn-find-r7c1"
+    },
+    {
+      "id": "btn-find-r7c12",
+      "label": "Home",
+      "vocalization": "Home",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🏠",
+      "load_board": {
+        "id": "lamp-home"
+      },
+      "image_id": "img-btn-find-r7c12"
+    }
+  ],
+  "images": [
+    {
+      "id": "img-btn-find-r1c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔍"
+      }
+    },
+    {
+      "id": "img-btn-find-r1c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔍"
+      }
+    },
+    {
+      "id": "img-btn-find-r1c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔍"
+      }
+    },
+    {
+      "id": "img-btn-find-r1c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔍"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👤"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👟"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📖"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📱"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🔑"
+      }
+    },
+    {
+      "id": "img-btn-find-r2c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🎒"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👉"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👓"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🍎"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🚽"
+      }
+    },
+    {
+      "id": "img-btn-find-r3c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👫"
+      }
+    },
+    {
+      "id": "img-btn-find-r4c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👦"
+      }
+    },
+    {
+      "id": "img-btn-find-r5c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👧"
+      }
+    },
+    {
+      "id": "img-btn-find-r6c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💡"
+      }
+    },
+    {
+      "id": "img-btn-find-r7c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🗑"
+      }
+    },
+    {
+      "id": "img-btn-find-r7c12",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🏠"
+      }
+    }
+  ],
+  "sounds": []
+}

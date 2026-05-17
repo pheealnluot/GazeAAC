@@ -1,0 +1,394 @@
+/* ─── TopBar ──────────────────────────────────────────────────────────────────
+   Main AAC top bar: Home, Back, Phrase chips, Backspace, Clear, Sidebar
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.top-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  /* Height is not fixed — driven by the parent flex layout so it matches
+     one grid-cell row (see App.css .app__main grid-template-rows 1fr 7fr) */
+  background: #0d1117;
+  border-bottom: 2px solid rgba(0, 200, 255, 0.15);
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+  z-index: 100;
+}
+
+/* ── Left nav button group ─────────────────────────────────────────────────── */
+
+.top-bar__nav {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.top-bar__nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 68px;
+  padding: 0 12px;
+  background: #141824;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  color: #c8d8f0;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-app-region: no-drag;
+  outline: none;
+  /* Dwell ring positioning */
+  position: relative;
+  overflow: hidden;
+}
+
+.top-bar__nav-btn:hover {
+  background: rgba(0, 200, 255, 0.12);
+  color: #fff;
+}
+
+.top-bar__nav-btn:active {
+  background: rgba(0, 200, 255, 0.22);
+}
+
+.top-bar__nav-btn--home {
+  color: #7ddcff;
+}
+.top-bar__nav-btn--home:hover {
+  background: rgba(0, 200, 255, 0.18);
+  color: #fff;
+}
+
+.top-bar__nav-btn--back {
+  color: #a0b8d0;
+}
+
+.top-bar__nav-btn--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.top-bar__nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.top-bar__nav-label {
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* ── Phrase bar ────────────────────────────────────────────────────────────── */
+
+.top-bar__phrase {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.9rem 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s ease;
+  outline: none;
+}
+
+.top-bar__phrase:hover {
+  background: rgba(0, 200, 255, 0.06);
+}
+
+.top-bar__phrase:active {
+  background: rgba(0, 200, 255, 0.12);
+}
+
+.top-bar__chips {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+.top-bar__chips::-webkit-scrollbar { display: none; }
+
+.top-bar__scroll-anchor {
+  flex-shrink: 0;
+  width: 2px;
+}
+
+.top-bar__placeholder {
+  color: rgba(136, 153, 170, 0.4);
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.8rem;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.top-bar__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(0, 200, 255, 0.12);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  color: #e8eaf6;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: topbar-chip-enter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes topbar-chip-enter {
+  from { opacity: 0; transform: translateX(12px) scale(0.88); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.top-bar__chip--new {
+  background: rgba(0, 200, 255, 0.22);
+  border-color: rgba(0, 200, 255, 0.6);
+  color: #fff;
+  animation: topbar-chip-enter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+             topbar-chip-glow  0.6s ease-out 0.15s both;
+}
+
+@keyframes topbar-chip-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0.55); }
+  50%  { box-shadow: 0 0 0 5px rgba(0, 200, 255, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 200, 255, 0); }
+}
+
+.top-bar__speak-hint {
+  flex-shrink: 0;
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(0, 200, 255, 0.7);
+  padding: 2px 8px;
+  border: 1px solid rgba(0, 200, 255, 0.28);
+  border-radius: 6px;
+  white-space: nowrap;
+  background: rgba(0, 200, 255, 0.08);
+}
+
+/* ── Backspace & Clear action buttons ──────────────────────────────────────── */
+
+.top-bar__actions {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.top-bar__action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 0 10px;
+  background: #141824;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  color: #8899aa;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-app-region: no-drag;
+  outline: none;
+  /* Dwell ring positioning */
+  position: relative;
+  overflow: hidden;
+}
+
+.top-bar__action-btn--delete:hover {
+  background: rgba(255, 180, 0, 0.14);
+  color: #ffb400;
+}
+.top-bar__action-btn--delete:active {
+  background: rgba(255, 180, 0, 0.25);
+  color: #ffd250;
+}
+
+.top-bar__action-btn--clear:hover {
+  background: rgba(255, 70, 70, 0.14);
+  color: #ff4646;
+}
+.top-bar__action-btn--clear:active {
+  background: rgba(255, 70, 70, 0.25);
+  color: #ff7070;
+}
+
+/* ── Sidebar button + panel ────────────────────────────────────────────────── */
+
+.top-bar__sidebar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.top-bar__sidebar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 72px;
+  height: 100%;
+  padding: 0 14px;
+  background: #141824;
+  border: none;
+  color: #c8d8f0;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-app-region: no-drag;
+  outline: none;
+}
+
+.top-bar__sidebar-btn:hover,
+.top-bar__sidebar-btn--open {
+  background: rgba(80, 100, 220, 0.2);
+  color: #a0b8ff;
+}
+
+/* The sidebar panel drops down from the right edge */
+.top-bar__sidebar {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 6000;
+  min-width: 160px;
+  background: #1a1d28;
+  border: 1px solid rgba(0, 200, 255, 0.18);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0,200,255,0.06);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: sidebar-drop-in 0.14s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes sidebar-drop-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.top-bar__sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.45rem;
+  color: #8899aa;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.12s, color 0.12s;
+  margin-bottom: 2px;
+}
+.top-bar__sidebar-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.top-bar__sidebar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 0.55rem;
+  color: #c8d8f0;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, border-color 0.14s, box-shadow 0.14s;
+  text-align: center;
+  width: 100%;
+}
+
+.top-bar__sidebar-item:hover {
+  background: color-mix(in srgb, var(--item-color, #00c8ff) 18%, transparent);
+  border-color: color-mix(in srgb, var(--item-color, #00c8ff) 55%, transparent);
+  color: #fff;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--item-color, #00c8ff) 30%, transparent);
+}
+
+.top-bar__sidebar-item:active {
+  background: color-mix(in srgb, var(--item-color, #00c8ff) 30%, transparent);
+}
+
+.top-bar__sidebar-item-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.top-bar__sidebar-item-label {
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--item-color, #00c8ff) 80%, #c8d8f0);
+}
+
+/* ── TopBar dwell ring (SVG arc, same visual as GazeButton ring) ───────────── */
+
+.top-bar__dwell-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  overflow: visible;
+}
+
+/* The SVG circle is always rendered; arc visibility controlled by opacity on button */
+.top-bar__dwell-ring-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.top-bar__dwell-ring-arc {
+  stroke: #00c8ff;
+  transition: stroke-dashoffset 0.05s linear;
+  filter: drop-shadow(0 0 4px #00c8ff);
+}
+
+/* Show ring SVG only while the button is actively being dwelled */
+.top-bar__nav-btn[data-gazed="true"] .top-bar__dwell-ring,
+.top-bar__action-btn[data-gazed="true"] .top-bar__dwell-ring {
+  opacity: var(--topbar-ring-opacity, 1);
+}
+
+/* Highlight border while gazed */
+.top-bar__nav-btn[data-gazed="true"],
+.top-bar__action-btn[data-gazed="true"] {
+  background: rgba(0, 200, 255, 0.14);
+  border-color: rgba(0, 200, 255, 0.45);
+}

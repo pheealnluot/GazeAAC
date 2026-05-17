@@ -1,0 +1,478 @@
+{
+  "format": "open-board-0.1",
+  "id": "lamp-get",
+  "locale": "en",
+  "name": "LAMP WFL — Get",
+  "description_html": "<p>LAMP Words For Life sub-page for 'Get'. Auto-returns to home after word selection.</p>",
+  "ext_gazeaac_auto_return_home": true,
+  "grid": {
+    "rows": 7,
+    "columns": 12,
+    "order": [
+      [
+        "btn-get-r1c1",
+        "btn-get-r1c2",
+        "btn-get-r1c3",
+        "btn-get-r1c4",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r2c1",
+        "btn-get-r2c2",
+        "btn-get-r2c3",
+        "btn-get-r2c4",
+        "btn-get-r2c5",
+        "btn-get-r2c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r3c1",
+        "btn-get-r3c2",
+        "btn-get-r3c3",
+        "btn-get-r3c4",
+        "btn-get-r3c5",
+        "btn-get-r3c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r4c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r5c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r6c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-get-r7c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "btn-get-r7c12"
+      ]
+    ]
+  },
+  "buttons": [
+    {
+      "id": "btn-get-r1c1",
+      "label": "Get",
+      "vocalization": "Get",
+      "background_color": "rgb(153,204,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "action-man",
+      "ext_gazeaac_icon": "🖐",
+      "image_id": "img-btn-get-r1c1"
+    },
+    {
+      "id": "btn-get-r1c2",
+      "label": "Gets",
+      "vocalization": "Gets",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🖐",
+      "image_id": "img-btn-get-r1c2"
+    },
+    {
+      "id": "btn-get-r1c3",
+      "label": "Getting",
+      "vocalization": "Getting",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🖐",
+      "image_id": "img-btn-get-r1c3"
+    },
+    {
+      "id": "btn-get-r1c4",
+      "label": "Got",
+      "vocalization": "Got",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "🖐",
+      "image_id": "img-btn-get-r1c4"
+    },
+    {
+      "id": "btn-get-r2c1",
+      "label": "I",
+      "vocalization": "I",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👤",
+      "image_id": "img-btn-get-r2c1"
+    },
+    {
+      "id": "btn-get-r2c2",
+      "label": "Drink",
+      "vocalization": "Drink",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🥤",
+      "image_id": "img-btn-get-r2c2"
+    },
+    {
+      "id": "btn-get-r2c3",
+      "label": "Toy",
+      "vocalization": "Toy",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🧸",
+      "image_id": "img-btn-get-r2c3"
+    },
+    {
+      "id": "btn-get-r2c4",
+      "label": "Book",
+      "vocalization": "Book",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📖",
+      "image_id": "img-btn-get-r2c4"
+    },
+    {
+      "id": "btn-get-r2c5",
+      "label": "Help",
+      "vocalization": "Help",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🙏",
+      "image_id": "img-btn-get-r2c5"
+    },
+    {
+      "id": "btn-get-r2c6",
+      "label": "Dressed",
+      "vocalization": "Dressed",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👕",
+      "image_id": "img-btn-get-r2c6"
+    },
+    {
+      "id": "btn-get-r3c1",
+      "label": "You",
+      "vocalization": "You",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👉",
+      "image_id": "img-btn-get-r3c1"
+    },
+    {
+      "id": "btn-get-r3c2",
+      "label": "Up",
+      "vocalization": "Up",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "⬆️",
+      "image_id": "img-btn-get-r3c2"
+    },
+    {
+      "id": "btn-get-r3c3",
+      "label": "Down",
+      "vocalization": "Down",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "⬇️",
+      "image_id": "img-btn-get-r3c3"
+    },
+    {
+      "id": "btn-get-r3c4",
+      "label": "Out",
+      "vocalization": "Out",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📤",
+      "image_id": "img-btn-get-r3c4"
+    },
+    {
+      "id": "btn-get-r3c5",
+      "label": "In",
+      "vocalization": "In",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "📥",
+      "image_id": "img-btn-get-r3c5"
+    },
+    {
+      "id": "btn-get-r3c6",
+      "label": "Better",
+      "vocalization": "Better",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "💪",
+      "image_id": "img-btn-get-r3c6"
+    },
+    {
+      "id": "btn-get-r4c1",
+      "label": "He",
+      "vocalization": "He",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👦",
+      "image_id": "img-btn-get-r4c1"
+    },
+    {
+      "id": "btn-get-r5c1",
+      "label": "She",
+      "vocalization": "She",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👧",
+      "image_id": "img-btn-get-r5c1"
+    },
+    {
+      "id": "btn-get-r6c1",
+      "label": "It",
+      "vocalization": "It",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "💡",
+      "image_id": "img-btn-get-r6c1"
+    },
+    {
+      "id": "btn-get-r7c1",
+      "label": "CLEAR",
+      "vocalization": "CLEAR",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🗑",
+      "ext_gazeaac_action": "clear",
+      "image_id": "img-btn-get-r7c1"
+    },
+    {
+      "id": "btn-get-r7c12",
+      "label": "Home",
+      "vocalization": "Home",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🏠",
+      "load_board": {
+        "id": "lamp-home"
+      },
+      "image_id": "img-btn-get-r7c12"
+    }
+  ],
+  "images": [
+    {
+      "id": "img-btn-get-r1c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🖐"
+      }
+    },
+    {
+      "id": "img-btn-get-r1c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🖐"
+      }
+    },
+    {
+      "id": "img-btn-get-r1c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🖐"
+      }
+    },
+    {
+      "id": "img-btn-get-r1c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🖐"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👤"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🥤"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🧸"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📖"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🙏"
+      }
+    },
+    {
+      "id": "img-btn-get-r2c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👕"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👉"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "⬆️"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "⬇️"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📤"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "📥"
+      }
+    },
+    {
+      "id": "img-btn-get-r3c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💪"
+      }
+    },
+    {
+      "id": "img-btn-get-r4c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👦"
+      }
+    },
+    {
+      "id": "img-btn-get-r5c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👧"
+      }
+    },
+    {
+      "id": "img-btn-get-r6c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💡"
+      }
+    },
+    {
+      "id": "img-btn-get-r7c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🗑"
+      }
+    },
+    {
+      "id": "img-btn-get-r7c12",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🏠"
+      }
+    }
+  ],
+  "sounds": []
+}

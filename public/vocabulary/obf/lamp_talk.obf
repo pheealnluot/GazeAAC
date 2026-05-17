@@ -1,0 +1,478 @@
+{
+  "format": "open-board-0.1",
+  "id": "lamp-talk",
+  "locale": "en",
+  "name": "LAMP WFL — Talk",
+  "description_html": "<p>LAMP Words For Life sub-page for 'Talk'. Auto-returns to home after word selection.</p>",
+  "ext_gazeaac_auto_return_home": true,
+  "grid": {
+    "rows": 7,
+    "columns": 12,
+    "order": [
+      [
+        "btn-talk-r1c1",
+        "btn-talk-r1c2",
+        "btn-talk-r1c3",
+        "btn-talk-r1c4",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r2c1",
+        "btn-talk-r2c2",
+        "btn-talk-r2c3",
+        "btn-talk-r2c4",
+        "btn-talk-r2c5",
+        "btn-talk-r2c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r3c1",
+        "btn-talk-r3c2",
+        "btn-talk-r3c3",
+        "btn-talk-r3c4",
+        "btn-talk-r3c5",
+        "btn-talk-r3c6",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r4c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r5c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r6c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        "btn-talk-r7c1",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "btn-talk-r7c12"
+      ]
+    ]
+  },
+  "buttons": [
+    {
+      "id": "btn-talk-r1c1",
+      "label": "Talk",
+      "vocalization": "Talk",
+      "background_color": "rgb(153,204,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "action-man",
+      "ext_gazeaac_icon": "💬",
+      "image_id": "img-btn-talk-r1c1"
+    },
+    {
+      "id": "btn-talk-r1c2",
+      "label": "Talks",
+      "vocalization": "Talks",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "💬",
+      "image_id": "img-btn-talk-r1c2"
+    },
+    {
+      "id": "btn-talk-r1c3",
+      "label": "Talking",
+      "vocalization": "Talking",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "💬",
+      "image_id": "img-btn-talk-r1c3"
+    },
+    {
+      "id": "btn-talk-r1c4",
+      "label": "Talked",
+      "vocalization": "Talked",
+      "background_color": "rgb(180,230,255)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "conjugation",
+      "ext_gazeaac_icon": "💬",
+      "image_id": "img-btn-talk-r1c4"
+    },
+    {
+      "id": "btn-talk-r2c1",
+      "label": "I",
+      "vocalization": "I",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👤",
+      "image_id": "img-btn-talk-r2c1"
+    },
+    {
+      "id": "btn-talk-r2c2",
+      "label": "Dad",
+      "vocalization": "Dad",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👨",
+      "image_id": "img-btn-talk-r2c2"
+    },
+    {
+      "id": "btn-talk-r2c3",
+      "label": "Baby",
+      "vocalization": "Baby",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👶",
+      "image_id": "img-btn-talk-r2c3"
+    },
+    {
+      "id": "btn-talk-r2c4",
+      "label": "Friend",
+      "vocalization": "Friend",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👫",
+      "image_id": "img-btn-talk-r2c4"
+    },
+    {
+      "id": "btn-talk-r2c5",
+      "label": "Teacher",
+      "vocalization": "Teacher",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🧑‍🏫",
+      "image_id": "img-btn-talk-r2c5"
+    },
+    {
+      "id": "btn-talk-r2c6",
+      "label": "Doctor",
+      "vocalization": "Doctor",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👨‍⚕️",
+      "image_id": "img-btn-talk-r2c6"
+    },
+    {
+      "id": "btn-talk-r3c1",
+      "label": "You",
+      "vocalization": "You",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👉",
+      "image_id": "img-btn-talk-r3c1"
+    },
+    {
+      "id": "btn-talk-r3c2",
+      "label": "Girl",
+      "vocalization": "Girl",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👧",
+      "image_id": "img-btn-talk-r3c2"
+    },
+    {
+      "id": "btn-talk-r3c3",
+      "label": "Man",
+      "vocalization": "Man",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👨",
+      "image_id": "img-btn-talk-r3c3"
+    },
+    {
+      "id": "btn-talk-r3c4",
+      "label": "Woman",
+      "vocalization": "Woman",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👩",
+      "image_id": "img-btn-talk-r3c4"
+    },
+    {
+      "id": "btn-talk-r3c5",
+      "label": "Child",
+      "vocalization": "Child",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "🧒",
+      "image_id": "img-btn-talk-r3c5"
+    },
+    {
+      "id": "btn-talk-r3c6",
+      "label": "Family",
+      "vocalization": "Family",
+      "background_color": "rgb(255,220,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "noun",
+      "ext_gazeaac_icon": "👨‍👩‍👧",
+      "image_id": "img-btn-talk-r3c6"
+    },
+    {
+      "id": "btn-talk-r4c1",
+      "label": "He",
+      "vocalization": "He",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👦",
+      "image_id": "img-btn-talk-r4c1"
+    },
+    {
+      "id": "btn-talk-r5c1",
+      "label": "She",
+      "vocalization": "She",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "👧",
+      "image_id": "img-btn-talk-r5c1"
+    },
+    {
+      "id": "btn-talk-r6c1",
+      "label": "It",
+      "vocalization": "It",
+      "background_color": "rgb(255,255,153)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "pronoun",
+      "ext_gazeaac_icon": "💡",
+      "image_id": "img-btn-talk-r6c1"
+    },
+    {
+      "id": "btn-talk-r7c1",
+      "label": "CLEAR",
+      "vocalization": "CLEAR",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🗑",
+      "ext_gazeaac_action": "clear",
+      "image_id": "img-btn-talk-r7c1"
+    },
+    {
+      "id": "btn-talk-r7c12",
+      "label": "Home",
+      "vocalization": "Home",
+      "background_color": "rgb(150,150,150)",
+      "border_color": "rgb(68,68,68)",
+      "ext_gazeaac_category": "utility",
+      "ext_gazeaac_icon": "🏠",
+      "load_board": {
+        "id": "lamp-home"
+      },
+      "image_id": "img-btn-talk-r7c12"
+    }
+  ],
+  "images": [
+    {
+      "id": "img-btn-talk-r1c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💬"
+      }
+    },
+    {
+      "id": "img-btn-talk-r1c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💬"
+      }
+    },
+    {
+      "id": "img-btn-talk-r1c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💬"
+      }
+    },
+    {
+      "id": "img-btn-talk-r1c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💬"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👤"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👨"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👶"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👫"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🧑‍🏫"
+      }
+    },
+    {
+      "id": "img-btn-talk-r2c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👨‍⚕️"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👉"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c2",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👧"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c3",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👨"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c4",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👩"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c5",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🧒"
+      }
+    },
+    {
+      "id": "img-btn-talk-r3c6",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👨‍👩‍👧"
+      }
+    },
+    {
+      "id": "img-btn-talk-r4c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👦"
+      }
+    },
+    {
+      "id": "img-btn-talk-r5c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "👧"
+      }
+    },
+    {
+      "id": "img-btn-talk-r6c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "💡"
+      }
+    },
+    {
+      "id": "img-btn-talk-r7c1",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🗑"
+      }
+    },
+    {
+      "id": "img-btn-talk-r7c12",
+      "symbol": {
+        "set": "emoji",
+        "filename": "🏠"
+      }
+    }
+  ],
+  "sounds": []
+}

@@ -1,0 +1,36 @@
+# Dependency directories
+node_modules/
+out/
+release/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Electron build artifacts
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Cache
+.eslintcache
+.vite/

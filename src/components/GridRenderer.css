@@ -1,0 +1,35 @@
+/* ─── GridRenderer component styles ────────────────────────────────────────── */
+
+.grid-renderer {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 12), 1fr);
+  grid-template-rows: repeat(var(--grid-rows, 7), 1fr);
+  gap: var(--grid-gap, 6px);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-sm);
+  box-sizing: border-box;
+}
+
+/* ─── Skeleton loader (shown while lamp_84.json is fetching) ─────────────── */
+
+.grid-renderer--loading {
+  /* Same layout as normal grid */
+}
+
+.grid-renderer__skeleton-cell {
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-1, #1a1d26) 25%,
+    var(--color-surface-2, #22263a) 50%,
+    var(--color-surface-1, #1a1d26) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
