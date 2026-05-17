@@ -107,18 +107,23 @@
   border-left: 3px solid var(--cell-accent, var(--color-border));
 }
 
-/* ── SVG Dwell ring ──────────────────────────────────────────────────── */
+/* ── SVG Dwell ring ──────────────────────────────────────────────── */
 .gaze-button__ring {
   position: absolute;
-  /* Size and position are driven by JS ringStyle props;
-     width/height/left/top/transform are all set inline. */
+  /* Explicit centering fallback: the inline ringStyle also sets these,
+     but having them in CSS ensures the ring never renders at top-left
+     if JS inline styles are delayed or overridden. */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
 .gaze-button--gazed .gaze-button__ring {
-  opacity: 1;
+  /* Respect the caregiver-configurable ring opacity (0–1) */
+  opacity: var(--dwell-ring-opacity, 1);
 }
 
 .gaze-button__ring-track {

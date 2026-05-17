@@ -185,4 +185,12 @@
   white-space: nowrap;
   transition: background 0.12s, color 0.12s;
 }
-.app__gear-popover-it
+.app__gear-popover-item:hover {
+  background: rgba(0,200,255,0.1);
+  color: #fff;
+}
+.app__gear-popover-divider {
+  height: 1px;
+  background: rgba(0,200,255,0.1);
+  margin: 2px 4px;
+}

@@ -87,6 +87,11 @@ export function App() {
   // Stable ref wrapper so the TelemetryRouter never needs to restart
   // when activeCells or other handleActivate dependencies change.
   const handleActivateRef   = useRef(null)
+  // Refs for measuring both grid cells and TopBar buttons
+  const measureTriggerRef   = useRef(null)
+  const topBarMeasureRef    = useRef(null)  // set by TopBar via onMeasureReady
+  // Store the latest grid cell measurements so we can merge them with TopBar
+  const gridCellsRef        = useRef([])
 
   // ── Waiting-for-gaze counter ───────────────────────────────────────────────
   // Shows elapsed seconds in the status bar while mode === 'calibration'.
@@ -198,6 +203,12 @@ export function App() {
    *   3. Regular vocabulary words → push to phrase + optional immediate speak
    */
   const handleActivate = useCallback((cellId) => {
+    // ── TopBar button routing (dwell from TopBar) ───────────────────────────
+    if (cellId === 'topbar-home')      { goHome(); return }
+    if (cellId === 'topbar-back')      { goBack(); return }
+    if (cellId === 'topbar-backspace') { deleteWord(); return }
+    if (cellId === 'topbar-clear')     { clearPhrase(); speak('Cleared'); return }
+
     const cell = activeCells.find(c => c.id === cellId)
     if (!cell) return
 
@@ -285,9 +296,14 @@ export function App() {
   const measureTriggerRef = useRef(null)
 
   const handleGridMeasured = useCallback((measured) => {
+    // Merge grid cells with TopBar button cells so the router
+    // can hit-test both vocabularly cells AND top-bar buttons.
+    gridCellsRef.current = measured
+    const topBarCells = topBarMeasureRef.current?.() ?? []
+    const allCells = [...measured, ...topBarCells]
     if (routerRef.current) {
-      routerRef.current.registerGrid(measured)
-      console.log(`[App] TelemetryRouter.registerGrid() updated with ${measured.length} DOM-measured cells`)
+      routerRef.current.registerGrid(allCells)
+      console.log(`[App] TelemetryRouter.registerGrid() updated with ${measured.length} grid + ${topBarCells.length} topbar cells`)
     }
   }, [])
 
@@ -605,6 +621,12 @@ export function App() {
           <>
             {/* TopBar: Home/Back/Phrase/Backspace/Clear/Sidebar */}
             <TopBar
+              topBarGazeState={{
+                cellId: gazeState.cellId,
+                dwellProgress: gazeState.dwellProgress,
+              }}
+              onMeasureReady={(fn) => { topBarMeasureRef.current = fn }}
+              dwellRingOpacity={settings.dwellProgressOpacity ?? 1.0}
               onSidebarItemClick={(id) => {
                 // Future: handle Yes/No, Inflections/Keyboard, Social, Alert
                 console.log('[TopBar] sidebar item:', id)

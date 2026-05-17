@@ -335,6 +335,13 @@ function AACPanel({ settings, updateSetting }) {
           </button>
         ))}
       </div>
+      <Row name="Progress Indicator Opacity" hint="Transparency of the dwell ring or bar (0% = invisible, 100% = fully opaque)">
+        <input id="slider-dwell-opacity" type="range" className="sm-slider sm-slider--violet" min={0.05} max={1.0} step={0.05}
+          value={settings.dwellProgressOpacity ?? 1.0}
+          onChange={e => updateSetting('dwellProgressOpacity', Number(e.target.value))} />
+        <Val>{Math.round((settings.dwellProgressOpacity ?? 1.0) * 100)}%</Val>
+      </Row>
+
 
       {/* Voice */}
       <SectionLabel>Voice &amp; Speech</SectionLabel>

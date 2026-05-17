@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { usePhrase } from '@context/PhraseContext'
 import { useVocabulary } from '@context/VocabularyContext'
+import { useGazeSettings } from '@context/GazeSettingsContext'
 import './TopBar.css'
 
 /**
@@ -11,19 +12,56 @@ import './TopBar.css'
  *
  * Sidebar (toggleable panel on the right side) shows:
  *   Yes/No | Inflections/Keyboard | Social | Alert
+ *
+ * Dwell support:
+ *   Each nav and action button carries a data-cell-id attribute so the
+ *   TelemetryRouter can hit-test them alongside the vocabulary grid.
+ *   App.jsx measures their bounding rects and registers them with the router,
+ *   then feeds back topBarGazeState = { cellId, dwellProgress } so we can
+ *   render the progress ring without any React render on every gaze frame.
  */
-export function TopBar({ onSidebarItemClick }) {
+export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureReady, dwellRingOpacity = 1.0 }) {
   const { words, phraseText, speakPhrase, deleteWord, clearPhrase } = usePhrase()
   const { goHome, goBack, activePage } = useVocabulary()
+  const { settings } = useGazeSettings()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const chipsEndRef = useRef(null)
+  const barRef = useRef(null)
 
   // Auto-scroll to latest chip
   useEffect(() => {
     chipsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [words])
 
+  // Expose measurement function to parent (App.jsx)
+  useEffect(() => {
+    if (!onMeasureReady) return
+    onMeasureReady(() => {
+      if (!barRef.current) return []
+      const buttons = barRef.current.querySelectorAll('[data-cell-id]')
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const cells = []
+      buttons.forEach(el => {
+        const id = el.getAttribute('data-cell-id')
+        if (!id) return
+        const rect = el.getBoundingClientRect()
+        cells.push({
+          id,
+          x0: rect.left   / vw,
+          y0: rect.top    / vh,
+          x1: rect.right  / vw,
+          y1: rect.bottom / vh,
+        })
+      })
+      return cells
+    })
+  }, [onMeasureReady])
+
   const isAtHome = activePage === 'home'
+  const { cellId: gazedId, dwellProgress = 0 } = topBarGazeState
+
+  const opacity = dwellRingOpacity
 
   const sidebarItems = [
     { id: 'yesno',      label: 'Yes/No',      emoji: '✅', color: 'hsl(145 60% 45%)' },
@@ -39,22 +77,25 @@ export function TopBar({ onSidebarItemClick }) {
   }
 
   return (
-    <div className="top-bar" role="banner">
-      {/* ── Left nav buttons ─────────────────────────────────── */}
+    <div className="top-bar" role="banner" ref={barRef}>
+      {/* ── Left nav button group ─────────────────────────────── */}
       <div className="top-bar__nav">
-        <button
-          id="top-bar-home"
+        <DwellNavButton
+          id="topbar-home"
           className="top-bar__nav-btn top-bar__nav-btn--home"
           aria-label="Go to home board"
           title="Home"
           onClick={goHome}
+          isGazed={gazedId === 'topbar-home'}
+          dwellProgress={gazedId === 'topbar-home' ? dwellProgress : 0}
+          opacity={opacity}
         >
           <span className="top-bar__nav-icon" aria-hidden="true">🏠</span>
           <span className="top-bar__nav-label">Home</span>
-        </button>
+        </DwellNavButton>
 
-        <button
-          id="top-bar-back"
+        <DwellNavButton
+          id="topbar-back"
           className={[
             'top-bar__nav-btn top-bar__nav-btn--back',
             isAtHome ? 'top-bar__nav-btn--disabled' : ''
@@ -63,10 +104,13 @@ export function TopBar({ onSidebarItemClick }) {
           title="Back"
           onClick={goBack}
           disabled={isAtHome}
+          isGazed={gazedId === 'topbar-back'}
+          dwellProgress={gazedId === 'topbar-back' ? dwellProgress : 0}
+          opacity={opacity}
         >
           <span className="top-bar__nav-icon" aria-hidden="true">←</span>
           <span className="top-bar__nav-label">Back</span>
-        </button>
+        </DwellNavButton>
       </div>
 
       {/* ── Phrase / word-chip bar ────────────────────────────── */}
@@ -102,24 +146,30 @@ export function TopBar({ onSidebarItemClick }) {
 
       {/* ── Action buttons (backspace + clear) ───────────────── */}
       <div className="top-bar__actions">
-        <button
-          id="top-bar-backspace"
+        <DwellNavButton
+          id="topbar-backspace"
           className="top-bar__action-btn top-bar__action-btn--delete"
           aria-label="Delete last word"
           title="Backspace"
           onClick={deleteWord}
+          isGazed={gazedId === 'topbar-backspace'}
+          dwellProgress={gazedId === 'topbar-backspace' ? dwellProgress : 0}
+          opacity={opacity}
         >
           <span aria-hidden="true">⌫</span>
-        </button>
-        <button
-          id="top-bar-clear"
+        </DwellNavButton>
+        <DwellNavButton
+          id="topbar-clear"
           className="top-bar__action-btn top-bar__action-btn--clear"
           aria-label="Clear all words"
           title="Clear"
           onClick={clearPhrase}
+          isGazed={gazedId === 'topbar-clear'}
+          dwellProgress={gazedId === 'topbar-clear' ? dwellProgress : 0}
+          opacity={opacity}
         >
           <span aria-hidden="true">✕</span>
-        </button>
+        </DwellNavButton>
       </div>
 
       {/* ── Sidebar toggle ─────────────────────────────────────── */}
@@ -164,5 +214,57 @@ export function TopBar({ onSidebarItemClick }) {
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * DwellNavButton — A TopBar button that renders an SVG dwell progress ring
+ * centered on itself, similar to GazeButton's ring.
+ */
+function DwellNavButton({ id, className, 'aria-label': ariaLabel, title, onClick, disabled, children, isGazed, dwellProgress, opacity }) {
+  const circumference = 2 * Math.PI * 38   // r=38 in a 100x100 viewBox
+  const dashOffset    = circumference * (1 - (dwellProgress ?? 0))
+
+  return (
+    <button
+      id={id}
+      data-cell-id={id}
+      data-gazed={isGazed ? 'true' : 'false'}
+      className={className}
+      aria-label={ariaLabel}
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={{ '--topbar-ring-opacity': isGazed ? opacity : 0 }}
+    >
+      {/* Centered dwell ring SVG */}
+      <svg
+        className="top-bar__dwell-ring"
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+        style={{
+          opacity: isGazed ? opacity : 0,
+          transition: 'opacity 0.15s ease',
+        }}
+      >
+        <circle
+          className="top-bar__dwell-ring-track"
+          cx="50" cy="50" r="38"
+          fill="none"
+          strokeWidth="4"
+        />
+        <circle
+          className="top-bar__dwell-ring-arc"
+          cx="50" cy="50" r="38"
+          fill="none"
+          strokeWidth="4"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          transform="rotate(-90 50 50)"
+        />
+      </svg>
+      {children}
+    </button>
   )
 }

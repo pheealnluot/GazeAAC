@@ -115,7 +115,11 @@ export function GazeButton({
     top:      '50%',
     transform: 'translate(-50%, -50%)',
     aspectRatio: '1 / 1',
-    opacity:  dwellRingOpacity,
+    // NOTE: opacity is NOT set here — it is handled by CSS rules so that
+    // the ring is invisible when not gazed and fades in on gaze:
+    //   .gaze-button__ring            { opacity: 0 }
+    //   .gaze-button--gazed ring       { opacity: var(--dwell-ring-opacity, 1) }
+    // The CSS variable is already on the button via buttonStyle.
   }
 
   const contentStyle = {

@@ -178,6 +178,9 @@
 .sm-slider::-webkit-slider-thumb:hover { transform:scale(1.2); box-shadow:0 0 14px var(--color-accent) }
 .sm-slider--green::-webkit-slider-thumb { background:hsl(150,60%,45%); box-shadow:0 0 8px hsl(150,60%,45%) }
 .sm-slider--green::-webkit-slider-thumb:hover { box-shadow:0 0 14px hsl(150,60%,45%) }
+.sm-slider--violet::-webkit-slider-thumb { background:hsl(265,65%,62%); box-shadow:0 0 8px hsl(265,65%,62%) }
+.sm-slider--violet::-webkit-slider-thumb:hover { box-shadow:0 0 14px hsl(265,65%,62%) }
+
 
 .sm-val { font-family:var(--font-mono); font-size:.8rem; color:var(--color-accent); min-width:52px; text-align:right }
 
