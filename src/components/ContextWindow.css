@@ -1,0 +1,400 @@
+/* ─── ContextWindow — context input panel ────────────────────────────────── */
+
+.ctx-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(135deg,
+    hsl(230, 25%, 11%) 0%,
+    hsl(250, 30%, 13%) 100%);
+  border-bottom: 2px solid hsl(265, 60%, 35%);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle animated gradient shimmer on the top edge */
+.ctx-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    hsl(265, 80%, 60%),
+    hsl(200, 100%, 60%),
+    hsl(265, 80%, 60%));
+  background-size: 200% 100%;
+  animation: ctx-shimmer 3s linear infinite;
+}
+
+@keyframes ctx-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.ctx-window__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(165, 100, 255, 0.15);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.ctx-window__title {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(265, 70%, 75%);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.ctx-window__title-icon {
+  font-size: 0.9rem;
+}
+
+.ctx-window__status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  min-width: 0;
+}
+
+.ctx-window__thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: hsl(200, 90%, 70%);
+  font-weight: 600;
+}
+
+.ctx-window__listening {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: hsl(340, 80%, 65%);
+  font-weight: 600;
+}
+
+.ctx-window__error-badge {
+  color: hsl(0, 70%, 65%);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* Spinner */
+.ctx-window__spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 200, 255, 0.25);
+  border-top-color: hsl(200, 90%, 65%);
+  border-radius: 50%;
+  animation: ctx-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ctx-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulse dot for listening */
+.ctx-window__pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: hsl(340, 80%, 60%);
+  animation: ctx-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ctx-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.6); opacity: 0.5; }
+}
+
+.ctx-window__clear {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.7rem;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.ctx-window__clear:hover {
+  background: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 80, 80, 0.4);
+  color: hsl(0, 70%, 65%);
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.ctx-window__body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Camera panel ────────────────────────────────────────────────────────── */
+.ctx-window__camera-panel {
+  width: 120px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctx-window__video {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(165, 100, 255, 0.3);
+  background: #000;
+}
+
+.ctx-window__camera-thumb {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid hsl(265, 60%, 45%);
+}
+
+/* Wrap for captured still with badges */
+.ctx-window__camera-thumb-wrap {
+  position: relative;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.ctx-window__cam-badge {
+  position: absolute;
+  bottom: 22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: hsl(265, 80%, 85%);
+  background: rgba(0, 0, 0, 0.65);
+  padding: 1px 4px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctx-window__cam-clear {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(200, 50, 50, 0.75);
+  border: none;
+  color: #fff;
+  font-size: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.ctx-window__cam-clear:hover {
+  background: rgba(220, 50, 50, 0.95);
+}
+
+/* Model badge in header */
+.ctx-window__model-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: hsl(200, 80%, 75%);
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.ctx-window__cam-snap {
+  background: hsl(265, 60%, 30%);
+  border: 1px solid hsl(265, 60%, 45%);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ctx-window__cam-snap:hover {
+  background: hsl(265, 60%, 40%);
+}
+
+/* ── Textarea ────────────────────────────────────────────────────────────── */
+.ctx-window__textarea {
+  flex: 1;
+  resize: none;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(165, 100, 255, 0.2);
+  border-radius: 8px;
+  color: hsl(220, 20%, 90%);
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.7rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  min-height: 0;
+  height: 100%;
+}
+
+.ctx-window__textarea::placeholder {
+  color: rgba(200, 200, 255, 0.3);
+  font-style: italic;
+}
+
+.ctx-window__textarea:focus {
+  border-color: hsl(265, 70%, 55%);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 2px rgba(165, 100, 255, 0.15);
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.ctx-window__controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  align-content: center;
+  width: fit-content;
+}
+
+.ctx-window__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  min-width: 72px;
+}
+
+/* Mic button */
+.ctx-window__btn--mic {
+  background: rgba(200, 50, 120, 0.15);
+  border-color: rgba(200, 50, 120, 0.35);
+  color: hsl(340, 70%, 75%);
+}
+
+.ctx-window__btn--mic:hover {
+  background: rgba(200, 50, 120, 0.28);
+  border-color: hsl(340, 70%, 55%);
+}
+
+.ctx-window__btn--mic.ctx-window__btn--active {
+  background: hsl(340, 65%, 30%);
+  border-color: hsl(340, 70%, 55%);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(200, 50, 120, 0.4);
+}
+
+/* Camera button */
+.ctx-window__btn--cam {
+  background: rgba(100, 160, 255, 0.12);
+  border-color: rgba(100, 160, 255, 0.3);
+  color: hsl(210, 80%, 75%);
+}
+
+.ctx-window__btn--cam:hover {
+  background: rgba(100, 160, 255, 0.22);
+  border-color: hsl(210, 80%, 60%);
+}
+
+.ctx-window__btn--cam.ctx-window__btn--active {
+  background: hsl(210, 65%, 28%);
+  border-color: hsl(210, 80%, 55%);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(100, 160, 255, 0.35);
+}
+
+/* Generate button */
+.ctx-window__btn--generate {
+  background: linear-gradient(135deg, hsl(265, 60%, 35%), hsl(290, 60%, 32%));
+  border-color: hsl(265, 60%, 50%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(165, 100, 255, 0.25);
+}
+
+.ctx-window__btn--generate:hover:not(:disabled) {
+  background: linear-gradient(135deg, hsl(265, 65%, 42%), hsl(290, 65%, 40%));
+  box-shadow: 0 4px 14px rgba(165, 100, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.ctx-window__btn--generate:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Clear input button */
+.ctx-window__btn--clear-input {
+  background: rgba(255, 80, 60, 0.12);
+  border-color: rgba(255, 80, 60, 0.3);
+  color: hsl(10, 70%, 72%);
+}
+
+.ctx-window__btn--clear-input:hover:not(:disabled) {
+  background: rgba(255, 80, 60, 0.25);
+  border-color: hsl(10, 75%, 58%);
+  color: #fff;
+}
+
+.ctx-window__btn--clear-input:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

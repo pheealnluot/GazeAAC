@@ -1,0 +1,336 @@
+/* ─── ContextualResponseGrid — AI-generated response tiles ────────────────── */
+
+.ctx-grid {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 6px;
+  padding: 6px;
+  box-sizing: border-box;
+  background: hsl(230, 22%, 9%);
+
+  /* Default (3 tiles): 1 row × 3 cols */
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
+}
+
+/* 2 responses → 1 row × 2 cols */
+.ctx-grid[data-count="2"] {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+/* 3 responses → 1 row × 3 cols (default above) */
+.ctx-grid[data-count="3"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
+}
+
+/* 4 responses → 2 rows × 2 cols */
+.ctx-grid[data-count="4"] {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* 5 responses → 2 rows × 3 cols (last cell spans to fill) */
+.ctx-grid[data-count="5"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+/* 5th tile spans the 3rd column of row 2 — visually centred */
+.ctx-grid[data-count="5"] .ctx-cell:last-child {
+  grid-column: 2 / 3;
+}
+
+/* 6 responses → 2 rows × 3 cols */
+.ctx-grid[data-count="6"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* 7 responses → 3 rows × 3 cols */
+.ctx-grid[data-count="7"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+/* 7th tile: centre it in the last row */
+.ctx-grid[data-count="7"] .ctx-cell:last-child {
+  grid-column: 2 / 3;
+}
+
+/* 8 responses → 3 rows × 3 cols */
+.ctx-grid[data-count="8"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+/* 8th & (implicit) 9th slot: span last two cells in row 3 */
+.ctx-grid[data-count="8"] .ctx-cell:nth-child(7) {
+  grid-column: 1 / 2;
+}
+.ctx-grid[data-count="8"] .ctx-cell:nth-child(8) {
+  grid-column: 2 / 3;
+}
+
+/* 9 responses → 3 rows × 3 cols (perfect square) */
+.ctx-grid[data-count="9"] {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+}
+
+
+/* ── Empty / placeholder state ───────────────────────────────────────────── */
+.ctx-grid--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ctx-grid__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  padding: 2rem;
+  max-width: 480px;
+}
+
+.ctx-grid__placeholder-icon {
+  font-size: 2.5rem;
+  filter: grayscale(0.4);
+  opacity: 0.7;
+}
+
+.ctx-grid__placeholder-text {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(220, 20%, 65%);
+  line-height: 1.4;
+}
+
+.ctx-grid__placeholder-hint {
+  font-size: 0.78rem;
+  color: hsl(220, 15%, 45%);
+  font-style: italic;
+}
+
+/* ── Response tiles ──────────────────────────────────────────────────────── */
+.ctx-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid hsl(var(--ctx-hue, 220), 50%, 28%);
+  background: linear-gradient(
+    145deg,
+    hsl(var(--ctx-hue, 220), 35%, 14%) 0%,
+    hsl(var(--ctx-hue, 220), 28%, 10%) 100%
+  );
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+
+  /* Dwell ring opacity CSS var */
+  --dwell-ring-opacity: 1;
+}
+
+/* Glazed shimmer overlay */
+.ctx-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Hover */
+.ctx-cell:hover {
+  border-color: hsl(var(--ctx-hue, 220), 65%, 48%);
+  background: linear-gradient(
+    145deg,
+    hsl(var(--ctx-hue, 220), 45%, 19%) 0%,
+    hsl(var(--ctx-hue, 220), 35%, 14%) 100%
+  );
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px hsl(var(--ctx-hue, 220), 60%, 40%);
+}
+
+/* Gazed state */
+.ctx-cell--gazed {
+  border-color: hsl(var(--ctx-hue, 220), 75%, 58%);
+  background: linear-gradient(
+    145deg,
+    hsl(var(--ctx-hue, 220), 55%, 22%) 0%,
+    hsl(var(--ctx-hue, 220), 45%, 17%) 100%
+  );
+  box-shadow:
+    0 0 0 2px hsl(var(--ctx-hue, 220), 70%, 50%),
+    0 0 24px rgba(100, 180, 255, 0.25),
+    inset 0 0 20px rgba(100, 180, 255, 0.06);
+  transform: scale(1.012);
+}
+
+/* Activated flash */
+.ctx-cell--activated {
+  animation: ctx-cell-flash 0.55s ease-out;
+}
+
+@keyframes ctx-cell-flash {
+  0%   { background: linear-gradient(145deg, hsl(var(--ctx-hue, 220), 80%, 40%), hsl(var(--ctx-hue, 220), 70%, 28%)); }
+  40%  { background: linear-gradient(145deg, hsl(var(--ctx-hue, 220), 70%, 32%), hsl(var(--ctx-hue, 220), 55%, 22%)); }
+  100% { background: linear-gradient(145deg, hsl(var(--ctx-hue, 220), 55%, 22%), hsl(var(--ctx-hue, 220), 45%, 17%)); }
+}
+
+/* ── Dwell ring (SVG) ────────────────────────────────────────────────────── */
+.ctx-cell__ring {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1 / 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+
+.ctx-cell--gazed .ctx-cell__ring {
+  opacity: var(--dwell-ring-opacity, 1);
+}
+
+.ctx-cell__ring-track {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.ctx-cell__ring-arc {
+  stroke: hsl(var(--ctx-hue, 220), 85%, 65%);
+  transition: stroke-dashoffset 0.05s linear;
+  filter: drop-shadow(0 0 3px hsl(var(--ctx-hue, 220), 80%, 60%));
+}
+
+/* ── Content ─────────────────────────────────────────────────────────────── */
+.ctx-cell__index {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: hsl(var(--ctx-hue, 220), 60%, 60%);
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  position: relative;
+  z-index: 2;
+}
+
+.ctx-cell__text {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: clamp(0.9rem, 2.5vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: hsl(220, 15%, 95%);
+  letter-spacing: 0.01em;
+  word-break: break-word;
+  hyphens: auto;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.ctx-cell--gazed .ctx-cell__text {
+  color: #fff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+/* ── Wrapper — position:relative so the overlaid gate bar can anchor to it ── */
+.ctx-grid-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* The grid fills the full wrapper — bar is overlaid, takes no layout space */
+.ctx-grid-wrap .ctx-grid {
+  height: 100%;
+}
+
+/* ── Global AnswerGate progress bar — overlaid, zero layout impact ─────────── */
+.ctx-gate-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.ctx-gate-bar__fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    hsl(200, 80%, 52%) 0%,
+    hsl(145, 75%, 50%) 100%
+  );
+  box-shadow: 0 0 6px hsl(200, 80%, 52%);
+}
+
+/* Completed state — shift to solid green, stays visible */
+.ctx-gate-bar--done .ctx-gate-bar__fill {
+  background: hsl(145, 60%, 38%);
+  box-shadow: 0 0 4px hsl(145, 60%, 38%);
+  width: 100% !important;
+}
+
+/* ── Grid gated state — dim all tiles while locked ───────────────────────── */
+.ctx-grid--gated .ctx-cell {
+  cursor: default;
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: hsl(var(--ctx-hue, 220), 28%, 20%) !important;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+}
+
+.ctx-grid--gated .ctx-cell:hover {
+  opacity: 0.68;
+  filter: grayscale(0.1);
+  border-color: hsl(var(--ctx-hue, 220), 42%, 30%) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Unlock flash — brief glow on all tiles when gate clears */
+.ctx-grid:not(.ctx-grid--gated) .ctx-cell {
+  animation: ctx-gate-cell-unlock 0.4s ease-out;
+}
+
+@keyframes ctx-gate-cell-unlock {
+  0%   { box-shadow: 0 0 0 2px hsl(145, 70%, 48%), 0 0 18px rgba(60, 220, 120, 0.35); }
+  100% { box-shadow: none; }
+}
+
+

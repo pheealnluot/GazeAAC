@@ -15,6 +15,8 @@ import { NavBreadcrumb } from '@components/NavBreadcrumb'
 import { CaregiverPanel } from '@components/CaregiverPanel'
 import { BoardSelector } from '@components/BoardSelector'
 import { BoardEditor } from '@components/BoardEditor'
+import { ContextWindow } from '@components/ContextWindow'
+import { ContextualResponseGrid } from '@components/ContextualResponseGrid'
 import './App.css'
 
 /**
@@ -25,7 +27,8 @@ import './App.css'
 function TobiiStatus() {
   const mode = window.gazeAPI?.trackerMode
   if (mode === 'tobii') return 'Tobii SDK @ real-time'
-  return 'mock @ 60 Hz'
+  if (mode === 'mouse') return 'Mouse hover mode'
+  return 'No eye tracker'
 }
 
 
@@ -77,6 +80,10 @@ export function App() {
   // M5: caregiver panel + gear popover
   const [showCaregiverPanel, setShowCaregiverPanel] = useState(false)
   const [showGearPopover, setShowGearPopover]   = useState(false)
+
+  // Contextual Response board state
+  const [contextualResponses, setContextualResponses]   = useState([])
+  const [contextualActiveModel, setContextualActiveModel] = useState(null)
 
   // Board library & editor (M7)
   const [showBoardSelector, setShowBoardSelector] = useState(false)
@@ -180,6 +187,69 @@ export function App() {
     window.gazeAPI?.speak(text)   // IPC → main process → PowerShell SpeakAsync()
   }, [])
 
+  // ── Navigation click sound helper ─────────────────────────────────────────
+  // Synthesises a short, discreet audio cue using the Web Audio API whenever
+  // a non-word button fires (Home, Back, Backspace, Clear, sub-page nav).
+  // Runs entirely in the renderer — zero IPC cost.
+  const audioCtxRef = useRef(null)
+  const playNavClick = useCallback(() => {
+    if (!settings.navClickSound) return
+    // Lazy-create AudioContext on first use (respects browser autoplay policy)
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      try { audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)() }
+      catch { return }
+    }
+    const ctx = audioCtxRef.current
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+
+    const vol    = settings.navClickVolume ?? 0.35
+    const tone   = settings.navClickTone  ?? 'soft'
+    const now    = ctx.currentTime
+
+    const gain = ctx.createGain()
+    gain.connect(ctx.destination)
+
+    if (tone === 'soft') {
+      // Sine chime: 880 Hz, 120 ms fade-out
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, now)
+      osc.frequency.exponentialRampToValueAtTime(660, now + 0.08)
+      gain.gain.setValueAtTime(vol * 0.6, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
+      osc.connect(gain)
+      osc.start(now)
+      osc.stop(now + 0.13)
+    } else if (tone === 'tick') {
+      // White-noise burst filtered to a sharp click: 20 ms
+      const bufSize = Math.floor(ctx.sampleRate * 0.02)
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate)
+      const data = buf.getChannelData(0)
+      for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1)
+      const src = ctx.createBufferSource()
+      src.buffer = buf
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'highpass'
+      filter.frequency.value = 4000
+      src.connect(filter)
+      filter.connect(gain)
+      gain.gain.setValueAtTime(vol * 0.9, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02)
+      src.start(now)
+    } else if (tone === 'pop') {
+      // Short square + rapid pitch drop: 1200 → 400 Hz, 60 ms
+      const osc = ctx.createOscillator()
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(1200, now)
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.04)
+      gain.gain.setValueAtTime(vol * 0.5, now)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06)
+      osc.connect(gain)
+      osc.start(now)
+      osc.stop(now + 0.07)
+    }
+  }, [settings.navClickSound, settings.navClickVolume, settings.navClickTone])
+
 
 
   // ── M5: SessionLogger lifecycle ────────────────────────────────────────────
@@ -203,11 +273,35 @@ export function App() {
    *   3. Regular vocabulary words → push to phrase + optional immediate speak
    */
   const handleActivate = useCallback((cellId) => {
+    // ── Contextual Response tile routing ────────────────────────────────────
+    if (cellId.startsWith('ctx-r')) {
+      const idx = parseInt(cellId.replace('ctx-r', ''), 10)
+      const text = contextualResponses[idx]
+      if (!text) return
+      routerRef.current?._dwellTimer?.reset()
+      const action = settings.contextualResponseAction ?? 'both'
+      if (action === 'push' || action === 'both') pushWord(text, cellId)
+      if (action === 'speak' || action === 'both') speak(text)
+      sessionRef.current?.recordActivation(text)
+      // Record which response was chosen (supports multiple per context)
+      window.gazeAPI?.aiHistory?.recordChoice?.(text).catch(
+        e => console.warn('[App] Failed to record AI history choice:', e)
+      )
+      return
+    }
+
     // ── TopBar button routing (dwell from TopBar) ───────────────────────────
-    if (cellId === 'topbar-home')      { goHome(); return }
-    if (cellId === 'topbar-back')      { goBack(); return }
-    if (cellId === 'topbar-backspace') { deleteWord(); return }
-    if (cellId === 'topbar-clear')     { clearPhrase(); speak('Cleared'); return }
+    if (cellId === 'topbar-home' || cellId === 'topbar-back' ||
+        cellId === 'topbar-backspace' || cellId === 'topbar-clear' ||
+        cellId === 'topbar-speak') {
+      routerRef.current?._dwellTimer.reset()
+      if (cellId === 'topbar-home')      { playNavClick(); goHome(); return }
+      if (cellId === 'topbar-back')      { playNavClick(); goBack(); return }
+      if (cellId === 'topbar-backspace') { playNavClick(); deleteWord(); return }
+      if (cellId === 'topbar-clear')     { playNavClick(); clearPhrase(); speak('Cleared'); return }
+      if (cellId === 'topbar-speak')     { speakPhrase(); return }
+    }
+
 
     const cell = activeCells.find(c => c.id === cellId)
     if (!cell) return
@@ -219,12 +313,14 @@ export function App() {
     // ── OBF action routing ──────────────────────────────────────────────────
     // cell.action is set by OBFParser from ext_gazeaac_action
     if (cell.action === 'clear' || (cell.category === 'utility' && cell.label === 'CLEAR')) {
+      playNavClick()
       clearPhrase()
       speak('Cleared')
       if (settings.autoReturnHome) goHome()
       return
     }
     if (cell.action === 'home' || (cell.category === 'utility' && cell.label === 'HOME')) {
+      playNavClick()
       goHome()
       return
     }
@@ -248,6 +344,7 @@ export function App() {
     // If the target IS the root board, call goHome() so stage masking is
     // reapplied correctly (e.g. Core 24 "it" on a sub-page links back to root).
     if (cell.loadBoardId) {
+      playNavClick()
       if (cell.addVocalization) speak(cell.label)
       if (cell.loadBoardId === rootBoardId) {
         goHome()
@@ -276,7 +373,7 @@ export function App() {
     if (activePage !== 'home' && cell.category !== 'utility' && settings.autoReturnFromSubPage) {
       setTimeout(() => goHome(), 350)
     }
-  }, [activeCells, speak, pushWord, clearPhrase, speakPhrase, navigateTo, goHome, activePage, rootBoardId, settings.autoReturnHome, settings.speakOnWord, settings.autoReturnFromSubPage])
+  }, [activeCells, speak, playNavClick, pushWord, clearPhrase, speakPhrase, navigateTo, goHome, goBack, deleteWord, activePage, rootBoardId, settings.autoReturnHome, settings.speakOnWord, settings.autoReturnFromSubPage, contextualResponses, settings.contextualResponseAction])
 
   // Keep the ref in sync with the latest handleActivate without triggering
   // any effects that depend on the router. This is the pattern that prevents
@@ -291,10 +388,6 @@ export function App() {
    *
    * @param {Array<{ id: string, x0: number, y0: number, x1: number, y1: number }>} measured
    */
-  // Keep a stable ref so the router-startup effect can trigger measurement
-  // without needing handleGridMeasured in its own dep array.
-  const measureTriggerRef = useRef(null)
-
   const handleGridMeasured = useCallback((measured) => {
     // Merge grid cells with TopBar button cells so the router
     // can hit-test both vocabularly cells AND top-bar buttons.
@@ -329,6 +422,7 @@ export function App() {
       dwellMs: settings.dwellMs,
       decayHalfLifeMs: settings.decayHalfLifeMs,   // M3
       maxDropoutMs: settings.maxDropoutMs,           // M3
+      postActivationCooldownMs: settings.postActivationCooldownMs,
       // Use a stable wrapper so the router NEVER restarts when activeCells
       // or other handleActivate deps change — the ref is always up-to-date.
       onDwell: (cellId) => handleActivateRef.current?.(cellId),
@@ -357,7 +451,13 @@ export function App() {
 
         // ── State update: throttled to ~22/sec instead of 90/sec ─────────────
         // Threshold 0.02 cuts GazeFeedbackOverlay re-renders by ~75%.
+        // IMPORTANT: always let dwellProgress===1 (the activation frame) through
+        // so the dwell ring visually completes before the timer resets.
         setGazeState(prev => {
+          if (event.dwellProgress === 1) {
+            // Activation frame — always render so the ring reaches 100%
+            return { cellId: event.cellId, dwellProgress: 1 }
+          }
           if (prev.cellId === event.cellId &&
               Math.abs(prev.dwellProgress - event.dwellProgress) < 0.02) {
             return prev
@@ -420,6 +520,83 @@ export function App() {
   useEffect(() => {
     routerRef.current?.setFilterOptions({ saccadeThreshold: settings.saccadeThreshold })
   }, [settings.saccadeThreshold])
+
+  // ── Update post-activation cooldown at runtime ─────────────────────────────
+  useEffect(() => {
+    routerRef.current?.setPostActivationCooldownMs(settings.postActivationCooldownMs)
+  }, [settings.postActivationCooldownMs])
+
+
+  // ── Mouse Hover Mode — feeds mouse position into TelemetryRouter as synthetic gaze ──
+  //
+  // When mouseHoverMode is enabled, we track the last known cursor position via
+  // mousemove and then POLL at ~60 Hz via setInterval, injecting a synthetic gaze
+  // frame on every tick — even when the mouse is stationary.
+  //
+  // WHY: The browser's mousemove event only fires when the pointer physically moves.
+  // A stationary mouse produces zero events, so DwellTimer.tick() is never called
+  // and dwell progress freezes. By polling the last known position continuously we
+  // mirror the behaviour of the Tobii IPC stream, which emits frames at ~60–90 Hz
+  // regardless of whether the user's gaze is moving or still.
+  //
+  // The eye-tracker IPC stream is NOT stopped — if real gaze data arrives it still
+  // flows through. Setting mouseHoverMode = false re-enables pure gaze.
+  useEffect(() => {
+    if (mode !== 'aac') return
+    if (!settings.mouseHoverMode) return
+
+    const router = routerRef.current
+    if (!router) return
+
+    // Last known normalised cursor position. null until first mousemove.
+    let lastPos = null
+    let insideWindow = true
+
+    const handleMouseMove = (e) => {
+      insideWindow = true
+      lastPos = {
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      }
+    }
+
+    // Mouse leave → mark as outside so the poll loop emits dropout frames
+    // until the cursor returns. This lets dwell decay cleanly when the user
+    // moves to another app or the OS taskbar.
+    const handleMouseLeave = () => {
+      insideWindow = false
+    }
+
+    const handleMouseEnter = () => {
+      insideWindow = true
+    }
+
+    // Polling loop — injects a frame at ~60 Hz using the last known position.
+    // This is what makes dwell progress while the mouse is stationary.
+    const pollInterval = setInterval(() => {
+      const ts = performance.now()
+      if (!insideWindow || lastPos === null) {
+        // Cursor is outside the window — emit a dropout so dwell decays.
+        router._handleRaw({ x: 0, y: 0, timestamp: ts, valid: false })
+      } else {
+        router._handleRaw({ ...lastPos, timestamp: ts, valid: true })
+      }
+    }, 16) // ~60 Hz — matches typical eye-tracker sample rate
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseleave', handleMouseLeave)
+    window.addEventListener('mouseenter', handleMouseEnter)
+
+    console.log('[App] Mouse Hover Mode active — polling at ~60 Hz via TelemetryRouter')
+
+    return () => {
+      clearInterval(pollInterval)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseleave', handleMouseLeave)
+      window.removeEventListener('mouseenter', handleMouseEnter)
+      console.log('[App] Mouse Hover Mode deactivated')
+    }
+  }, [mode, settings.mouseHoverMode])
 
   // ── Apply cursor size & shape to the DOM element ──────────────────────────
   // Runs outside the hot-path so there is zero cost per gaze frame.
@@ -510,6 +687,19 @@ export function App() {
     }
   }, [showSettings, showCaregiverPanel, showBoardSelector, boardEditorId])
 
+  // ── Status bar: reflect Mouse Hover Mode ──────────────────────────────────
+  useEffect(() => {
+    if (mode !== 'aac') return
+    if (showSettings || showCaregiverPanel) return  // overlay message takes priority
+    if (settings.mouseHoverMode) {
+      const isRealTracker = window.gazeAPI?.trackerMode === 'tobii'
+      setStatusMsg(isRealTracker
+        ? 'Mouse Hover Mode active (alongside eye tracker)'
+        : 'Mouse hover active — no eye tracker detected')
+    }
+  }, [mode, settings.mouseHoverMode, showSettings, showCaregiverPanel])
+
+
   return (
     <div className="app">
       {/* ── Frameless title bar ────────────────────────────────────────── */}
@@ -562,6 +752,13 @@ export function App() {
                 >
                   📋 Board Settings
                 </button>
+                <button
+                  className="app__gear-popover-item"
+                  role="menuitem"
+                  onClick={() => { openSettings('contextual'); setShowGearPopover(false) }}
+                >
+                  🧠 Contextual Response
+                </button>
                 <div className="app__gear-popover-divider" />
                 <button
                   className="app__gear-popover-item"
@@ -593,7 +790,7 @@ export function App() {
       </header>
 
       {/* ── Main content area ─────────────────────────────────────────── */}
-      <main className="app__main">
+      <main className={`app__main${settings.contextualResponseEnabled ? ' app__main--contextual' : ''}`}>
 
         {/* Global gaze cursor — always rendered; position updated via direct DOM
              mutation in onGaze/startStream callbacks so no React render cycle
@@ -619,6 +816,24 @@ export function App() {
 
         {mode === 'aac' && (
           <>
+            {/* ── Contextual Response context window (above TopBar) ── */}
+            {settings.contextualResponseEnabled && (
+              <ContextWindow
+                onResponsesGenerated={({ responses, activeModel }) => {
+                  setContextualResponses(responses)
+                  setContextualActiveModel(activeModel)
+                }}
+                count={settings.contextualResponseCount ?? 9}
+                minCount={settings.contextualResponseMinCount ?? 2}
+                backend={settings.contextualResponseModel ?? 'ollama'}
+                ollamaModel={settings.contextualOllamaModel ?? 'llama3.2'}
+                ollamaVisionModel={settings.contextualOllamaVisionModel ?? 'llava'}
+                promptPrefix={settings.contextualPromptPrefix ?? ''}
+                lifeLore={settings.contextualLifeLore ?? ''}
+                systemPrompt={settings.contextualSystemPrompt ?? ''}
+              />
+            )}
+
             {/* TopBar: Home/Back/Phrase/Backspace/Clear/Sidebar */}
             <TopBar
               topBarGazeState={{
@@ -646,13 +861,23 @@ export function App() {
             {/* Gaze cursor dot is now rendered globally above — hidden here in AAC mode
                 when feedbackPattern owns the cursor, or when showGazeCursor is off */}
 
-            {/* Vocabulary grid */}
-            <GridRenderer
-              gazeState={gazeState}
-              onActivate={handleActivate}
-              onGridMeasured={handleGridMeasured}
-              onMeasureTriggerReady={(fn) => { measureTriggerRef.current = fn }}
-            />
+            {/* Vocabulary grid OR contextual response tiles */}
+            {settings.contextualResponseEnabled ? (
+              <ContextualResponseGrid
+                responses={contextualResponses}
+                gazeState={gazeState}
+                onActivate={handleActivate}
+                onGridMeasured={handleGridMeasured}
+                onMeasureTriggerReady={(fn) => { measureTriggerRef.current = fn }}
+              />
+            ) : (
+              <GridRenderer
+                gazeState={gazeState}
+                onActivate={handleActivate}
+                onGridMeasured={handleGridMeasured}
+                onMeasureTriggerReady={(fn) => { measureTriggerRef.current = fn }}
+              />
+            )}
           </>
         )}
       </main>

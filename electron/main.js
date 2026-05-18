@@ -49,6 +49,39 @@ const STORE_DEFAULTS = {
   symbolScale: 2.0,
   symbolOnTop: false,
   gridFontColor: '#ffffff',
+  // Navigation click sound
+  navClickSound: false,
+  navClickVolume: 0.35,
+  navClickTone: 'soft',
+  // Input method — true means mouse hover drives dwell when no eye tracker is found
+  mouseHoverMode: true,
+  // Contextual Response board
+  contextualResponseEnabled: false,
+  contextualResponseModel: 'ollama',
+  contextualOllamaModel: 'llama3.2',
+  contextualOllamaVisionModel: 'llava',
+  contextualResponseCount: 3,
+  contextualResponseAction: 'both',
+  // Life Lore, Prompt Prefix & System Prompt
+  contextualPromptPrefix: `You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of the [User Name].
+Your job is to suggest between 2 and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say.
+Vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+Example: ["I want to play!", "Can we call Daddy?", "Not now, please"]
+Prioritize the usefulness of the responses.
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A OR CHOICE B, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) BOTH, 4) NONE.`,
+  contextualLifeLore: '',
+  contextualSystemPrompt: '',      // Fully custom system prompt body; empty = use built-in default
+  // AI Interaction History — persisted Q&A pairs that prime the model over time
+  // Each entry: { context: string, responses: string[], chosen?: string, savedAt: number }
+  aiHistory: [],
+  // User profile embedded into every AI system prompt
+  userProfile: {
+    name:     'Caden Chye',
+    age:      9,
+    location: 'Singapore',
+    family:   { father: 'James', mother: 'Venus' },
+  },
 }
 
 
@@ -235,7 +268,7 @@ ipcMain.on('ipc:gaze-stream-start', async (event) => {
   await gazeEmitter.start()
 
   // Inform the renderer which tracker source is active (resolved after start)
-  const trackerMode = TobiiGazeProvider.isAvailable() ? 'tobii' : 'mock'
+  const trackerMode = TobiiGazeProvider.isAvailable() ? 'tobii' : 'mouse'
   if (event.sender && !event.sender.isDestroyed()) {
     event.sender.send('ipc:tracker-mode', trackerMode)
   }
@@ -394,6 +427,97 @@ ipcMain.handle('ipc:session-log-clear', () => {
     return { ok: true }
   }
   return { ok: false }
+})
+
+// ─── AI History IPC Handlers ──────────────────────────────────────────────────
+// Stores context+response pairs so the model learns Caden's communication
+// patterns over time. Capped at 200 entries (≈ 3–6 months of daily use).
+
+/**
+ * ipc:ai-history-append
+ * Save one context → responses interaction to the persistent history log.
+ * @param {{ context: string, responses: string[], chosen?: string }} entry
+ */
+ipcMain.handle('ipc:ai-history-append', (_event, entry) => {
+  if (!store) return { ok: false }
+  const history = store.get('aiHistory', [])
+  history.push({ ...entry, savedAt: Date.now() })
+  const trimmed = history.slice(-200) // keep most-recent 200
+  store.set('aiHistory', trimmed)
+  return { ok: true, total: trimmed.length }
+})
+
+/**
+ * ipc:ai-history-get
+ * Returns the full interaction history array.
+ */
+ipcMain.handle('ipc:ai-history-get', () => {
+  return store ? store.get('aiHistory', []) : []
+})
+
+/**
+ * ipc:ai-history-clear
+ * Wipes the AI interaction history (useful for privacy / reset).
+ */
+ipcMain.handle('ipc:ai-history-clear', () => {
+  if (store) {
+    store.set('aiHistory', [])
+    return { ok: true }
+  }
+  return { ok: false }
+})
+
+/**
+ * ipc:ai-history-delete
+ * Removes a single history entry identified by its savedAt timestamp.
+ * @param {number} savedAt — The savedAt timestamp of the entry to remove
+ */
+ipcMain.handle('ipc:ai-history-delete', (_event, savedAt) => {
+  if (!store) return { ok: false }
+  const history = store.get('aiHistory', [])
+  const filtered = history.filter(h => h.savedAt !== savedAt)
+  store.set('aiHistory', filtered)
+  return { ok: true, total: filtered.length }
+})
+
+/**
+ * ipc:ai-history-record-choice
+ * Appends a chosen response text to the most recent history entry.
+ * Supports multiple choices per context (chosen is stored as string[]).
+ * @param {string} chosenText — The text the user selected
+ */
+ipcMain.handle('ipc:ai-history-record-choice', (_event, chosenText) => {
+  if (!store) return { ok: false }
+  const history = store.get('aiHistory', [])
+  if (!history.length) return { ok: false, reason: 'no history' }
+  const last = history[history.length - 1]
+  const current = Array.isArray(last.chosen) ? last.chosen
+    : (last.chosen ? [last.chosen] : [])
+  if (!current.includes(chosenText)) current.push(chosenText)
+  last.chosen = current
+  store.set('aiHistory', history)
+  return { ok: true }
+})
+
+/**
+ * ipc:user-profile-get
+ * Returns the stored user profile for Caden (or the defaults).
+ */
+ipcMain.handle('ipc:user-profile-get', () => {
+  return store ? store.get('userProfile', STORE_DEFAULTS.userProfile) : STORE_DEFAULTS.userProfile
+})
+
+/**
+ * ipc:user-profile-set
+ * Persists updates to Caden's profile (name, age, family, location).
+ * @param {object} profile – Partial or full profile object
+ */
+ipcMain.handle('ipc:user-profile-set', (_event, profile) => {
+  if (!store) return { ok: false }
+  const current = store.get('userProfile', STORE_DEFAULTS.userProfile)
+  const updated = { ...current, ...profile }
+  store.set('userProfile', updated)
+  return { ok: true, profile: updated }
 })
 
 /**
@@ -565,6 +689,14 @@ app.whenReady().then(async () => {
   await initStore()       // Initialize electron-store before opening the window
   await loadAACBoards()  // Pre-load all .obz files from AACBoards/
   _ensureTtsProcess()    // Pre-warm native TTS so first word has no startup lag
+
+  // Allow microphone and camera in the renderer (required for ContextWindow)
+  const { session } = await import('electron')
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
+    const allowed = ['media', 'microphone', 'camera', 'audioCapture', 'videoCapture']
+    callback(allowed.includes(permission))
+  })
+
   createWindow()
 })
 

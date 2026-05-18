@@ -398,3 +398,40 @@
   padding: 0.1rem 0.4rem;
   letter-spacing: 0.02em;
 }
+
+/* Loading Button State */
+.bsel__btn--loading {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bsel__btn--loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--progress, 0%);
+  background: rgba(56, 189, 248, 0.25);
+  transition: width 0.2s ease-out;
+  z-index: 1;
+}
+
+.bsel__loading-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.bsel__counter {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+  font-size: 0.9em;
+}
+

@@ -21,7 +21,7 @@
  *   x, y – normalized [0, 1], origin top-left
  */
 
-import { MockGazeEmitter } from './MockGazeEmitter.js'
+// MockGazeEmitter import removed — mouse hover mode is the designated fallback
 import { spawn }           from 'child_process'
 import { join, resolve }   from 'path'
 import { fileURLToPath }   from 'url'
@@ -84,9 +84,8 @@ export class TobiiGazeProvider {
       console.log('[TobiiGazeProvider] Started using real Tobii hardware (Python bridge)')
     } else {
       _sdkAvailable = false
-      this._impl = new MockGazeEmitter(this._onData)
-      this._impl.start()
-      console.log('[TobiiGazeProvider] Started using MockGazeEmitter (bridge unavailable)')
+      this._impl = null  // No mock — renderer will use mouse hover mode instead
+      console.log('[TobiiGazeProvider] Bridge unavailable — staying idle (mouse hover mode will take over)')
     }
   }
 

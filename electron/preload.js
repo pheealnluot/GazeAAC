@@ -197,5 +197,79 @@ contextBridge.exposeInMainWorld('gazeAPI', {
     clearAll() {
       return ipcRenderer.invoke('ipc:board-edits-clear-all')
     }
+  },
+
+  /**
+   * AI Interaction History — persists context → response pairs so the model
+   * learns Caden's communication patterns over time.
+   * Backed by electron-store, capped at 200 entries.
+   */
+  aiHistory: {
+    /**
+     * Append one context → responses interaction to the persistent log.
+     * @param {{ context: string, responses: string[], chosen?: string }} entry
+     * @returns {Promise<{ ok: boolean, total: number }>}
+     */
+    append(entry) {
+      return ipcRenderer.invoke('ipc:ai-history-append', entry)
+    },
+
+    /**
+     * Retrieve the full AI interaction history array.
+     * @returns {Promise<Array<{ context: string, responses: string[], chosen?: string[], savedAt: number }>>}
+     */
+    getAll() {
+      return ipcRenderer.invoke('ipc:ai-history-get')
+    },
+
+    /**
+     * Clear all stored AI interaction history.
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    clear() {
+      return ipcRenderer.invoke('ipc:ai-history-clear')
+    },
+
+    /**
+     * Delete a single history entry by its savedAt timestamp.
+     * @param {number} savedAt
+     * @returns {Promise<{ ok: boolean, total: number }>}
+     */
+    delete(savedAt) {
+      return ipcRenderer.invoke('ipc:ai-history-delete', savedAt)
+    },
+
+    /**
+     * Record a chosen response on the most recent history entry.
+     * Multiple choices per context are supported (stored as string[]).
+     * @param {string} chosenText
+     * @returns {Promise<{ ok: boolean }>}
+     */
+    recordChoice(chosenText) {
+      return ipcRenderer.invoke('ipc:ai-history-record-choice', chosenText)
+    }
+  },
+
+  /**
+   * Caden's user profile — stored persistently and injected into every
+   * AI system prompt so responses stay age-appropriate and personalised.
+   */
+  userProfile: {
+    /**
+     * Retrieve the stored user profile.
+     * @returns {Promise<{ name: string, age: number, location: string, family: { father: string, mother: string } }>}
+     */
+    get() {
+      return ipcRenderer.invoke('ipc:user-profile-get')
+    },
+
+    /**
+     * Persist updates to the user profile.
+     * @param {object} profile  Partial or full profile object
+     * @returns {Promise<{ ok: boolean, profile: object }>}
+     */
+    set(profile) {
+      return ipcRenderer.invoke('ipc:user-profile-set', profile)
+    }
   }
 })

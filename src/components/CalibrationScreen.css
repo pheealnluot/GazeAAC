@@ -11,7 +11,11 @@
   background: var(--color-bg-base);
   padding: var(--space-xl);
   box-sizing: border-box;
+  /* Span both rows of app__main's 2-row CSS grid so calibration fills the
+     full available area (row 1 = topbar height, row 2 = grid height) */
+  grid-row: 1 / -1;
 }
+
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
 .calibration-screen__header {

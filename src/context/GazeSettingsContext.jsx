@@ -9,10 +9,14 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
  * persistent store; every change is written back asynchronously.
  *
  * Available settings:
- *   dwellMs           – Dwell activation threshold (default 800 ms)
- *   dropoutCushionMs  – Legacy blink recovery window (unused in M3 decay engine)
- *   decayHalfLifeMs   – Exponential decay half-life during dropout (default 200 ms)
- *   maxDropoutMs      – Hard-reset ceiling after continuous dropout (default 500 ms)
+ *   dwellMs                  – Dwell activation threshold (default 800 ms)
+ *   dropoutCushionMs         – Legacy blink recovery window (unused in M3 decay engine)
+ *   decayHalfLifeMs          – Exponential decay half-life during dropout (default 200 ms)
+ *   maxDropoutMs             – Hard-reset ceiling after continuous dropout (default 500 ms)
+ *   postActivationCooldownMs – After a cell fires, gaze must leave that cell for this
+ *                              many ms before dwell can restart on it. Prevents accidental
+ *                              re-activation when gaze stays or returns to the same box.
+ *                              (default 10 ms)
  *   processNoise      – Kalman Q parameter (default 0.012)
  *   measurementNoise  – Kalman R parameter (default 0.07)
  *   saccadeThreshold  – Normalised jump distance [0–1] that triggers Kalman
@@ -38,6 +42,25 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
  * Milestone 5 additions:
  *   caregiverPin      – 4-digit PIN string protecting the Caregiver Panel (default '0000')
  *   customVocabIds    – Array of cell ID strings for Stage 1 Custom Vocab List (default [])
+ *
+ * Navigation sound additions:
+ *   navClickSound     – Play a discreet click sound when any non-word button fires
+ *                       (Home, Back, Backspace, Clear, layer-1 nav cells). (default false)
+ *   navClickVolume    – Volume of the navigation click sound (0.0–1.0, default 0.35)
+ *   navClickTone      – Timbre of the click: 'soft' | 'tick' | 'pop' (default 'soft')
+ *
+ * Input method additions:
+ *   mouseHoverMode    – Use mouse cursor position as a proxy gaze input (for Mill Mouse
+ *                       or any setup where direct eye-gaze hardware is unavailable).
+ *                       When enabled, the mouse cursor drives dwell activation instead
+ *                       of the eye-tracker stream. (default false)
+ *
+ * Answer Gate:
+ *   answerGateMs      – When > 0, newly generated response tiles are rendered as
+ *                       unselectable. Each tile requires the user to hover/gaze on it
+ *                       for this many ms before it unlocks for selection. A horizontal
+ *                       progress bar on the tile fills during hover to show progress.
+ *                       0 = gate disabled (tiles are immediately selectable). (default 0)
  */
 
 export const DEFAULT_SETTINGS = {
@@ -45,6 +68,7 @@ export const DEFAULT_SETTINGS = {
   dropoutCushionMs: 120,
   decayHalfLifeMs: 200,
   maxDropoutMs: 500,
+  postActivationCooldownMs: 10,
   processNoise: 0.012,
   measurementNoise: 0.07,
   saccadeThreshold: 0.10,
@@ -76,6 +100,32 @@ export const DEFAULT_SETTINGS = {
   symbolScale: 2.0,              // Relative symbol/image size multiplier (0.5–5.0)
   symbolOnTop: false,            // When true, symbol/image appears above the text label
   gridFontColor: '#ffffff',      // Default text colour for grid buttons (overridden by OBF foreground_color)
+  // Navigation click sound
+  navClickSound: false,          // Play a discreet click for nav/utility button activations
+  navClickVolume: 0.35,          // Volume of the navigation click (0.0–1.0)
+  navClickTone: 'soft',          // Timbre: 'soft' | 'tick' | 'pop'
+  // Input method
+  mouseHoverMode: true,
+  // Answer Gate — reading delay before response tiles become selectable
+  answerGateMs: 0,             // 0 = off; 1–30000 ms = gate duration per tile
+  // Contextual Response board
+  contextualResponseEnabled: false,   // Show the Contextual Response board mode
+  contextualResponseModel: 'ollama',  // AI backend: 'ollama' | 'window-ai'
+  contextualOllamaModel: 'llama3.2',  // Ollama text model name
+  contextualOllamaVisionModel: 'llava', // Ollama vision model (used when image captured)
+  contextualResponseMinCount: 2,      // Min suggestions the AI must generate (slider: 2–9)
+  contextualResponseCount: 9,         // Max suggestions the AI may generate (slider: 2–9)
+  contextualResponseAction: 'both',   // On selection: 'speak' | 'push' | 'both'
+  // Life Lore, Prompt Prefix & System Prompt
+  contextualPromptPrefix: `You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of the [User Name].
+Your job is to suggest between 2 and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say.
+Vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+Example: ["I want to play!", "Can we call Daddy?", "Not now, please"]
+Prioritize the usefulness of the responses.
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A OR CHOICE B, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) BOTH, 4) NONE.`,
+  contextualLifeLore: '',             // Background facts about the user (injected as context data)
+  contextualSystemPrompt: '',         // Fully custom system prompt body; empty = use built-in default
 }
 
 const GazeSettingsContext = createContext(null)
@@ -95,9 +145,18 @@ export function GazeSettingsProvider({ children }) {
 
     api.getAll().then((stored) => {
       if (stored && typeof stored === 'object') {
+        // ── Migration: if the stored promptPrefix is still the old empty string,
+        //    replace it with the new default so users don't have to manually reset.
+        const migrated = { ...stored }
+        if (!migrated.contextualPromptPrefix) {
+          migrated.contextualPromptPrefix = DEFAULT_SETTINGS.contextualPromptPrefix
+          // Write the corrected value back to the store immediately
+          api.set('contextualPromptPrefix', migrated.contextualPromptPrefix).catch(() => {})
+          console.log('[GazeSettingsContext] Migrated empty contextualPromptPrefix → new default')
+        }
         // Merge stored values over defaults (forward-compat: new keys use defaults)
-        setSettings(prev => ({ ...prev, ...stored }))
-        console.log('[GazeSettingsContext] Hydrated from electron-store:', stored)
+        setSettings(prev => ({ ...prev, ...migrated }))
+        console.log('[GazeSettingsContext] Hydrated from electron-store:', migrated)
       }
       setStoreReady(true)
     }).catch((err) => {

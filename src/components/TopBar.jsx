@@ -114,11 +114,9 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
       </div>
 
       {/* ── Phrase / word-chip bar ────────────────────────────── */}
-      <button
+      <div
         className="top-bar__phrase"
-        aria-label={words.length === 0 ? 'Phrase bar empty — activate words to speak' : `Speak phrase: ${phraseText}`}
-        title={phraseText || 'Phrase bar'}
-        onClick={speakPhrase}
+        aria-label={words.length === 0 ? 'Phrase bar empty' : phraseText}
         aria-live="polite"
       >
         <div className="top-bar__chips" aria-hidden="true">
@@ -139,10 +137,22 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
           )}
           <span ref={chipsEndRef} className="top-bar__scroll-anchor" />
         </div>
-        {words.length > 0 && (
-          <span className="top-bar__speak-hint" aria-hidden="true">▶ Speak</span>
-        )}
-      </button>
+      </div>
+
+      {/* ── Speak button ──────────────────────────────────────── */}
+      <DwellNavButton
+        id="topbar-speak"
+        className="top-bar__nav-btn top-bar__nav-btn--speak"
+        aria-label="Speak phrase"
+        title="Speak"
+        onClick={speakPhrase}
+        isGazed={gazedId === 'topbar-speak'}
+        dwellProgress={gazedId === 'topbar-speak' ? dwellProgress : 0}
+        opacity={opacity}
+      >
+        <span className="top-bar__nav-icon" aria-hidden="true">▶</span>
+        <span className="top-bar__nav-label">Speak</span>
+      </DwellNavButton>
 
       {/* ── Action buttons (backspace + clear) ───────────────── */}
       <div className="top-bar__actions">

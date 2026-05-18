@@ -83,11 +83,24 @@
 .app__main {
   flex: 1;
   overflow: hidden;
+  /* min-width: 0 prevents grid children from overflowing the flex column */
+  min-width: 0;
   /* 2-row grid: TopBar (1fr) + vocabulary grid (7fr).
      Each "fr" is the same size as one grid cell row, so the TopBar
      always matches the height of a single grid cell. */
   display: grid;
   grid-template-rows: 1fr 7fr;
+  /* Columns must also be constrained so the grid track never exceeds 100vw */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ── Contextual Response layout: context window above TopBar ─────────── */
+/* 3-row grid:
+     Row 1 — ContextWindow (25% of content area)
+     Row 2 — TopBar        (1fr ≈ one vocabulary cell height)
+     Row 3 — Response grid (remaining ~75%) */
+.app__main--contextual {
+  grid-template-rows: 1.6fr 1fr 6fr;
 }
 
 /* ── Speech output bar ───────────────────────────────────────────────── */

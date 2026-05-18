@@ -47,17 +47,18 @@ export function PhraseProvider({ children }) {
     const text = words.map(t => t.word).join(' ')
     if (!text) return
 
-    if ('speechSynthesis' in window) {
-      // Cancel any currently-speaking utterance first
+    // Route through native IPC → PowerShell SAPI (SpeakAsync) so the
+    // renderer thread is never blocked.  Falls back to Web Speech API
+    // only when running outside Electron (e.g. browser dev mode).
+    if (window.gazeAPI?.speak) {
+      window.gazeAPI.speak(text)
+    } else if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel()
       const utter = new SpeechSynthesisUtterance(text)
       utter.rate = 0.9
       utter.pitch = 1.05
       window.speechSynthesis.speak(utter)
     }
-
-    // Also notify main process (future native TTS hook)
-    window.gazeAPI?.speak(text)
   }, [words])
 
   return (

@@ -26,12 +26,13 @@ import { DwellTimer } from './DwellTimer.js'
  */
 export class TelemetryRouter {
   /**
-   * @param {{\n   *   filterOptions?:    ConstructorParameters<typeof KalmanFilter>[0],
-   *   dwellMs?:          number,
-   *   decayHalfLifeMs?:  number,   ← M3: decay half-life during dropout (ms)
-   *   maxDropoutMs?:     number,   ← M3: hard-reset ceiling (ms)
-   *   onDwell:           (cellId: string) => void,
-   *   onGaze?:           (event: GazeEvent) => void,
+   * @param {{\n   *   filterOptions?:            ConstructorParameters<typeof KalmanFilter>[0],
+   *   dwellMs?:                  number,
+   *   decayHalfLifeMs?:          number,   ← M3: decay half-life during dropout (ms)
+   *   maxDropoutMs?:             number,   ← M3: hard-reset ceiling (ms)
+   *   postActivationCooldownMs?: number,   ← cooldown: gaze must leave cell for this long before re-dwell
+   *   onDwell:                   (cellId: string) => void,
+   *   onGaze?:                   (event: GazeEvent) => void,
    * }} options
    *
    * GazeEvent shape:
@@ -43,14 +44,24 @@ export class TelemetryRouter {
     dwellMs = 800,
     decayHalfLifeMs = 200,
     maxDropoutMs = 500,
+    postActivationCooldownMs = 10,
     onDwell,
     onGaze
   } = {}) {
     this._filter = new KalmanFilter(filterOptions)
-    this._dwellTimer = new DwellTimer({ dwellMs, onDwell })
+    this._dwellTimer = new DwellTimer({ dwellMs, onDwell: (cellId) => this._onDwellInternal(cellId) })
     this._decayHalfLifeMs = decayHalfLifeMs
     this._maxDropoutMs = maxDropoutMs
+    this._postActivationCooldownMs = postActivationCooldownMs
+    this._onDwellExternal = onDwell
     this._onGaze = onGaze ?? null
+
+    // Post-activation cooldown state
+    // After a cell fires, gaze must leave it for _postActivationCooldownMs before
+    // the same cell can accumulate dwell again.
+    this._lastActivatedCellId  = null  // cell that most recently fired
+    this._lastActivatedTime    = null  // wall-clock ms when it fired
+    this._leftActivatedCellAt  = null  // timestamp when gaze first moved off the activated cell
 
     // HitTest registry: set externally via registerGrid()
     this._cells = []           // Array<{ id, x0, y0, x1, y1 }> in normalized coords
@@ -61,12 +72,30 @@ export class TelemetryRouter {
     this._lastFilteredPos = null
     this._lastDwellProgress = 0     // progress snapshot at dropout onset
 
+    // Flag set by _onDwellInternal during the same synchronous tick() call.
+    // Lets _handleRaw emit dwellProgress=1 on the exact activation frame,
+    // even if handleActivate resets the timer before getProgress() is called.
+    this._dwellFiredThisTick = false
+
     // Stream subscription handle
     this._running = false
 
     // Board-active guard — when false, hit-testing and dwell are frozen.
     // The gaze cursor continues to update so the overlay still renders.
     this._paused = false
+  }
+
+  // ─── Internal dwell callback (wraps external onDwell with cooldown book-keeping) ─
+  _onDwellInternal(cellId) {
+    // Mark that dwell fired during this tick BEFORE calling the external handler.
+    // handleActivate will call _dwellTimer.reset() synchronously, so
+    // getProgress() would return 0 if we checked after tick() returns.
+    // _handleRaw reads this flag to emit dwellProgress=1 on the activation frame.
+    this._dwellFiredThisTick = true
+    this._lastActivatedCellId = cellId
+    this._lastActivatedTime   = performance.now()
+    this._leftActivatedCellAt = null   // gaze is still ON the cell at fire time
+    this._onDwellExternal?.(cellId)
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────────
@@ -135,6 +164,14 @@ export class TelemetryRouter {
    */
   setMaxDropoutMs(ms) {
     this._maxDropoutMs = ms
+  }
+
+  /**
+   * Update the post-activation cooldown window at runtime.
+   * @param {number} ms
+   */
+  setPostActivationCooldownMs(ms) {
+    this._postActivationCooldownMs = ms
   }
 
   /**
@@ -207,13 +244,46 @@ export class TelemetryRouter {
     this._lastFilteredPos = filtered
 
     // Stage 2: Hit-test – find which cell the filtered gaze falls within
-    const cellId = this._hitTest(filtered.x, filtered.y)
+    const rawCellId = this._hitTest(filtered.x, filtered.y)
+
+    // Stage 2b: Post-activation cooldown gate.
+    // After a cell fires, gaze must move off that cell for at least
+    // _postActivationCooldownMs before the same cell can accumulate dwell again.
+    let cellId = rawCellId
+    if (this._lastActivatedCellId !== null) {
+      if (rawCellId !== this._lastActivatedCellId) {
+        // Gaze has moved OFF the activated cell
+        if (this._leftActivatedCellAt === null) {
+          // Record the first moment gaze left the cell
+          this._leftActivatedCellAt = timestamp
+        }
+        const awayMs = timestamp - this._leftActivatedCellAt
+        if (awayMs >= this._postActivationCooldownMs) {
+          // Cooldown satisfied — clear the lock
+          this._lastActivatedCellId = null
+          this._leftActivatedCellAt = null
+        }
+        // cellId is a different cell (or null) — allow normal dwell on it
+      } else {
+        // Gaze is still ON the activated cell — suppress dwell accumulation
+        this._leftActivatedCellAt = null   // reset "away" timer; gaze came back
+        cellId = null
+      }
+    }
 
     // Stage 3: Dwell accumulation
+    // Reset the per-tick fire flag before calling tick() so _onDwellInternal
+    // can set it if the threshold is crossed on this exact frame.
+    this._dwellFiredThisTick = false
     this._dwellTimer.tick(cellId, timestamp)
 
-    // Snapshot current progress for use during the next dropout window
-    const dwellProgress = this._dwellTimer.getProgress(cellId, timestamp)
+    // If _onDwellInternal fired during tick(), emit 1.0 so the ring visually
+    // completes for this frame — even though handleActivate has already called
+    // _dwellTimer.reset(), which would make getProgress() return 0.
+    const dwellProgress = this._dwellFiredThisTick
+      ? 1
+      : this._dwellTimer.getProgress(cellId, timestamp)
+
     this._lastDwellProgress = dwellProgress
 
     // Stage 4: Emit GazeEvent to listeners (e.g., cursor overlay)
@@ -221,7 +291,7 @@ export class TelemetryRouter {
       this._onGaze({
         raw: { x, y },
         filtered,
-        cellId,
+        cellId: rawCellId,   // always report raw hit for cursor/highlight rendering
         timestamp,
         dwellProgress
       })

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useAACBoards } from '@context/AACBoardContext'
 import './BoardSelector.css'
@@ -110,6 +110,26 @@ export function BoardSelector({ open, onClose, onEdit }) {
 // ─── Board Card ───────────────────────────────────────────────────────────────
 
 function BoardCard({ entry, isActive, isLoadingThis, onSelect, onEdit }) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    let interval;
+    if (isLoadingThis) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress(p => {
+          // Asymptotic progress: quickly up to 80, then slower
+          if (p < 50) return p + Math.floor(Math.random() * 15) + 5;
+          if (p < 80) return p + Math.floor(Math.random() * 5) + 2;
+          if (p < 95) return p + 1;
+          return p;
+        });
+      }, 200);
+    } else {
+      setProgress(100);
+    }
+    return () => clearInterval(interval);
+  }, [isLoadingThis]);
   // Sample the first few buttons from the root board for the thumbnail
   const thumbCells = useMemo(() => {
     const board = entry.boardSet?.boards?.get(entry.rootId)
@@ -183,12 +203,18 @@ function BoardCard({ entry, isActive, isLoadingThis, onSelect, onEdit }) {
       {/* Actions */}
       <div className="bsel__card-actions">
         <button
-          className={`bsel__btn ${isActive ? 'bsel__btn--active' : 'bsel__btn--primary'}`}
+          className={`bsel__btn ${isActive ? 'bsel__btn--active' : 'bsel__btn--primary'} ${isLoadingThis ? 'bsel__btn--loading' : ''}`}
           onClick={onSelect}
           disabled={isLoadingThis}
           aria-label={`Select board ${entry.name}`}
+          style={isLoadingThis ? { '--progress': `${progress}%` } : undefined}
         >
-          {isLoadingThis ? '⏳ Loading…' : isActive ? '✓ Selected' : entry.loaded ? '▶ Select' : '⬇ Load & Select'}
+          {isLoadingThis ? (
+            <div className="bsel__loading-content">
+              <span>⏳ Loading…</span>
+              <span className="bsel__counter">{progress}%</span>
+            </div>
+          ) : isActive ? '✓ Selected' : entry.loaded ? '▶ Select' : '⬇ Load & Select'}
         </button>
         <button
           className="bsel__btn bsel__btn--outline"
