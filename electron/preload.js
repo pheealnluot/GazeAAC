@@ -27,6 +27,14 @@ ipcRenderer.on('ipc:tracker-mode', (_event, mode) => {
 
 contextBridge.exposeInMainWorld('gazeAPI', {
   /**
+   * Retrieve the current app version from package.json.
+   * @returns {Promise<string>}
+   */
+  getVersion() {
+    return ipcRenderer.invoke('ipc:get-app-version')
+  },
+
+  /**
    * Start the gaze data stream.
    * @param {(gazePoint: { x: number, y: number, timestamp: number, valid: boolean }) => void} callback
    */
@@ -39,6 +47,17 @@ contextBridge.exposeInMainWorld('gazeAPI', {
     _gazeDataListener = (_event, gazePoint) => callback(gazePoint)
     ipcRenderer.on('ipc:gaze-data', _gazeDataListener)
     ipcRenderer.send('ipc:gaze-stream-start')
+  },
+
+  /**
+   * Register a callback for tracker mode changes.
+   * Returns an unsubscribe function.
+   * @param {(mode: 'tobii'|'mouse'|'mock') => void} callback
+   */
+  onTrackerModeChange(callback) {
+    const handler = (_event, mode) => callback(mode)
+    ipcRenderer.on('ipc:tracker-mode', handler)
+    return () => ipcRenderer.removeListener('ipc:tracker-mode', handler)
   },
 
   /**
@@ -60,6 +79,42 @@ contextBridge.exposeInMainWorld('gazeAPI', {
    */
   speak(text) {
     return ipcRenderer.invoke('ipc:tts-speak', text)
+  },
+
+  /**
+   * Register a callback for TTS completed events.
+   * Returns an unsubscribe function.
+   * @param {() => void} callback
+   */
+  onTtsCompleted(callback) {
+    const handler = (_event) => callback()
+    ipcRenderer.on('ipc:tts-completed', handler)
+    return () => ipcRenderer.removeListener('ipc:tts-completed', handler)
+  },
+
+  /**
+   * Native TTS utilities.
+   */
+  tts: {
+    /**
+     * Enumerate installed Windows SAPI voices.
+     * Returns an array of { name, gender, age, culture, engine } objects.
+     * @returns {Promise<Array<{ name: string, gender: string, age: string, culture: string, engine: string }>>}
+     */
+    listVoices() {
+      return ipcRenderer.invoke('ipc:tts-list-voices', 'sapi')
+    },
+
+    /**
+     * Enumerate installed voices for the given TTS engine.
+     * engine: 'sapi' | 'winrt'
+     * 'winrt' surfaces Natural / OneCore / Azure Edge-Powered voices.
+     * @param {'sapi'|'winrt'} engine
+     * @returns {Promise<Array<{ name: string, gender: string, age: string, culture: string, engine: string }>>}
+     */
+    listVoicesByEngine(engine) {
+      return ipcRenderer.invoke('ipc:tts-list-voices', engine)
+    }
   },
 
   /**
@@ -201,7 +256,7 @@ contextBridge.exposeInMainWorld('gazeAPI', {
 
   /**
    * AI Interaction History — persists context → response pairs so the model
-   * learns Caden's communication patterns over time.
+   * learns Johnny's communication patterns over time.
    * Backed by electron-store, capped at 200 entries.
    */
   aiHistory: {
@@ -251,7 +306,7 @@ contextBridge.exposeInMainWorld('gazeAPI', {
   },
 
   /**
-   * Caden's user profile — stored persistently and injected into every
+   * Johnny's user profile — stored persistently and injected into every
    * AI system prompt so responses stay age-appropriate and personalised.
    */
   userProfile: {
@@ -271,5 +326,104 @@ contextBridge.exposeInMainWorld('gazeAPI', {
     set(profile) {
       return ipcRenderer.invoke('ipc:user-profile-set', profile)
     }
+  },
+
+  /**
+   * In-app gaze calibration correction — a lightweight offset+scale
+   * transform applied on top of Tobii's hardware calibration.
+   * Persisted in electron-store across sessions.
+   */
+  gazeCorrection: {
+    /** Retrieve the stored correction transform. */
+    get() {
+      return ipcRenderer.invoke('ipc:gaze-correction-get')
+    },
+    /** Persist a new correction transform. */
+    set(correction) {
+      return ipcRenderer.invoke('ipc:gaze-correction-set', correction)
+    },
+    /** Clear the correction (revert to raw Tobii pass-through). */
+    reset() {
+      return ipcRenderer.invoke('ipc:gaze-correction-reset')
+    },
+    /** Clear the correction (alias for reset). */
+    clear() {
+      return ipcRenderer.invoke('ipc:gaze-correction-reset')
+    },
+  },
+
+  /**
+   * Native Windows SAPI speech-to-text.
+   * Works fully offline via System.Speech.Recognition in a PowerShell child process.
+   */
+  mic: {
+    /** Start the SAPI STT engine. Transcripts are delivered via onTranscript(). */
+    start() {
+      return ipcRenderer.invoke('ipc:mic-start')
+    },
+    /** Stop the SAPI STT engine. */
+    stop() {
+      return ipcRenderer.invoke('ipc:mic-stop')
+    },
+    /** Trigger Windows Voice Typing (Win+H) */
+    triggerVoiceTyping(desiredState) {
+      return ipcRenderer.invoke('ipc:trigger-voice-typing', desiredState)
+    },
+    /**
+     * Register a callback for incoming transcript strings.
+     * Returns an unsubscribe function.
+     * @param {(text: string) => void} callback
+     */
+    onTranscript(callback) {
+      const handler = (_event, text) => callback(text)
+      ipcRenderer.on('ipc:mic-transcript', handler)
+      return () => ipcRenderer.removeListener('ipc:mic-transcript', handler)
+    },
+    /** Called once when the SAPI engine finishes compiling and is ready to listen. */
+    onReady(callback) {
+      ipcRenderer.once('ipc:mic-ready', () => callback())
+    },
+    /**
+     * Register a callback for STT errors.
+     * @param {(msg: string) => void} callback
+     */
+    onError(callback) {
+      const handler = (_event, msg) => callback(msg)
+      ipcRenderer.on('ipc:mic-error', handler)
+      return () => ipcRenderer.removeListener('ipc:mic-error', handler)
+    },
+    /**
+     * Pipeline stage updates: 'recognizers=N', 'engine=…', 'mic-connected',
+     * 'grammar-loaded', 'listening', 'got-transcript', 'audio-problem=…'
+     * @param {(stage: string) => void} callback
+     */
+    onStatus(callback) {
+      const handler = (_event, stage) => callback(stage)
+      ipcRenderer.on('ipc:mic-status', handler)
+      return () => ipcRenderer.removeListener('ipc:mic-status', handler)
+    },
+    /**
+     * SAPI heard speech but confidence was below the acceptance threshold.
+     * Useful for diagnosing "SAPI runs but produces no transcripts" situations.
+     * @param {(data: { confidence: number, text: string }) => void} callback
+     */
+    onRejected(callback) {
+      const handler = (_event, data) => callback(data)
+      ipcRenderer.on('ipc:mic-rejected', handler)
+      return () => ipcRenderer.removeListener('ipc:mic-rejected', handler)
+    }
+  },
+  wifi: {
+    getWifiUploadUrl() {
+      return ipcRenderer.invoke('ipc:get-wifi-upload-url')
+    },
+    onMobilePhotoUploaded(callback) {
+      const handler = (_event, data) => callback(data)
+      ipcRenderer.on('ipc:mobile-photo-uploaded', handler)
+      return () => ipcRenderer.removeListener('ipc:mobile-photo-uploaded', handler)
+    }
+  },
+  fetchUrl(url) {
+    return ipcRenderer.invoke('ipc:fetch-url', url)
   }
 })

@@ -1,0 +1,296 @@
+/* ─── GamesHub – Game selection screen ──────────────────────────────────────── */
+
+.games-hub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-bg-base);
+}
+
+/* Animated background */
+.games-hub__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 25%, hsl(140 70% 14% / 0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 85% 70%, hsl(40 90% 14% / 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 10%, hsl(280 60% 13% / 0.5) 0%, transparent 55%),
+    var(--color-bg-base);
+  animation: games-bg-shift 14s ease-in-out infinite alternate;
+}
+
+@keyframes games-bg-shift {
+  0%   { filter: hue-rotate(0deg) brightness(1); }
+  50%  { filter: hue-rotate(10deg) brightness(1.05); }
+  100% { filter: hue-rotate(-5deg) brightness(0.97); }
+}
+
+/* Floating orbs */
+.games-hub__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+}
+.games-hub__orb--1 {
+  width: 45vw; height: 45vw;
+  top: -12%; left: -10%;
+  background: hsl(140 70% 45% / 0.1);
+  animation: games-orb-1 18s ease-in-out infinite;
+}
+.games-hub__orb--2 {
+  width: 38vw; height: 38vw;
+  bottom: -12%; right: -6%;
+  background: hsl(40 90% 55% / 0.1);
+  animation: games-orb-2 22s ease-in-out infinite;
+}
+.games-hub__orb--3 {
+  width: 28vw; height: 28vw;
+  top: 55%; left: 30%;
+  background: hsl(280 60% 55% / 0.07);
+  animation: games-orb-3 20s ease-in-out infinite;
+}
+
+@keyframes games-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(4vw, 5vh) scale(1.08); }
+}
+@keyframes games-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(-3vw, -4vh) scale(1.05); }
+}
+@keyframes games-orb-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(3vw, -6vh) scale(0.94); }
+}
+
+/* ── Back button ── */
+.games-hub__back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--color-text-secondary, #8899aa);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.games-hub__back:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* ── Content wrapper ── */
+.games-hub__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg, 24px);
+  width: 100%;
+  max-width: 960px;
+  padding: var(--space-xl, 32px) var(--space-lg, 24px);
+}
+
+/* ── Header ── */
+.games-hub__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.games-hub__title {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 900;
+  background: linear-gradient(90deg, hsl(140 80% 55%), hsl(40 95% 60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.01em;
+}
+
+.games-hub__subtitle {
+  font-size: clamp(0.7rem, 1.3vw, 0.82rem);
+  color: var(--color-text-secondary, #8899aa);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+/* ── Game tile grid ── */
+.games-hub__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 3vw, 36px);
+  width: 100%;
+}
+
+/* ── Individual game tile ── */
+.game-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md, 12px);
+  padding: clamp(28px, 5vh, 56px) clamp(20px, 3vw, 40px);
+  border-radius: var(--radius-lg, 20px);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+  background: var(--gt-bg, hsl(225 20% 11% / 0.85));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  user-select: none;
+  min-height: clamp(220px, 32vh, 340px);
+}
+
+/* Shimmer overlay */
+.game-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gt-shimmer, linear-gradient(135deg, hsl(140 80% 55% / 0.08), transparent 60%));
+  border-radius: inherit;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Gaze / hover state */
+.game-tile:hover,
+.game-tile--gazed {
+  transform: translateY(-6px) scale(1.015);
+}
+
+/* ── Peppa tile theming ── */
+.game-tile--peppa {
+  --gt-bg: hsl(30 60% 8% / 0.9);
+  --gt-shimmer: linear-gradient(135deg, hsl(30 90% 65% / 0.1), transparent 55%);
+  border-color: hsl(30 80% 55% / 0.28);
+  box-shadow: 0 4px 24px hsl(30 80% 40% / 0.12), 0 0 0 1px hsl(30 80% 55% / 0.08);
+}
+.game-tile--peppa:hover,
+.game-tile--peppa.game-tile--gazed {
+  border-color: hsl(30 90% 65% / 0.55);
+  box-shadow:
+    0 16px 48px hsl(30 90% 55% / 0.22),
+    0 0 0 1px hsl(30 90% 65% / 0.18),
+    inset 0 1px 0 hsl(30 100% 80% / 0.06);
+}
+
+/* ── Balloon Pop tile theming ── */
+.game-tile--balloon {
+  --gt-bg: hsl(210 60% 8% / 0.9);
+  --gt-shimmer: linear-gradient(135deg, hsl(200 100% 60% / 0.1), transparent 55%);
+  border-color: hsl(200 90% 55% / 0.28);
+  box-shadow: 0 4px 24px hsl(200 90% 40% / 0.12), 0 0 0 1px hsl(200 90% 55% / 0.08);
+}
+.game-tile--balloon:hover,
+.game-tile--balloon.game-tile--gazed {
+  border-color: hsl(200 100% 68% / 0.55);
+  box-shadow:
+    0 16px 48px hsl(200 100% 55% / 0.22),
+    0 0 0 1px hsl(200 100% 68% / 0.18),
+    inset 0 1px 0 hsl(200 100% 85% / 0.06);
+}
+
+/* ── Tile icon ── */
+.game-tile__icon {
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 4px 16px var(--gt-icon-shadow, rgba(200,160,0,0.4)));
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+.game-tile--peppa   .game-tile__icon { --gt-icon-shadow: hsl(30 90% 60% / 0.5); }
+.game-tile--balloon .game-tile__icon { --gt-icon-shadow: hsl(200 100% 60% / 0.5); }
+
+.game-tile:hover .game-tile__icon,
+.game-tile--gazed .game-tile__icon {
+  transform: scale(1.15) translateY(-3px);
+}
+
+/* ── Tile badge (NEW tag) ── */
+.game-tile__badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: hsl(140 80% 40% / 0.2);
+  border: 1px solid hsl(140 80% 50% / 0.3);
+  color: hsl(140 80% 65%);
+}
+
+/* ── Tile text ── */
+.game-tile__label {
+  font-family: var(--font-display, 'Inter', sans-serif);
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary, #f1f5f9);
+}
+.game-tile--peppa   .game-tile__label { color: hsl(30 90% 80%); }
+.game-tile--balloon .game-tile__label { color: hsl(200 100% 82%); }
+
+.game-tile__desc {
+  font-size: clamp(0.75rem, 1.5vw, 0.88rem);
+  color: var(--color-text-secondary, #8899aa);
+  font-weight: 500;
+  text-align: center;
+  max-width: 22ch;
+  line-height: 1.45;
+}
+
+/* ── Dwell progress bar ── */
+.game-tile__progress-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 4px;
+  border-radius: 0 0 var(--radius-lg, 20px) var(--radius-lg, 20px);
+  transition: width 0.05s linear;
+  opacity: 0.85;
+}
+.game-tile--peppa   .game-tile__progress-bar { background: hsl(30 90% 65%); }
+.game-tile--balloon .game-tile__progress-bar { background: hsl(200 100% 65%); }
+
+/* ── Footer ── */
+.games-hub__footer {
+  position: relative;
+  z-index: 1;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #8899aa);
+  opacity: 0.5;
+  letter-spacing: 0.04em;
+  text-align: center;
+}

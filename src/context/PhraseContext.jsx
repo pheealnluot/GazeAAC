@@ -47,6 +47,9 @@ export function PhraseProvider({ children }) {
     const text = words.map(t => t.word).join(' ')
     if (!text) return
 
+    // Basic echo cancellation: estimate TTS duration (75ms/char + 1s buffer)
+    window.__ttsEndTime = Date.now() + text.length * 75 + 1000
+
     // Route through native IPC → PowerShell SAPI (SpeakAsync) so the
     // renderer thread is never blocked.  Falls back to Web Speech API
     // only when running outside Electron (e.g. browser dev mode).

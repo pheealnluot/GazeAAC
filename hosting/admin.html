@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>Caregiver Portal – GazeAAC Sync & Settings Administration</title>
+  <meta name="description" content="Secure GazeAAC administration portal for caregivers to configure shared parameters, adjust device profiles, and review spasticity metrics.">
+  <meta name="keywords" content="GazeAAC admin, caregiver portal, eye-gaze settings, Firebase sync, CP metrics">
+  <meta name="author" content="GazeAAC Contributors">
+  
+  <!-- Fonts & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://gazeaac-app-sync.web.app/icons/icon.png" onerror="this.href='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👁️</text></svg>'">
+  
+  <!-- Firebase Compat Web SDK (Perfect for browser static pages without a bundler) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <!-- Background Gradients -->
+  <div class="bg-gradient bg-indigo"></div>
+  <div class="bg-gradient bg-pink"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-container">
+      <a href="index.html" class="logo" id="logo-link">
+        <span class="logo-icon">👁️</span>
+        <span class="logo-text">Gaze<span>AAC</span></span>
+      </a>
+      <nav id="header-nav">
+        <a href="index.html#features" id="nav-features">Features</a>
+        <a href="index.html#simulation" id="nav-simulation">Live Demo</a>
+        <a href="index.html#requirements" id="nav-requirements">Requirements</a>
+        <a href="index.html#downloads" class="btn btn-secondary btn-sm" id="nav-download-btn">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="container">
+    
+    <!-- ── AUTHENTICATION GATE (Unauthenticated state) ── -->
+    <div class="auth-wrapper" id="auth-gate-wrapper">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1 class="auth-logo" id="auth-main-title">👁️ Gaze<span>AAC</span></h1>
+          <p class="auth-subtitle" id="auth-sub-title">Caregiver Administration Portal</p>
+        </div>
+        
+        <!-- Error Reporting Box -->
+        <div class="auth-error" id="auth-error-banner"></div>
+        
+        <!-- Auth Tabs Toggle -->
+        <div class="auth-tabs" role="tablist">
+          <button class="auth-tab-btn active" id="tab-login" role="tab" aria-selected="true">Sign In</button>
+          <button class="auth-tab-btn" id="tab-register" role="tab" aria-selected="false">Create Account</button>
+        </div>
+        
+        <!-- Login & Signup Form -->
+        <form class="auth-form" id="caregiver-auth-form" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <label class="form-label" for="auth-email">Caregiver Email</label>
+            <input type="email" class="form-input" id="auth-email" placeholder="caregiver@domain.com" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="auth-password">Password</label>
+            <div class="input-wrap">
+              <input type="password" class="form-input" id="auth-password" placeholder="••••••••" required autocomplete="current-password">
+              <button type="button" class="pwd-toggle" id="btn-toggle-pwd" title="Toggle password visibility">👁️</button>
+            </div>
+          </div>
+          
+          <button type="submit" class="auth-btn" id="btn-submit-auth">
+            <span id="btn-auth-text">Sign In to Dashboard</span>
+            <span class="logo-icon">⚡</span>
+          </button>
+        </form>
+        
+        <div class="auth-divider">Or continue with</div>
+        
+        <!-- Google Sign-In Button -->
+        <button type="button" class="google-btn" id="btn-google-signin">
+          <svg class="google-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          Google Identity Sync
+        </button>
+      </div>
+    </div>
+    
+    <!-- ── CAREGIVER DASHBOARD PANEL (Authenticated state) ── -->
+    <div class="admin-container" id="admin-dashboard-container" style="display: none;">
+      
+      <!-- Dashboard Sidebar Navigation -->
+      <aside class="admin-sidebar">
+        <div class="caregiver-profile">
+          <div class="caregiver-avatar" id="sidebar-avatar">👤</div>
+          <div class="caregiver-info">
+            <span class="caregiver-name" id="sidebar-caregiver-email">Caregiver</span>
+            <span class="caregiver-role">GazeAAC Specialist</span>
+          </div>
+        </div>
+        
+        <nav class="sidebar-menu">
+          <button class="menu-btn active" id="menu-profile" onclick="switchPanel('profile')">👤 Child Profile</button>
+          <button class="menu-btn" id="menu-shared" onclick="switchPanel('shared')">🌐 Cross-Device Data</button>
+          <button class="menu-btn" id="menu-devices" onclick="switchPanel('devices')">📱 Device Profiles</button>
+          <button class="menu-btn" id="menu-history" onclick="switchPanel('history')">📊 Session & AI Audit</button>
+        </nav>
+        
+        <button class="btn btn-outline btn-sm logout-btn" id="btn-logout" title="Sign out from GazeAAC Portal">
+          Sign Out Portal
+        </button>
+      </aside>
+      
+      <!-- Main Configuration Workspaces -->
+      <section class="admin-workspace">
+        
+        <!-- PANEL 1: CHILD PROFILE -->
+        <div class="panel-card active" id="panel-profile">
+          <div class="panel-header">
+            <h2 class="panel-title">👤 Child & AAC User Profile</h2>
+            <p class="panel-desc">Customize biographical parameters and environmental lore. The local AI utilizes this profile to calibrate child-friendly age-appropriate responses.</p>
+          </div>
+          
+          <div class="profile-select-panel">
+            <!-- Left Side: Profile Sidebar List -->
+            <div class="profile-sidebar-list">
+              <div id="child-profiles-list-sidebar" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                <div style="opacity: 0.5; padding: 1rem 0; text-align: center;">Scanning child profiles...</div>
+              </div>
+              
+              <div class="profile-actions-bar">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-add-profile-trigger" onclick="initNewProfileForm()" style="width: 100%; text-align: center; justify-content: center; display: inline-flex; font-weight: 600;">+ Add Child Profile</button>
+              </div>
+            </div>
+            
+            <!-- Right Side: Biographical Details Workspace -->
+            <div class="profile-detail-workspace">
+              <form class="auth-form" id="profile-settings-form" onsubmit="event.preventDefault(); handleSaveProfileForm();">
+                <input type="hidden" id="profile-id-hidden" value="default">
+                
+                <div class="settings-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="profile-name">Child's Name</label>
+                    <input type="text" class="form-input" id="profile-name" placeholder="e.g., Leo" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profile-age">Age (Years)</label>
+                    <input type="number" class="form-input" id="profile-age" placeholder="e.g., 8" min="1" max="99" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profile-location">Current Location</label>
+                    <input type="text" class="form-input" id="profile-location" placeholder="e.g., Singapore" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profile-father">Father's Name (Optional)</label>
+                    <input type="text" class="form-input" id="profile-father" placeholder="e.g., Robert">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="profile-mother">Mother's Name (Optional)</label>
+                    <input type="text" class="form-input" id="profile-mother" placeholder="e.g., Sarah">
+                  </div>
+                </div>
+                
+                <h3 class="settings-section-title">🧠 Contextual Bio & Life Lore</h3>
+                <div class="form-group">
+                  <label class="form-label" for="profile-lore">Interactive Life Lore</label>
+                  <textarea class="form-input textarea-input" id="profile-lore" placeholder="Specify milestones, preferred toys, pet names, daily hobbies, or visual interests..." required></textarea>
+                </div>
+                
+                <div class="settings-actions" style="margin-top: 1.5rem; padding-top: 1rem; display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem;">
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-activate-profile" onclick="handleActivateProfile()" style="display: none; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--color-teal); align-items: center; font-weight: 600;">⚡ Activate Default</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="btn-delete-profile" onclick="handleDeleteProfile()" style="display: none; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--color-red); align-items: center; font-weight: 600;">🗑️ Delete Profile</button>
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-sm" id="btn-save-profile" style="font-weight: 600;">Save Profile Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PANEL 2: SHARED CROSS-DEVICE SETTINGS -->
+        <div class="panel-card" id="panel-shared">
+          <div class="panel-header">
+            <h2 class="panel-title">🌐 Shared Cross-Device Data</h2>
+            <p class="panel-desc">Manage API configurations, background prompts, and biometric rosters. Changes here are synced to all devices connected to this account.</p>
+          </div>
+          
+          <form class="auth-form" id="shared-settings-form" onsubmit="event.preventDefault(); saveSharedSettings();">
+            
+            <!-- Cross-Device sub-tabs -->
+            <div class="history-tabs" role="tablist">
+              <button type="button" class="history-tab-btn active" id="shared-subtab-general" onclick="switchSharedSubtab('general')" role="tab">🔑 1. General Functions</button>
+              <button type="button" class="history-tab-btn" id="shared-subtab-aac" onclick="switchSharedSubtab('aac')" role="tab">💬 2. AAC Settings</button>
+              <button type="button" class="history-tab-btn" id="shared-subtab-movietime" onclick="switchSharedSubtab('movietime')" role="tab">🎬 3. Movie Time Settings</button>
+            </div>
+
+            <!-- SECTION 1: GENERAL FUNCTIONS -->
+            <div id="shared-sec-general">
+              <h3 class="settings-section-title">🤖 Cloud LLM Configuration</h3>
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label" for="shared-gemini-key">Gemini Cloud API Key</label>
+                  <div class="input-wrap">
+                    <input type="password" class="form-input" id="shared-gemini-key" placeholder="AIzaSy...">
+                    <button type="button" class="pwd-toggle" id="btn-toggle-geminikey" title="Show/Hide API Key">👁️</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="shared-gemini-model">Gemini Target Model</label>
+                  <select class="form-input" id="shared-gemini-model">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label" for="shared-ai-routing">AI Routing Strategy</label>
+                  <select class="form-input" id="shared-ai-routing">
+                    <option value="internet-first">Internet First (Cloud Fallback to Local)</option>
+                    <option value="local-only">Local Only (Suppress API Key Usage)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <h3 class="settings-section-title">✍ AI Core Prompts</h3>
+              <div class="settings-grid full-width">
+                <div class="form-group">
+                  <label class="form-label" for="shared-prompt-system">Custom System Prompt Override</label>
+                  <textarea class="form-input textarea-input" id="shared-prompt-system" placeholder="Leave empty for standard clinical default..."></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="shared-prompt-prefix">Contextual Prompt Prefix</label>
+                  <textarea class="form-input textarea-input" id="shared-prompt-prefix" placeholder="Pre-pend additional guidelines to prediction..."></textarea>
+                </div>
+              </div>
+
+              <h3 class="settings-section-title">🧬 Biometric Rosters (Faces & Objects)</h3>
+              <div class="settings-grid">
+                <div>
+                  <label class="form-label">Registered Face Roster</label>
+                  <div class="bio-list" id="list-registered-faces">
+                    <div style="opacity: 0.5; padding: 1rem 0;">No face profiles registered.</div>
+                  </div>
+                  <!-- Inline Register Face Form -->
+                  <div class="bio-add-container">
+                    <span class="bio-add-title">➕ Register Face Profile</span>
+                    <div class="bio-add-fields">
+                      <input type="text" class="bio-add-input" id="input-new-face-name" placeholder="Name (e.g. Auntie Sally)">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="addNewFaceProfile()" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 600;">Add</button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">Registered Object/Scene Library</label>
+                  <div class="bio-list" id="list-registered-objects">
+                    <div style="opacity: 0.5; padding: 1rem 0;">No objects registered.</div>
+                  </div>
+                  <!-- Inline Register Object Form -->
+                  <div class="bio-add-container">
+                    <span class="bio-add-title">➕ Register Object/Scene</span>
+                    <div class="bio-add-fields" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                      <div style="display: flex; gap: 0.5rem; width: 100%;">
+                        <input type="text" class="bio-add-input" id="input-new-obj-label" placeholder="Label (e.g. Teddy Bear)" style="flex-grow: 1;">
+                        <select class="bio-add-select" id="select-new-obj-type" style="width: 100px;">
+                          <option value="object">Object</option>
+                          <option value="scene">Scene</option>
+                        </select>
+                      </div>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="addNewObjectProfile()" style="width: 100%; padding: 0.5rem; font-size: 0.8rem; font-weight: 600;">Register Item</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: AAC SETTINGS -->
+            <div id="shared-sec-aac" style="display: none;">
+              <h3 class="settings-section-title">🧱 Vocabulary & Clinical Behaviors</h3>
+              <div class="row-switch" style="margin-top:0.5rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Speak Words Immediately</span>
+                  <span class="row-switch-desc">Speak each word immediately on activation instead of queuing in phrase bar.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="shared-aac-speakonword">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="row-switch">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Show Emoji Icons on Grid Cells</span>
+                  <span class="row-switch-desc">Renders descriptive pictographic emojis alongside text labels.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="shared-aac-showicons">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="row-switch">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Auto Return Home after Clear (CLR)</span>
+                  <span class="row-switch-desc">Automatically returns the board grid back to root index page when CLR fires.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="shared-aac-autoreturnhome">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="row-switch">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Auto Return from Sub-Page</span>
+                  <span class="row-switch-desc">Return to Home after 2nd-level noun selection, per clinical motor planning principles.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="shared-aac-autoreturnsubpage">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="settings-grid" style="margin-top: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-caregiverpin">Caregiver Access PIN</label>
+                  <input type="text" class="form-input" id="shared-aac-caregiverpin" placeholder="0000" maxlength="4" style="width: 120px; text-align: center; font-size: 1.2rem; letter-spacing: 0.2em; font-weight: bold;">
+                  <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">4-digit code to protect administrative control panels.</small>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-unmaskedbox">Unmasked Cell Sizing (Hit-box Expansion)</label>
+                  <select class="form-input" id="shared-aac-unmaskedbox">
+                    <option value="1x">1x (Native Border Sizing)</option>
+                    <option value="2x">2x (Double size, overlapping adjacent masked space)</option>
+                    <option value="3x">3x (Triple size, centering over blank slots)</option>
+                    <option value="full">Full Expansion (Consume all surrounding masked space)</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 class="settings-section-title">🎨 UI Typography & Grid Sizing</h3>
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label">Font Scale Multiplier</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="shared-aac-fontscale" min="0.5" max="5.0" step="0.1" value="2.0">
+                    <span class="slider-val" id="val-shared-aac-fontscale">2.0x</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Symbol/Image Scale Multiplier</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="shared-aac-symbolscale" min="0.5" max="5.0" step="0.1" value="2.0">
+                    <span class="slider-val" id="val-shared-aac-symbolscale">2.0x</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-switch" style="margin-top:1rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Symbol On Top of Label</span>
+                  <span class="row-switch-desc">Renders symbols/emojis directly above text instead of inline.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="shared-aac-symbolontop">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="settings-grid" style="margin-top: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-fontcolor">Default Grid Font Color</label>
+                  <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <input type="color" class="form-input" id="shared-aac-fontcolor" value="#ffffff" style="width: 50px; padding: 0.2rem; cursor: pointer; height: 38px;">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Overall Grid Panel Opacity</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="shared-aac-gridopacity" min="0.3" max="1.0" step="0.1" value="1.0">
+                    <span class="slider-val" id="val-shared-aac-gridopacity">100%</span>
+                  </div>
+                </div>
+              </div>
+
+              <h3 class="settings-section-title">⏱️ Visual Gaze Feedback (Dwell Overlays)</h3>
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-bordercolor">Highlight Border Color during Dwell</label>
+                  <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <input type="color" class="form-input" id="shared-aac-bordercolor" value="#00c8ff" style="width: 50px; padding: 0.2rem; cursor: pointer; height: 38px;">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Dwell Progress Circle/Bar Opacity</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="shared-aac-progressopacity" min="0.1" max="1.0" step="0.1" value="1.0">
+                    <span class="slider-val" id="val-shared-aac-progressopacity">100%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-grid" style="margin-top: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-progressstyle">Dwell Progress Style</label>
+                  <select class="form-input" id="shared-aac-progressstyle">
+                    <option value="circle">Expanding Circle Overlays</option>
+                    <option value="bar">Horizontal Loading Progress Bar</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="shared-aac-progresspos">Dwell Progress Position (Bar only)</label>
+                  <select class="form-input" id="shared-aac-progresspos">
+                    <option value="center">Centered overlay</option>
+                    <option value="top">Top border edge</option>
+                    <option value="bottom">Bottom border edge</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 class="settings-section-title">🎯 Emergent Custom Vocabulary (Stage 1)</h3>
+              <div class="form-group">
+                <label class="form-label" for="shared-aac-customvocab">Custom Vocabulary Button IDs (comma-separated)</label>
+                <textarea class="form-input textarea-input" id="shared-aac-customvocab" placeholder="e.g. core-more, core-want, core-stop, core-go" style="height: 80px;"></textarea>
+                <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">IDs of keys to show in emergent stage 1 board view. Leave empty for default core roster.</small>
+              </div>
+            </div>
+
+            <!-- SECTION 3: MOVIE TIME SETTINGS -->
+            <div id="shared-sec-movietime" style="display: none;">
+              <h3 class="settings-section-title">🎬 YouTube API & Playback Limits</h3>
+
+              <!-- Sub-tabs for Movie Time -->
+              <div class="history-tabs" role="tablist">
+                <button type="button" class="history-tab-btn active" id="mt-tab-playback" onclick="switchMovieTimeTab('playback')" role="tab">▶️ Playback</button>
+                <button type="button" class="history-tab-btn" id="mt-tab-content" onclick="switchMovieTimeTab('content')" role="tab">📋 Content</button>
+                <button type="button" class="history-tab-btn" id="mt-tab-quiz" onclick="switchMovieTimeTab('quiz')" role="tab">🧩 Quiz</button>
+                <button type="button" class="history-tab-btn" id="mt-tab-limits" onclick="switchMovieTimeTab('limits')" role="tab">🔒 Limits</button>
+              </div>
+
+              <!-- PLAYBACK tab -->
+              <div id="mt-panel-playback">
+                <div class="settings-grid">
+                  <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">YouTube Data API v3 Key Roster (Quota Rotation)</label>
+                    
+                    <div id="list-youtube-keys" style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem;">
+                      <div style="opacity: 0.5; padding: 0.5rem 0;">No YouTube keys registered.</div>
+                    </div>
+
+                    <!-- Add new YouTube Key Form -->
+                    <div class="bio-add-container" style="margin-top: 0.5rem;">
+                      <span class="bio-add-title">➕ Add YouTube API Key</span>
+                      <div class="bio-add-fields" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <div style="display: flex; gap: 0.8rem; width: 100%;">
+                          <input type="text" class="bio-add-input" id="input-new-ytkey-label" placeholder="Key Label (e.g. Primary Key)" style="width: 35%;">
+                          <div class="input-wrap" style="flex-grow: 1;">
+                            <input type="password" class="bio-add-input" id="input-new-ytkey-val" placeholder="AIzaSy..." style="width: 100%;">
+                            <button type="button" class="pwd-toggle" id="btn-toggle-new-ytkey" title="Toggle password visibility">👁️</button>
+                          </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                          <small style="color: var(--color-text-muted, #888); font-size: 0.78rem;">
+                            Get a free key at <strong>console.cloud.google.com</strong>. Multiple keys are used in sequence and rotated automatically if quota limits are exceeded.
+                          </small>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="addNewYoutubeKeyPair()" style="padding: 0.5rem 1.2rem; font-size: 0.8rem; font-weight: 600; white-space: nowrap;">Add Key</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-duration">Video Duration Filter</label>
+                    <select class="form-input" id="shared-mt-duration">
+                      <option value="any">Any Duration</option>
+                      <option value="short">Short (&lt; 4 min)</option>
+                      <option value="medium">Medium (4–20 min)</option>
+                      <option value="long">Long (&gt; 20 min)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-quality">Minimum Video Quality</label>
+                    <select class="form-input" id="shared-mt-quality">
+                      <option value="any">Any Quality</option>
+                      <option value="hd">HD (720p+)</option>
+                      <option value="fhd">Full HD (1080p+)</option>
+                      <option value="4k">4K</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-safesearch">Safe Search Level</label>
+                    <select class="form-input" id="shared-mt-safesearch">
+                      <option value="strict">Strict (Recommended)</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="none">None</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Number of Video Choices</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-selcount" min="2" max="9" step="1" value="4">
+                      <span class="slider-val" id="val-mt-selcount">4</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CONTENT tab -->
+              <div id="mt-panel-content" style="display:none;">
+                <div class="settings-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-topics">Interest Topics (comma-separated)</label>
+                    <input type="text" class="form-input" id="shared-mt-topics" placeholder="Animals, Science, Art">
+                    <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">Topics used when searching YouTube for age-appropriate videos.</small>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-interests">Child Interest Keywords (comma-separated)</label>
+                    <input type="text" class="form-input" id="shared-mt-interests" placeholder="dinosaurs, space, painting">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-whitelist">Keyword Whitelist (comma-separated)</label>
+                    <input type="text" class="form-input" id="shared-mt-whitelist" placeholder="kids, educational">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-blacklist">Keyword Blacklist (comma-separated)</label>
+                    <input type="text" class="form-input" id="shared-mt-blacklist" placeholder="horror, violence">
+                  </div>
+                </div>
+                <div class="row-switch" style="margin-top:0.5rem;">
+                  <div class="row-switch-label">
+                    <span class="row-switch-title">Gamer Loophole</span>
+                    <span class="row-switch-desc">Include high-quality fan-created or gaming content alongside standard educational results.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shared-mt-gamer">
+                    <span class="slider-toggle"></span>
+                  </label>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                  <label class="form-label" for="shared-mt-selected-videos">Curated Curricular YouTube Video IDs (comma-separated)</label>
+                  <input type="text" class="form-input" id="shared-mt-selected-videos" placeholder="e.g. dQw4w9WgXcQ, -791238917 (empty = search globally by topics)">
+                  <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">Limit choices to specific trusted videos. Synced to all devices.</small>
+                </div>
+              </div>
+
+              <!-- QUIZ tab -->
+              <div id="mt-panel-quiz" style="display:none;">
+                <div class="settings-grid">
+                  <div class="form-group">
+                    <label class="form-label">Puzzle Interval (seconds between quizzes)</label>
+                    <select class="form-input" id="shared-mt-puzzle-interval">
+                      <option value="1">1 second</option>
+                      <option value="5">5 seconds</option>
+                      <option value="10">10 seconds</option>
+                      <option value="30">30 seconds</option>
+                      <option value="60">1 minute</option>
+                      <option value="120">2 minutes</option>
+                      <option value="180">3 minutes</option>
+                      <option value="300">5 minutes</option>
+                      <option value="600">10 minutes</option>
+                      <option value="900">15 minutes</option>
+                      <option value="1200">20 minutes</option>
+                      <option value="1800">30 minutes</option>
+                      <option value="2700">45 minutes</option>
+                      <option value="3600">60 minutes</option>
+                      <option value="0">Unlimited (No Quiz)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-quiz-difficulty">Puzzle Difficulty</label>
+                    <select class="form-input" id="shared-mt-quiz-difficulty">
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-quiz-edu">Education Level</label>
+                    <select class="form-input" id="shared-mt-quiz-edu">
+                      <option value="Pre-K">Pre-K</option>
+                      <option value="Primary">Primary</option>
+                      <option value="Secondary">Secondary</option>
+                      <option value="Adult">Adult</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-quiz-subject">Quiz Subject</label>
+                    <select class="form-input" id="shared-mt-quiz-subject">
+                      <option value="General">General</option>
+                      <option value="Math">Math</option>
+                      <option value="Science">Science</option>
+                      <option value="English">English</option>
+                      <option value="History">History</option>
+                      <option value="Geography">Geography</option>
+                      <option value="Arts">Arts</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="shared-mt-quiz-subject-custom">Custom Subject Override</label>
+                    <input type="text" class="form-input" id="shared-mt-quiz-subject-custom" placeholder="Leave blank to use dropdown above">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Number of Answer Choices</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-quiz-choices" min="2" max="4" step="1" value="4">
+                      <span class="slider-val" id="val-mt-quiz-choices">4</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Question Gate (ms before answers appear)</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-quiz-qgate" min="0" max="5000" step="100" value="2000">
+                      <span class="slider-val" id="val-mt-quiz-qgate">2000 ms</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Answer Gate (ms before dwell is active)</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-quiz-agate" min="0" max="5000" step="100" value="1500">
+                      <span class="slider-val" id="val-mt-quiz-agate">1500 ms</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Hint After Wrong Attempts</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-quiz-hint" min="0" max="5" step="1" value="3">
+                      <span class="slider-val" id="val-mt-quiz-hint">3</span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Questions generated per quiz session</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-puzzle-questions" min="1" max="10" step="1" value="3">
+                      <span class="slider-val" id="val-mt-puzzle-questions">3</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="row-switch" style="margin-top:0.5rem;">
+                  <div class="row-switch-label">
+                    <span class="row-switch-title">Base Quizzes on Video Content</span>
+                    <span class="row-switch-desc">Questions are generated directly from the video transcript and dialogue instead of generic title themes.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shared-mt-quiz-about-video">
+                    <span class="slider-toggle"></span>
+                  </label>
+                </div>
+                <div class="row-switch">
+                  <div class="row-switch-label">
+                    <span class="row-switch-title">Quiz Sound Effects</span>
+                    <span class="row-switch-desc">Play Web Audio tones on correct / wrong answer.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shared-mt-quiz-sounds" checked>
+                    <span class="slider-toggle"></span>
+                  </label>
+                </div>
+                <div class="row-switch">
+                  <div class="row-switch-label">
+                    <span class="row-switch-title">Voice-Over Questions</span>
+                    <span class="row-switch-desc">TTS reads the question aloud when the quiz overlay appears.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shared-mt-quiz-voiceover" checked>
+                    <span class="slider-toggle"></span>
+                  </label>
+                </div>
+                <div class="row-switch">
+                  <div class="row-switch-label">
+                    <span class="row-switch-title">Voice-Over Answer Choices</span>
+                    <span class="row-switch-desc">TTS also reads each answer choice after the question.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="shared-mt-quiz-voiceover-choices" checked>
+                    <span class="slider-toggle"></span>
+                  </label>
+                </div>
+                <div class="form-group" style="margin-top:1rem;">
+                  <label class="form-label">Voice-Over Pause (ms between readings)</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="shared-mt-quiz-voiceover-pause" min="0" max="5000" step="100" value="500">
+                    <span class="slider-val" id="val-mt-quiz-voiceover-pause">500 ms</span>
+                  </div>
+                </div>
+                <!-- Puzzle Types checkboxes -->
+                <div class="form-group" style="margin-top:1.2rem;">
+                  <label class="form-label">Enabled Puzzle Types</label>
+                  <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.5rem;">
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;"><input type="checkbox" id="mt-ptype-quiz" checked> Quiz</label>
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;"><input type="checkbox" id="mt-ptype-riddle" checked> Riddle</label>
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;"><input type="checkbox" id="mt-ptype-word"> Word Puzzle</label>
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;"><input type="checkbox" id="mt-ptype-math"> Math</label>
+                    <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;"><input type="checkbox" id="mt-ptype-memory"> Memory</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LIMITS tab -->
+              <div id="mt-panel-limits" style="display:none;">
+                <div class="settings-grid">
+                  <div class="form-group">
+                    <label class="form-label">Max Daily Watch Time (minutes)</label>
+                    <div class="slider-container">
+                      <input type="range" class="range-slider" id="shared-mt-maxdaily" min="10" max="720" step="10" value="60">
+                      <span class="slider-val" id="val-mt-maxdaily">60 min</span>
+                    </div>
+                    <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">720 minutes = Unlimited. Synced to all devices.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="btn-save-shared">Save Cross-Device Settings</button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- PANEL 3: DEVICE-SPECIFIC PROFILES -->
+        <div class="panel-card" id="panel-devices">
+          <div class="panel-header">
+            <h2 class="panel-title">📱 Device-Specific Profiles</h2>
+            <p class="panel-desc">Manage physical devices linked to GazeAAC. Each physical screen is configured independently to accommodate specific mounting rigs, local voices, and hardware parameters.</p>
+          </div>
+          
+          <div class="device-select-panel">
+            
+            <!-- Devices Sidebar list -->
+            <div class="device-sidebar-list" id="devices-list-sidebar">
+              <!-- Render dynamically -->
+              <div style="opacity: 0.5; padding: 1rem 0; text-align: center;">Loading registered devices...</div>
+            </div>
+            
+            <!-- Device Config Detail Workspace -->
+            <div class="device-detail-workspace" id="device-details-container">
+              <div class="no-device-selected">
+                <span class="no-device-icon">💻</span>
+                <h3>No Device Selected</h3>
+                <p>Select a physical hardware terminal from the list on the left to customize its specific local screen parameters.</p>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- PANEL 4: SESSIONS & AUDIT LOGS -->
+        <div class="panel-card" id="panel-history">
+          <div class="panel-header">
+            <h2 class="panel-title">📊 Session Sync & AI Audit Logs</h2>
+            <p class="panel-desc">Monitor interactive gaze duration statistics, child vocabulary progress, and historical logs of the predictive suggestion engines.</p>
+          </div>
+          
+          <div class="history-tabs" role="tablist">
+            <button class="history-tab-btn active" id="hist-tab-sessions" onclick="switchHistoryTab('sessions')" role="tab" aria-selected="true">Gaze Sessions</button>
+            <button class="history-tab-btn" id="hist-tab-ai" onclick="switchHistoryTab('ai')" role="tab" aria-selected="false">AI Response History</button>
+          </div>
+          
+          <!-- History Log Viewport -->
+          <div class="logs-list" id="audit-logs-viewport">
+            <div style="opacity: 0.5; padding: 2rem 0; text-align: center;">Loading logs...</div>
+          </div>
+        </div>
+        
+      </section>
+    </div>
+    
+  </main>
+
+  <!-- Status Notification Toast -->
+  <div class="status-toast" id="global-toast">
+    <span class="status-toast-icon success" id="global-toast-icon">✓</span>
+    <span id="global-toast-message">Success!</span>
+  </div>
+
+  <!-- Audio Context Setup for pleasant chime synthesize -->
+  <script>
+    let audioCtx = null;
+    function playDwellChime(type) {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const now = audioCtx.currentTime;
+        if (type === 'success') {
+          // Success pleasant chord
+          const osc1 = audioCtx.createOscillator();
+          const gain1 = audioCtx.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(523.25, now); // C5
+          gain1.gain.setValueAtTime(0.12, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc1.connect(gain1); gain1.connect(audioCtx.destination);
+          osc1.start(now); osc1.stop(now + 0.4);
+
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          gain2.gain.setValueAtTime(0.12, now + 0.08);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+          osc2.connect(gain2); gain2.connect(audioCtx.destination);
+          osc2.start(now + 0.08); osc2.stop(now + 0.48);
+        } else {
+          // Warning chime
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now); // A3
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.3);
+        }
+      } catch (err) {
+        console.warn("Audio Context playback not initialized yet.");
+      }
+    }
+  </script>
+
+  <!-- Core Dashboard Sync Logic -->
+  <script>
+    // GazeAAC Firebase Web SDK Credentials
+    const firebaseConfig = {
+      projectId: "gazeaac-app-sync",
+      appId: "1:396446082530:web:e4d4ab1b5029695452c5bb",
+      storageBucket: "gazeaac-app-sync.firebasestorage.app",
+      apiKey: "AIzaSyB0HeiNJNYr6lOMLFm7oAjprmEM-OFm0G8",
+      authDomain: "gazeaac-app-sync.firebaseapp.com",
+      messagingSenderId: "396446082530"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Application state
+    let currentUser = null;
+    let currentSharedSettings = {};
+    let currentDevices = [];
+    let activeDeviceData = null; // Currently selected device specific details
+    let activeDeviceId = null;   // Active selected device id
+    let activeHistoryTab = 'sessions'; // 'sessions' | 'ai'
+    
+    // Child profiles state variables
+    let currentChildProfiles = [];
+    let activeProfileId = 'default';
+    let defaultProfileData = null;
+    let currentYoutubeKeys = [];
+    let editingYtKeyIndex = null;
+
+    // HTML Elements References
+    const authGate = document.getElementById('auth-gate-wrapper');
+    const dashboardPanel = document.getElementById('admin-dashboard-container');
+    const headerNav = document.getElementById('header-nav');
+    
+    // Auth inputs
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authSubmitBtn = document.getElementById('btn-submit-auth');
+    const authSubmitText = document.getElementById('btn-auth-text');
+    const authErrorBanner = document.getElementById('auth-error-banner');
+    
+    // Toast notification controls
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('global-toast');
+      const toastMsg = document.getElementById('global-toast-message');
+      const toastIcon = document.getElementById('global-toast-icon');
+      
+      toastMsg.textContent = message;
+      if (type === 'success') {
+        toastIcon.textContent = '✓';
+        toastIcon.className = 'status-toast-icon success';
+        playDwellChime('success');
+      } else {
+        toastIcon.textContent = '⚠';
+        toastIcon.className = 'status-toast-icon error';
+        playDwellChime('error');
+      }
+      
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // Toggle password visibility
+    document.getElementById('btn-toggle-pwd').addEventListener('click', function() {
+      const type = authPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+      authPassword.setAttribute('type', type);
+      this.textContent = type === 'password' ? '👁️' : '🔒';
+    });
+
+    document.getElementById('btn-toggle-geminikey').addEventListener('click', function() {
+      const keyInput = document.getElementById('shared-gemini-key');
+      const type = keyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      keyInput.setAttribute('type', type);
+      this.textContent = type === 'password' ? '👁️' : '🔒';
+    });
+
+    document.getElementById('btn-toggle-new-ytkey').addEventListener('click', function() {
+      const keyInput = document.getElementById('input-new-ytkey-val');
+      const type = keyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      keyInput.setAttribute('type', type);
+      this.textContent = type === 'password' ? '👁️' : '🔒';
+    });
+
+    // ── Live slider labels for Movie Time fields ──────────────────────────────
+    function bindSliderLabel(sliderId, valId, fmt) {
+      const el = document.getElementById(sliderId);
+      const valEl = document.getElementById(valId);
+      if (el && valEl) {
+        el.addEventListener('input', function() {
+          valEl.textContent = fmt(Number(this.value));
+        });
+      }
+    }
+    bindSliderLabel('shared-mt-selcount', 'val-mt-selcount', v => v);
+    bindSliderLabel('shared-mt-quiz-choices', 'val-mt-quiz-choices', v => v);
+    bindSliderLabel('shared-mt-quiz-qgate',   'val-mt-quiz-qgate',   v => v + ' ms');
+    bindSliderLabel('shared-mt-quiz-agate',   'val-mt-quiz-agate',   v => v + ' ms');
+    bindSliderLabel('shared-mt-quiz-voiceover-pause', 'val-mt-quiz-voiceover-pause', v => v + ' ms');
+    bindSliderLabel('shared-mt-quiz-hint',    'val-mt-quiz-hint',    v => v);
+    bindSliderLabel('shared-mt-maxdaily',     'val-mt-maxdaily',     v => v >= 720 ? 'Unlimited' : v + ' min');
+    bindSliderLabel('shared-aac-fontscale', 'val-shared-aac-fontscale', v => v.toFixed(1) + 'x');
+    bindSliderLabel('shared-aac-symbolscale', 'val-shared-aac-symbolscale', v => v.toFixed(1) + 'x');
+    bindSliderLabel('shared-aac-gridopacity', 'val-shared-aac-gridopacity', v => Math.round(v * 100) + '%');
+    bindSliderLabel('shared-aac-progressopacity', 'val-shared-aac-progressopacity', v => Math.round(v * 100) + '%');
+    bindSliderLabel('shared-mt-puzzle-questions', 'val-mt-puzzle-questions', v => v);
+
+    // Auth tab toggling
+    let isSignUpMode = false;
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+
+    tabLogin.addEventListener('click', () => toggleAuthMode(false));
+    tabRegister.addEventListener('click', () => toggleAuthMode(true));
+
+    function toggleAuthMode(signUp) {
+      isSignUpMode = signUp;
+      authErrorBanner.style.display = 'none';
+      if (signUp) {
+        tabLogin.classList.remove('active');
+        tabLogin.setAttribute('aria-selected', 'false');
+        tabRegister.classList.add('active');
+        tabRegister.setAttribute('aria-selected', 'true');
+        authSubmitText.textContent = 'Register New Account';
+      } else {
+        tabRegister.classList.remove('active');
+        tabRegister.setAttribute('aria-selected', 'false');
+        tabLogin.classList.add('active');
+        tabLogin.setAttribute('aria-selected', 'true');
+        authSubmitText.textContent = 'Sign In to Dashboard';
+      }
+    }
+
+    // Auth listener trigger
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('sidebar-caregiver-email').textContent = user.email;
+        authGate.style.display = 'none';
+        dashboardPanel.style.display = 'grid';
+        
+        // Update navigation link to direct to dashboard active state
+        headerNav.innerHTML = `
+          <a href="index.html" id="nav-landing">Home Landing</a>
+          <a href="#" class="btn btn-secondary btn-sm" id="btn-portal-status">Connected: ${user.email.split('@')[0]}</a>
+        `;
+        
+        // Fetch core GazeAAC parameters
+        loadAllData();
+      } else {
+        currentUser = null;
+        authGate.style.display = 'flex';
+        dashboardPanel.style.display = 'none';
+        
+        // Reset navigation
+        headerNav.innerHTML = `
+          <a href="index.html#features" id="nav-features">Features</a>
+          <a href="index.html#simulation" id="nav-simulation">Live Demo</a>
+          <a href="index.html#requirements" id="nav-requirements">Requirements</a>
+          <a href="index.html#downloads" class="btn btn-secondary btn-sm" id="nav-download-btn">Download</a>
+        `;
+      }
+    });
+
+    // Email/Password Submit Flow
+    document.getElementById('caregiver-auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authErrorBanner.style.display = 'none';
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+      
+      try {
+        if (isSignUpMode) {
+          await auth.createUserWithEmailAndPassword(email, password);
+          showToast('Roster setup successful! Welcome to GazeAAC.', 'success');
+        } else {
+          await auth.signInWithEmailAndPassword(email, password);
+          showToast('Synchronized secure access established.', 'success');
+        }
+      } catch (err) {
+        authErrorBanner.textContent = err.message;
+        authErrorBanner.style.display = 'block';
+        playDwellChime('error');
+      }
+    });
+
+    // Google Auth Popup trigger
+    document.getElementById('btn-google-signin').addEventListener('click', async () => {
+      authErrorBanner.style.display = 'none';
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await auth.signInWithPopup(provider);
+        showToast('Google Identity handshake complete.', 'success');
+      } catch (err) {
+        authErrorBanner.textContent = err.message;
+        authErrorBanner.style.display = 'block';
+        playDwellChime('error');
+      }
+    });
+
+    // Logout
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        showToast('GazeAAC session terminated securely.', 'success');
+      } catch (err) {
+        showToast('Logout failure: ' + err.message, 'error');
+      }
+    });
+
+    // Switch between panels
+    function switchPanel(panelId) {
+      document.querySelectorAll('.menu-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`menu-${panelId}`).classList.add('active');
+      
+      document.querySelectorAll('.panel-card').forEach(card => {
+        card.classList.remove('active');
+      });
+      document.getElementById(`panel-${panelId}`).classList.add('active');
+
+      if (panelId === 'devices') {
+        loadDeviceProfiles();
+      } else if (panelId === 'history') {
+        loadHistoryLogs();
+      }
+    }
+
+    // ── DATA HYDRATION ENGINE ──
+    async function loadAllData() {
+      if (!currentUser) return;
+
+      // Load active devices list into memory cache
+      try {
+        const devicesSnap = await db.collection('users').doc(currentUser.uid).collection('settings').get();
+        const devices = [];
+        devicesSnap.forEach(docSnap => {
+          const docId = docSnap.id;
+          if (docId.startsWith('device_')) {
+            const devId = docId.slice(7);
+            devices.push({ deviceId: devId, ...docSnap.data() });
+          }
+        });
+        currentDevices = devices;
+      } catch (err) {
+        console.warn('Devices scan failure:', err);
+      }
+      
+      // 1. Hydrate default profile metadata first
+      try {
+        const profileDoc = await db.collection('users').doc(currentUser.uid).collection('profile').doc('default').get();
+        if (profileDoc.exists) {
+          defaultProfileData = profileDoc.data();
+        }
+      } catch (err) {
+        console.warn('Profile read denied or missing:', err);
+      }
+
+      // 2. Hydrate Shared settings
+      try {
+        const sharedRef = db.collection('users').doc(currentUser.uid).collection('settings').doc('shared');
+        const sharedSnap = await sharedRef.get();
+        if (sharedSnap.exists) {
+          currentSharedSettings = sharedSnap.data();
+          
+          document.getElementById('shared-gemini-key').value = currentSharedSettings.geminiApiKey || '';
+          document.getElementById('shared-gemini-model').value = currentSharedSettings.geminiModel || 'gemini-2.5-flash';
+          document.getElementById('shared-ai-routing').value = currentSharedSettings.contextualRouting || 'internet-first';
+          document.getElementById('shared-prompt-system').value = currentSharedSettings.contextualSystemPrompt || '';
+          document.getElementById('shared-prompt-prefix').value = currentSharedSettings.contextualPromptPrefix || '';
+          
+          currentYoutubeKeys = currentSharedSettings.movieTimeYoutubeKeys || [];
+          if (currentYoutubeKeys.length === 0 && currentSharedSettings.movieTimeYoutubeKey) {
+            currentYoutubeKeys = [{ key: currentSharedSettings.movieTimeYoutubeKey.trim(), label: 'Key 1' }];
+          }
+          renderYoutubeKeysRoster(currentYoutubeKeys);
+
+          // ── Movie Time: hydrate all fields ────────────────────────────────
+          hydrateMovieTimeSettings(currentSharedSettings);
+          hydrateSharedAacSettings(currentSharedSettings);
+
+          // Render Biometrics face/object rosters
+          renderFaceRoster(currentSharedSettings.registeredFaces || []);
+          renderObjectRoster(currentSharedSettings.registeredObjects || []);
+        } else {
+          document.getElementById('shared-gemini-model').value = 'gemini-2.5-flash';
+          document.getElementById('shared-ai-routing').value = 'internet-first';
+          currentYoutubeKeys = [];
+          renderYoutubeKeysRoster([]);
+          hydrateMovieTimeSettings({});
+          hydrateSharedAacSettings({});
+        }
+      } catch (err) {
+        console.warn('Shared parameters read failure:', err);
+      }
+
+      // 3. Hydrate Child Profiles List
+      try {
+        await loadChildProfiles();
+        
+        // Auto-select first profile in the roster or select default
+        if (activeProfileId === 'default' && defaultProfileData) {
+          document.getElementById('profile-id-hidden').value = 'default';
+          document.getElementById('profile-name').value = defaultProfileData.name || '';
+          document.getElementById('profile-age').value = defaultProfileData.age || '';
+          document.getElementById('profile-location').value = defaultProfileData.location || '';
+          document.getElementById('profile-father').value = defaultProfileData.family?.father || '';
+          document.getElementById('profile-mother').value = defaultProfileData.family?.mother || '';
+          document.getElementById('profile-lore').value = currentSharedSettings.contextualLifeLore || '';
+          
+          document.getElementById('btn-activate-profile').style.display = 'none';
+          document.getElementById('btn-delete-profile').style.display = 'none';
+        }
+      } catch (err) {
+        console.warn('Child profiles hydration failure:', err);
+      }
+    }
+
+    // ── CHILD PROFILE CRUD ACTIONS ──
+    async function loadChildProfiles() {
+      if (!currentUser) return;
+      const listSidebar = document.getElementById('child-profiles-list-sidebar');
+      if (!listSidebar) return;
+      
+      try {
+        const snap = await db.collection('users').doc(currentUser.uid).collection('profile').get();
+        const profiles = [];
+        
+        snap.forEach(docSnap => {
+          const id = docSnap.id;
+          const data = docSnap.data();
+          if (id === 'default') {
+            defaultProfileData = data;
+          } else {
+            profiles.push({ id, ...data });
+          }
+        });
+        
+        // Add default profile representation to list if not already present
+        if (defaultProfileData && !profiles.some(p => p.id === 'default')) {
+          profiles.unshift({
+            id: 'default',
+            name: defaultProfileData.name || 'Default User',
+            age: defaultProfileData.age || 8,
+            location: defaultProfileData.location || '',
+            family: defaultProfileData.family || {},
+            lifeLore: currentSharedSettings.contextualLifeLore || ''
+          });
+        }
+        
+        currentChildProfiles = profiles;
+        
+        if (profiles.length === 0) {
+          listSidebar.innerHTML = `<div style="opacity: 0.5; padding: 1.5rem 0; text-align: center; font-size: 0.9rem;">No profiles created yet.<br><br><small>Click "+ Add Child Profile" to create one.</small></div>`;
+          return;
+        }
+        
+        listSidebar.innerHTML = profiles.map(profile => {
+          const isSelected = activeProfileId === profile.id;
+          
+          // An item is Active if it is literal "default" or matches active defaultProfileData by name & age
+          let isActive = false;
+          if (defaultProfileData) {
+            isActive = (profile.id === 'default') || 
+                       (profile.name === defaultProfileData.name && 
+                        profile.age === defaultProfileData.age && 
+                        profile.location === defaultProfileData.location);
+          }
+          
+          return `
+            <button type="button" class="profile-item-btn ${isSelected ? 'active' : ''}" onclick="selectChildProfile('${profile.id}')" style="display: flex; gap: 0.8rem; width: 100%;">
+              <span class="profile-item-avatar">👦</span>
+              <div class="profile-item-meta">
+                <span class="profile-item-name">${escapeHTML(profile.name)}</span>
+                <span class="profile-item-status">
+                  <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Active' : 'Inactive'}</span>
+                  Age: ${profile.age}
+                </span>
+              </div>
+            </button>
+          `;
+        }).join('');
+      } catch (err) {
+        listSidebar.innerHTML = `<div style="color: var(--color-red); padding: 1rem 0;">Scan failure: ${err.message}</div>`;
+      }
+    }
+
+    function selectChildProfile(profileId) {
+      activeProfileId = profileId;
+      const profile = currentChildProfiles.find(p => p.id === profileId);
+      if (!profile) return;
+      
+      document.getElementById('profile-id-hidden').value = profile.id;
+      document.getElementById('profile-name').value = profile.name || '';
+      document.getElementById('profile-age').value = profile.age || '';
+      document.getElementById('profile-location').value = profile.location || '';
+      document.getElementById('profile-father').value = profile.family?.father || '';
+      document.getElementById('profile-mother').value = profile.family?.mother || '';
+      document.getElementById('profile-lore').value = profile.lifeLore || profile.contextualLifeLore || '';
+      
+      const btnActivate = document.getElementById('btn-activate-profile');
+      const btnDelete = document.getElementById('btn-delete-profile');
+      
+      let isActive = false;
+      if (defaultProfileData) {
+        isActive = (profile.id === 'default') || 
+                   (profile.name === defaultProfileData.name && 
+                    profile.age === defaultProfileData.age && 
+                    profile.location === defaultProfileData.location);
+      }
+      
+      if (isActive) {
+        btnActivate.style.display = 'none';
+        btnDelete.style.display = 'none';
+      } else {
+        btnActivate.style.display = 'inline-flex';
+        btnDelete.style.display = 'inline-flex';
+      }
+      
+      // Update sidebar visual highlights
+      document.querySelectorAll('.profile-item-btn').forEach(btn => btn.classList.remove('active'));
+      loadChildProfiles(); // Re-render lists to reflect active class
+    }
+
+    function initNewProfileForm() {
+      activeProfileId = 'new';
+      
+      document.getElementById('profile-id-hidden').value = 'new';
+      document.getElementById('profile-name').value = '';
+      document.getElementById('profile-age').value = '';
+      document.getElementById('profile-location').value = '';
+      document.getElementById('profile-father').value = '';
+      document.getElementById('profile-mother').value = '';
+      document.getElementById('profile-lore').value = '';
+      
+      document.getElementById('btn-activate-profile').style.display = 'none';
+      document.getElementById('btn-delete-profile').style.display = 'none';
+      
+      // Remove sidebar active highlights
+      document.querySelectorAll('.profile-item-btn').forEach(btn => btn.classList.remove('active'));
+    }
+
+    async function handleSaveProfileForm() {
+      if (!currentUser) return;
+      const profileId = document.getElementById('profile-id-hidden').value;
+      const name = document.getElementById('profile-name').value.trim();
+      const age = Number(document.getElementById('profile-age').value);
+      const location = document.getElementById('profile-location').value.trim();
+      const father = document.getElementById('profile-father').value.trim();
+      const mother = document.getElementById('profile-mother').value.trim();
+      const lifeLore = document.getElementById('profile-lore').value.trim();
+      
+      const payload = {
+        name,
+        age,
+        location,
+        family: { father, mother },
+        lifeLore,
+        updatedAt: Date.now()
+      };
+      
+      try {
+        let targetId = profileId;
+        if (profileId === 'new') {
+          targetId = `profile_${Date.now()}`;
+        }
+        
+        // Save user profile collection
+        await db.collection('users').doc(currentUser.uid).collection('profile').doc(targetId).set(payload, { merge: true });
+        
+        // If this profile was the active one, or we just saved 'default', write to default
+        let isDefault = (profileId === 'default');
+        if (defaultProfileData && profileId !== 'new') {
+          const profileObj = currentChildProfiles.find(p => p.id === profileId);
+          if (profileObj && profileObj.name === defaultProfileData.name && profileObj.age === defaultProfileData.age) {
+            isDefault = true;
+          }
+        }
+        
+        if (isDefault) {
+          // Push to default document for instant device synchronization
+          const defaultPayload = {
+            name,
+            age,
+            location,
+            family: { father, mother }
+          };
+          await db.collection('users').doc(currentUser.uid).collection('profile').doc('default').set(defaultPayload, { merge: true });
+          
+          await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+            contextualLifeLore: lifeLore
+          }, { merge: true });
+          
+          currentSharedSettings.contextualLifeLore = lifeLore;
+        }
+        
+        activeProfileId = targetId;
+        showToast('Child Profile saved successfully.', 'success');
+        
+        // Refresh data
+        await loadAllData();
+      } catch (err) {
+        showToast('Save failed: ' + err.message, 'error');
+      }
+    }
+
+    async function handleActivateProfile() {
+      if (!currentUser) return;
+      const profile = currentChildProfiles.find(p => p.id === activeProfileId);
+      if (!profile) return;
+      
+      try {
+        const defaultPayload = {
+          name: profile.name,
+          age: profile.age,
+          location: profile.location,
+          family: profile.family || {}
+        };
+        
+        // Set profile/default
+        await db.collection('users').doc(currentUser.uid).collection('profile').doc('default').set(defaultPayload, { merge: true });
+        
+        // Update lore in settings/shared
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          contextualLifeLore: profile.lifeLore || ''
+        }, { merge: true });
+        
+        currentSharedSettings.contextualLifeLore = profile.lifeLore || '';
+        document.getElementById('profile-lore').value = profile.lifeLore || '';
+        
+        showToast(`Profile '${profile.name}' is now active on all terminal devices.`, 'success');
+        await loadAllData();
+      } catch (err) {
+        showToast('Activation failed: ' + err.message, 'error');
+      }
+    }
+
+    async function handleDeleteProfile() {
+      if (!currentUser) return;
+      if (activeProfileId === 'default' || activeProfileId === 'new') return;
+      
+      const profile = currentChildProfiles.find(p => p.id === activeProfileId);
+      if (!profile) return;
+      
+      if (!window.confirm(`Are you sure you want to permanently delete profile '${profile.name}'?`)) return;
+      
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('profile').doc(activeProfileId).delete();
+        showToast(`Profile '${profile.name}' deleted successfully.`, 'success');
+        
+        activeProfileId = 'default';
+        await loadAllData();
+      } catch (err) {
+        showToast('Delete failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── Movie Time sub-tab switcher ──────────────────────────────────────────
+    let activeMovieTimeTab = 'playback';
+    function switchMovieTimeTab(tab) {
+      activeMovieTimeTab = tab;
+      ['playback', 'content', 'quiz', 'limits'].forEach(t => {
+        const btn = document.getElementById(`mt-tab-${t}`);
+        const panel = document.getElementById(`mt-panel-${t}`);
+        if (t === tab) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          panel.style.display = '';
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
+          panel.style.display = 'none';
+        }
+      });
+    }
+
+    // ── Shared settings sub-tab switcher ──────────────────────────────────────
+    let activeSharedSubtab = 'general';
+    function switchSharedSubtab(tab) {
+      activeSharedSubtab = tab;
+      ['general', 'aac', 'movietime'].forEach(t => {
+        const btn = document.getElementById(`shared-subtab-${t}`);
+        const sec = document.getElementById(`shared-sec-${t}`);
+        if (t === tab) {
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          sec.style.display = 'block';
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
+          sec.style.display = 'none';
+        }
+      });
+    }
+
+    // Hydrate all Shared AAC UI fields from a settings object
+    function hydrateSharedAacSettings(s) {
+      setCheck('shared-aac-speakonword', s.speakOnWord !== false);
+      setCheck('shared-aac-showicons', s.showIcons !== false);
+      setCheck('shared-aac-autoreturnhome', s.autoReturnHome !== false);
+      setCheck('shared-aac-autoreturnsubpage', s.autoReturnFromSubPage !== false);
+      setInputVal('shared-aac-caregiverpin', s.caregiverPin ?? '0000');
+      setSelectVal('shared-aac-unmaskedbox', s.unmaskedBoxSize ?? '1x');
+      setInputVal('shared-aac-bordercolor', rgbaToHex(s.selectedBorderColor || '#00c8ff'));
+      setSelectVal('shared-aac-progressstyle', s.dwellProgressStyle ?? 'circle');
+      setSelectVal('shared-aac-progresspos', s.dwellProgressPosition ?? 'center');
+      setSlider('shared-aac-progressopacity', 'val-shared-aac-progressopacity', s.dwellProgressOpacity ?? 1.0, v => Math.round(v * 100) + '%');
+      setSlider('shared-aac-fontscale', 'val-shared-aac-fontscale', s.fontScale ?? 2.0, v => v.toFixed(1) + 'x');
+      setSlider('shared-aac-symbolscale', 'val-shared-aac-symbolscale', s.symbolScale ?? 2.0, v => v.toFixed(1) + 'x');
+      setCheck('shared-aac-symbolontop', s.symbolOnTop ?? false);
+      setInputVal('shared-aac-fontcolor', s.gridFontColor ?? '#ffffff');
+      setSlider('shared-aac-gridopacity', 'val-shared-aac-gridopacity', s.gridOpacity ?? 1.0, v => Math.round(v * 100) + '%');
+      setInputVal('shared-aac-customvocab', (s.customVocabIds ?? []).join(', '));
+    }
+
+    // Hydrate all Movie Time UI fields from a settings object
+    function hydrateMovieTimeSettings(s) {
+      // Playback tab
+      setSlider('shared-mt-selcount', 'val-mt-selcount', s.movieTimeSelectionCount ?? 4, v => v);
+      setSelectVal('shared-mt-duration',  s.movieTimeDuration   ?? 'medium');
+      setSelectVal('shared-mt-quality',   s.movieTimeVideoQuality ?? 'any');
+      setSelectVal('shared-mt-safesearch', s.movieTimeSafeSearch ?? 'strict');
+
+      // Content tab
+      setInputVal('shared-mt-topics',    (s.movieTimeTopics    ?? ['Animals','Science','Art']).join(', '));
+      setInputVal('shared-mt-interests', (s.movieTimeInterests ?? []).join(', '));
+      setInputVal('shared-mt-whitelist', (s.movieTimeWhitelist ?? ['kids','educational']).join(', '));
+      setInputVal('shared-mt-blacklist', (s.movieTimeBlacklist ?? []).join(', '));
+      setCheck('shared-mt-gamer', s.movieTimeGamerLoophole ?? false);
+      setInputVal('shared-mt-selected-videos', (s.movieTimeSelectedYoutubeVideoIds ?? []).join(', '));
+
+      // Quiz tab
+      const intervalSec = s.movieTimePuzzleIntervalSec ?? 600;
+      setSelectVal('shared-mt-puzzle-interval', String(intervalSec));
+      setSelectVal('shared-mt-quiz-difficulty', s.movieTimePuzzleDifficulty ?? 'Easy');
+      setSelectVal('shared-mt-quiz-edu',        s.movieTimeQuizEducationLevel ?? 'Primary');
+      setSelectVal('shared-mt-quiz-subject',    s.movieTimeQuizSubject ?? 'General');
+      setInputVal('shared-mt-quiz-subject-custom', s.movieTimeQuizSubjectCustom ?? '');
+      setCheck('shared-mt-quiz-about-video', s.movieTimeQuizAboutVideo ?? false);
+      setSlider('shared-mt-quiz-choices', 'val-mt-quiz-choices', s.movieTimePuzzleChoices ?? 4, v => v);
+      setSlider('shared-mt-quiz-qgate',   'val-mt-quiz-qgate',   s.movieTimeQuizQuestionGateMs ?? 2000, v => v + ' ms');
+      setSlider('shared-mt-quiz-agate',   'val-mt-quiz-agate',   s.movieTimeQuizAnswerGateMs   ?? 1500, v => v + ' ms');
+      setSlider('shared-mt-quiz-voiceover-pause', 'val-mt-quiz-voiceover-pause', s.movieTimeQuizVoiceOverPauseMs ?? 500, v => v + ' ms');
+      setSlider('shared-mt-quiz-hint',    'val-mt-quiz-hint',    s.movieTimePuzzleHintAfterWrong ?? 3, v => v);
+      setSlider('shared-mt-puzzle-questions', 'val-mt-puzzle-questions', s.movieTimePuzzleQuestionsPerQuiz ?? 3, v => v);
+      setCheck('shared-mt-quiz-sounds',           s.movieTimeQuizSoundEffects    ?? true);
+      setCheck('shared-mt-quiz-voiceover',         s.movieTimeQuizVoiceOver       ?? true);
+      setCheck('shared-mt-quiz-voiceover-choices', s.movieTimeQuizVoiceOverChoices ?? true);
+      const types = s.movieTimePuzzleTypes ?? ['Quiz', 'Riddle'];
+      setCheck('mt-ptype-quiz',   types.includes('Quiz'));
+      setCheck('mt-ptype-riddle', types.includes('Riddle'));
+      setCheck('mt-ptype-word',   types.includes('Word Puzzle'));
+      setCheck('mt-ptype-math',   types.includes('Math'));
+      setCheck('mt-ptype-memory', types.includes('Memory'));
+
+      // Limits tab
+      setSlider('shared-mt-maxdaily', 'val-mt-maxdaily', s.movieTimeMaxDailyMinutes ?? 60, v => v >= 720 ? 'Unlimited' : v + ' min');
+    }
+
+    // Small DOM helpers
+    function setSlider(sliderId, valId, value, fmt) {
+      const el = document.getElementById(sliderId);
+      const valEl = document.getElementById(valId);
+      if (el) el.value = value;
+      if (valEl) valEl.textContent = fmt(value);
+    }
+    function setSelectVal(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+    function setInputVal(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value;
+    }
+    function setCheck(id, checked) {
+      const el = document.getElementById(id);
+      if (el) el.checked = checked;
+    }
+    function splitChips(str) {
+      return str.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    async function saveSharedSettings() {
+      if (!currentUser) return;
+      const geminiApiKey = document.getElementById('shared-gemini-key').value.trim();
+      const geminiModel = document.getElementById('shared-gemini-model').value;
+      const contextualRouting = document.getElementById('shared-ai-routing').value;
+      const contextualSystemPrompt = document.getElementById('shared-prompt-system').value.trim();
+      const contextualPromptPrefix = document.getElementById('shared-prompt-prefix').value.trim();
+      const movieTimeYoutubeKeys = currentYoutubeKeys;
+      const movieTimeYoutubeKey = currentYoutubeKeys.length > 0 ? currentYoutubeKeys[0].key : '';
+
+      // ── Collect all AAC Shared settings ──────────────────────────────────
+      const speakOnWord = document.getElementById('shared-aac-speakonword').checked;
+      const showIcons = document.getElementById('shared-aac-showicons').checked;
+      const autoReturnHome = document.getElementById('shared-aac-autoreturnhome').checked;
+      const autoReturnFromSubPage = document.getElementById('shared-aac-autoreturnsubpage').checked;
+      const caregiverPin = document.getElementById('shared-aac-caregiverpin').value.trim() || '0000';
+      const unmaskedBoxSize = document.getElementById('shared-aac-unmaskedbox').value;
+      const selectedBorderColor = hexToRgba(document.getElementById('shared-aac-bordercolor').value, 1.0);
+      const dwellProgressStyle = document.getElementById('shared-aac-progressstyle').value;
+      const dwellProgressPosition = document.getElementById('shared-aac-progresspos').value;
+      const dwellProgressOpacity = Number(document.getElementById('shared-aac-progressopacity').value);
+      const fontScale = Number(document.getElementById('shared-aac-fontscale').value);
+      const symbolScale = Number(document.getElementById('shared-aac-symbolscale').value);
+      const symbolOnTop = document.getElementById('shared-aac-symbolontop').checked;
+      const gridFontColor = document.getElementById('shared-aac-fontcolor').value;
+      const gridOpacity = Number(document.getElementById('shared-aac-gridopacity').value);
+      const customVocabIds = splitChips(document.getElementById('shared-aac-customvocab').value);
+
+      // ── Collect all Movie Time settings ──────────────────────────────────
+      const movieTimeSelectionCount   = Number(document.getElementById('shared-mt-selcount').value);
+      const movieTimeDuration         = document.getElementById('shared-mt-duration').value;
+      const movieTimeVideoQuality     = document.getElementById('shared-mt-quality').value;
+      const movieTimeSafeSearch       = document.getElementById('shared-mt-safesearch').value;
+
+      const movieTimeTopics    = splitChips(document.getElementById('shared-mt-topics').value);
+      const movieTimeInterests = splitChips(document.getElementById('shared-mt-interests').value);
+      const movieTimeWhitelist = splitChips(document.getElementById('shared-mt-whitelist').value);
+      const movieTimeBlacklist = splitChips(document.getElementById('shared-mt-blacklist').value);
+      const movieTimeGamerLoophole = document.getElementById('shared-mt-gamer').checked;
+      const movieTimeSelectedYoutubeVideoIds = splitChips(document.getElementById('shared-mt-selected-videos').value);
+
+      const movieTimePuzzleIntervalSec    = Number(document.getElementById('shared-mt-puzzle-interval').value);
+      const movieTimePuzzleDifficulty     = document.getElementById('shared-mt-quiz-difficulty').value;
+      const movieTimeQuizEducationLevel   = document.getElementById('shared-mt-quiz-edu').value;
+      const movieTimeQuizSubject          = document.getElementById('shared-mt-quiz-subject').value;
+      const movieTimeQuizSubjectCustom    = document.getElementById('shared-mt-quiz-subject-custom').value.trim();
+      const movieTimeQuizAboutVideo       = document.getElementById('shared-mt-quiz-about-video').checked;
+      const movieTimePuzzleChoices        = Number(document.getElementById('shared-mt-quiz-choices').value);
+      const movieTimeQuizQuestionGateMs   = Number(document.getElementById('shared-mt-quiz-qgate').value);
+      const movieTimeQuizAnswerGateMs     = Number(document.getElementById('shared-mt-quiz-agate').value);
+      const movieTimePuzzleHintAfterWrong = Number(document.getElementById('shared-mt-quiz-hint').value);
+      const movieTimePuzzleQuestionsPerQuiz = Number(document.getElementById('shared-mt-puzzle-questions').value);
+      const movieTimeQuizSoundEffects     = document.getElementById('shared-mt-quiz-sounds').checked;
+      const movieTimeQuizVoiceOver        = document.getElementById('shared-mt-quiz-voiceover').checked;
+      const movieTimeQuizVoiceOverChoices = document.getElementById('shared-mt-quiz-voiceover-choices').checked;
+      const movieTimeQuizVoiceOverPauseMs = Number(document.getElementById('shared-mt-quiz-voiceover-pause').value);
+
+      const puzzleTypeMap = {
+        'Quiz': 'mt-ptype-quiz', 'Riddle': 'mt-ptype-riddle',
+        'Word Puzzle': 'mt-ptype-word', 'Math': 'mt-ptype-math', 'Memory': 'mt-ptype-memory'
+      };
+      const movieTimePuzzleTypes = Object.entries(puzzleTypeMap)
+        .filter(([, id]) => document.getElementById(id)?.checked)
+        .map(([type]) => type);
+
+      const movieTimeMaxDailyMinutes = Number(document.getElementById('shared-mt-maxdaily').value);
+
+      const payload = {
+        geminiApiKey, geminiModel, contextualRouting, contextualSystemPrompt, contextualPromptPrefix,
+        movieTimeYoutubeKeys,
+        movieTimeYoutubeKey,
+        // AAC settings
+        speakOnWord, showIcons, autoReturnHome, autoReturnFromSubPage, caregiverPin,
+        unmaskedBoxSize, selectedBorderColor, dwellProgressStyle, dwellProgressPosition, dwellProgressOpacity,
+        fontScale, symbolScale, symbolOnTop, gridFontColor, gridOpacity, customVocabIds,
+        // Movie Time Playback
+        movieTimeSelectionCount, movieTimeDuration, movieTimeVideoQuality, movieTimeSafeSearch,
+        // Content
+        movieTimeTopics, movieTimeInterests, movieTimeWhitelist, movieTimeBlacklist, movieTimeGamerLoophole,
+        movieTimeSelectedYoutubeVideoIds,
+        // Quiz
+        movieTimePuzzleIntervalSec, movieTimePuzzleDifficulty, movieTimeQuizEducationLevel,
+        movieTimeQuizSubject, movieTimeQuizSubjectCustom, movieTimePuzzleChoices,
+        movieTimeQuizQuestionGateMs, movieTimeQuizAnswerGateMs, movieTimePuzzleHintAfterWrong,
+        movieTimePuzzleQuestionsPerQuiz, movieTimeQuizSoundEffects, movieTimeQuizVoiceOver, movieTimeQuizVoiceOverChoices, movieTimeQuizVoiceOverPauseMs,
+        movieTimePuzzleTypes, movieTimeQuizAboutVideo,
+        // Limits
+        movieTimeMaxDailyMinutes
+      };
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set(payload, { merge: true });
+        showToast('Movie Time & shared parameters updated. Syncing to all terminal devices...', 'success');
+      } catch (err) {
+        showToast('Save failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── YOUTUBE KEYS ROSTER MANAGEMENT ──
+    let revealedYtKeys = {}; // track revealed status by index
+
+    function toggleNewYtKeyVisibility() {
+      const input = document.getElementById('input-new-ytkey-val');
+      const btn = document.getElementById('btn-toggle-new-ytkey');
+      if (input && btn) {
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        btn.textContent = type === 'password' ? '👁️' : '🔒';
+      }
+    }
+
+    function toggleEditYtKeyVisibility(index) {
+      const input = document.getElementById(`input-edit-ytkey-val-${index}`);
+      const btn = document.getElementById(`btn-toggle-edit-ytkey-${index}`);
+      if (input && btn) {
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        btn.textContent = type === 'password' ? '👁️' : '🔒';
+      }
+    }
+
+    function toggleRevealYtKeyLocal(index) {
+      const displaySpan = document.getElementById(`display-ytkey-val-${index}`);
+      const btn = document.getElementById(`btn-reveal-ytkey-${index}`);
+      if (!displaySpan || !btn || index >= currentYoutubeKeys.length) return;
+      
+      const keyObj = currentYoutubeKeys[index];
+      const isCurrentlyRevealed = revealedYtKeys[index] || false;
+      
+      if (isCurrentlyRevealed) {
+        const maskedKey = keyObj.key.length > 12 ? `${keyObj.key.slice(0, 8)}••••${keyObj.key.slice(-4)}` : '••••••••••••';
+        displaySpan.textContent = maskedKey;
+        btn.textContent = '👁️';
+        revealedYtKeys[index] = false;
+      } else {
+        displaySpan.textContent = keyObj.key;
+        btn.textContent = '🔒';
+        revealedYtKeys[index] = true;
+      }
+    }
+
+    function addNewYoutubeKeyPair() {
+      const labelInput = document.getElementById('input-new-ytkey-label');
+      const valInput = document.getElementById('input-new-ytkey-val');
+      if (!labelInput || !valInput) return;
+      
+      const label = labelInput.value.trim() || `Key ${currentYoutubeKeys.length + 1}`;
+      const keyVal = valInput.value.trim();
+      
+      if (!keyVal) {
+        showStatusToast('❌ Key value cannot be empty', 'error');
+        return;
+      }
+      
+      currentYoutubeKeys.push({ label, key: keyVal });
+      renderYoutubeKeysRoster(currentYoutubeKeys);
+      
+      labelInput.value = '';
+      valInput.value = '';
+      valInput.setAttribute('type', 'password');
+      const btn = document.getElementById('btn-toggle-new-ytkey');
+      if (btn) btn.textContent = '👁️';
+      
+      showStatusToast('➕ YouTube API key added to list (save to apply)', 'success');
+    }
+
+    function startEditYtKeyLocal(index) {
+      editingYtKeyIndex = index;
+      renderYoutubeKeysRoster(currentYoutubeKeys);
+    }
+
+    function cancelEditYtKeyLocal() {
+      editingYtKeyIndex = null;
+      renderYoutubeKeysRoster(currentYoutubeKeys);
+    }
+
+    function saveEditYtKeyLocal(index) {
+      const labelInput = document.getElementById(`input-edit-ytkey-label-${index}`);
+      const valInput = document.getElementById(`input-edit-ytkey-val-${index}`);
+      if (!labelInput || !valInput || index >= currentYoutubeKeys.length) return;
+      
+      const label = labelInput.value.trim() || `Key ${index + 1}`;
+      const keyVal = valInput.value.trim();
+      
+      if (!keyVal) {
+        showStatusToast('❌ Key value cannot be empty', 'error');
+        return;
+      }
+      
+      currentYoutubeKeys[index] = { label, key: keyVal };
+      editingYtKeyIndex = null;
+      delete revealedYtKeys[index];
+      renderYoutubeKeysRoster(currentYoutubeKeys);
+      showStatusToast('✏️ Key edited (save to apply)', 'success');
+    }
+
+    function deleteYtKeyPair(index) {
+      if (index >= currentYoutubeKeys.length) return;
+      currentYoutubeKeys.splice(index, 1);
+      
+      const newRevealed = {};
+      Object.keys(revealedYtKeys).forEach(k => {
+        const ki = parseInt(k);
+        if (ki < index) newRevealed[ki] = revealedYtKeys[ki];
+        else if (ki > index) newRevealed[ki - 1] = revealedYtKeys[ki];
+      });
+      revealedYtKeys = newRevealed;
+      
+      if (editingYtKeyIndex === index) editingYtKeyIndex = null;
+      else if (editingYtKeyIndex > index) editingYtKeyIndex--;
+      
+      renderYoutubeKeysRoster(currentYoutubeKeys);
+      showStatusToast('🗑️ Key removed from list (save to apply)', 'success');
+    }
+
+    async function testSingleYtKeyLocal(index) {
+      if (index >= currentYoutubeKeys.length) return;
+      const keyObj = currentYoutubeKeys[index];
+      const btn = document.getElementById(`btn-test-ytkey-${index}`);
+      if (!btn) return;
+      
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ ...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key=${keyObj.key}`);
+        const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+        showStatusToast(`✅ Key "${keyObj.label}" is valid!`, 'success');
+      } catch (err) {
+        console.warn('[YouTube API Key Test Error]', err);
+        showStatusToast(`❌ Key "${keyObj.label}" is invalid/quota exceeded`, 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function renderYoutubeKeysRoster(keys) {
+      const container = document.getElementById('list-youtube-keys');
+      if (!container) return;
+      if (!keys || keys.length === 0) {
+        container.innerHTML = `<div style="opacity: 0.5; padding: 0.5rem 0;">No YouTube API keys registered. Add at least one below.</div>`;
+        return;
+      }
+      
+      container.innerHTML = keys.map((k, index) => {
+        const isRevealed = revealedYtKeys[index] || false;
+        const displayVal = isRevealed ? k.key : (k.key.length > 12 ? `${k.key.slice(0, 8)}••••${k.key.slice(-4)}` : '••••••••••••');
+        const revealIcon = isRevealed ? '🔒' : '👁️';
+        const isEditing = editingYtKeyIndex === index;
+        
+        if (isEditing) {
+          return `
+            <div class="bio-item" id="ytkey-${index}">
+              <div class="bio-item-edit-mode" style="display: flex; gap: 0.6rem; width: 100%; align-items: center;">
+                <input type="text" class="bio-edit-input" id="input-edit-ytkey-label-${index}" value="${escapeHTML(k.label)}" style="width: 25%;">
+                <div class="input-wrap" style="flex-grow: 1; position: relative;">
+                  <input type="password" class="bio-edit-input" id="input-edit-ytkey-val-${index}" value="${escapeHTML(k.key)}" style="width: 100%;">
+                  <button type="button" class="pwd-toggle" id="btn-toggle-edit-ytkey-${index}" onclick="toggleEditYtKeyVisibility(${index})" title="Toggle Visibility">👁️</button>
+                </div>
+                <div class="bio-controls-container" style="display: flex; gap: 0.3rem;">
+                  <button type="button" class="bio-action-btn bio-save-btn" onclick="saveEditYtKeyLocal(${index})" title="Save changes">💾</button>
+                  <button type="button" class="bio-action-btn bio-cancel-btn" onclick="cancelEditYtKeyLocal()" title="Cancel">✕</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        return `
+          <div class="bio-item" id="ytkey-${index}">
+            <div class="bio-meta" style="flex-grow: 1; display: flex; align-items: center; gap: 1rem; overflow: hidden;">
+              <span class="bio-avatar">🔑</span>
+              <div class="bio-details" style="min-width: 0; flex-grow: 1;">
+                <span class="bio-name" style="font-weight: 700;">${escapeHTML(k.label)}</span>
+                <span class="bio-id" style="font-family: monospace; font-size: 0.85rem; color: var(--text-dim);" id="display-ytkey-val-${index}">${escapeHTML(displayVal)}</span>
+              </div>
+            </div>
+            <div class="bio-controls-container" style="display: flex; gap: 0.4rem; align-items: center;">
+              <button type="button" class="bio-edit-btn" onclick="toggleRevealYtKeyLocal(${index})" id="btn-reveal-ytkey-${index}" title="Reveal/Mask API Key">${revealIcon}</button>
+              <button type="button" class="bio-edit-btn" onclick="testSingleYtKeyLocal(${index})" id="btn-test-ytkey-${index}" style="color: var(--color-teal);" title="Test API key quota validation">⚡ Test</button>
+              <button type="button" class="bio-edit-btn" onclick="startEditYtKeyLocal(${index})" title="Edit key label or value">✏️</button>
+              <button type="button" class="bio-delete-btn" onclick="deleteYtKeyPair(${index})" title="Remove API Key">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Biometric Edit states
+    let editingFaceId = null;
+    let editingObjectId = null;
+
+    // ── BIOMETRICS ADD / AMEND / REMOVE ──
+    function renderFaceRoster(faces) {
+      const facesList = document.getElementById('list-registered-faces');
+      if (faces.length === 0) {
+        facesList.innerHTML = `<div style="opacity: 0.5; padding: 1rem 0;">No face profiles registered.</div>`;
+        return;
+      }
+      
+      facesList.innerHTML = faces.map(face => {
+        const isEditing = editingFaceId === face.id;
+        
+        if (isEditing) {
+          return `
+            <div class="bio-item" id="face-${face.id}">
+              <div class="bio-item-edit-mode">
+                <input type="text" class="bio-edit-input" id="input-edit-face-${face.id}" value="${escapeHTML(face.name)}">
+                <div class="bio-controls-container" style="display: flex; gap: 0.3rem;">
+                  <button type="button" class="bio-action-btn bio-save-btn" onclick="saveRenameFaceLocal('${face.id}')" title="Save changes">💾</button>
+                  <button type="button" class="bio-action-btn bio-cancel-btn" onclick="cancelEditFaceLocal()" title="Cancel">✕</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        return `
+          <div class="bio-item" id="face-${face.id}">
+            <div class="bio-meta">
+              <span class="bio-avatar">👦</span>
+              <div class="bio-details">
+                <span class="bio-name">${escapeHTML(face.name)}</span>
+                <span class="bio-id">ID: ${face.id.slice(0, 8)}… | Reg: ${new Date(face.addedAt || Date.now()).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="bio-controls-container" style="display: flex; gap: 0.3rem;">
+              <button type="button" class="bio-edit-btn" onclick="startEditFaceLocal('${face.id}')" title="Rename face biometric profile">✏️</button>
+              <button type="button" class="bio-delete-btn" onclick="deleteFaceProfile('${face.id}')" title="Delete face biometric profile">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startEditFaceLocal(faceId) {
+      editingFaceId = faceId;
+      renderFaceRoster(currentSharedSettings.registeredFaces || []);
+    }
+
+    function cancelEditFaceLocal() {
+      editingFaceId = null;
+      renderFaceRoster(currentSharedSettings.registeredFaces || []);
+    }
+
+    async function saveRenameFaceLocal(faceId) {
+      if (!currentUser || !currentSharedSettings.registeredFaces) return;
+      const inputEl = document.getElementById(`input-edit-face-${faceId}`);
+      if (!inputEl) return;
+      const newName = inputEl.value.trim();
+      if (!newName) {
+        showToast("Name cannot be empty.", "error");
+        return;
+      }
+
+      const updatedFaces = currentSharedSettings.registeredFaces.map(f => {
+        if (f.id === faceId) {
+          return { ...f, name: newName };
+        }
+        return f;
+      });
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredFaces: updatedFaces
+        }, { merge: true });
+
+        currentSharedSettings.registeredFaces = updatedFaces;
+        editingFaceId = null;
+        renderFaceRoster(updatedFaces);
+        showToast("Face biometric profile renamed successfully.", "success");
+      } catch (err) {
+        showToast("Rename failed: " + err.message, "error");
+      }
+    }
+
+    async function addNewFaceProfile() {
+      if (!currentUser) return;
+      const nameInput = document.getElementById('input-new-face-name');
+      if (!nameInput) return;
+      const name = nameInput.value.trim();
+      if (!name) {
+        showToast("Please enter a name.", "error");
+        return;
+      }
+
+      const existingFaces = currentSharedSettings.registeredFaces || [];
+      const newFace = {
+        id: `face_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        name: name,
+        addedAt: Date.now(),
+        addedByDevice: 'Caregiver Portal',
+        photos: []
+      };
+
+      const updatedFaces = [...existingFaces, newFace];
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredFaces: updatedFaces
+        }, { merge: true });
+
+        currentSharedSettings.registeredFaces = updatedFaces;
+        nameInput.value = '';
+        renderFaceRoster(updatedFaces);
+        showToast(`Face profile '${name}' registered successfully.`, "success");
+      } catch (err) {
+        showToast("Registration failed: " + err.message, "error");
+      }
+    }
+
+    function renderObjectRoster(objects) {
+      const objectsList = document.getElementById('list-registered-objects');
+      if (objects.length === 0) {
+        objectsList.innerHTML = `<div style="opacity: 0.5; padding: 1rem 0;">No registered objects.</div>`;
+        return;
+      }
+      
+      objectsList.innerHTML = objects.map(obj => {
+        const isEditing = editingObjectId === obj.id;
+        
+        if (isEditing) {
+          return `
+            <div class="bio-item" id="obj-${obj.id}">
+              <div class="bio-item-edit-mode" style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                  <input type="text" class="bio-edit-input" id="input-edit-obj-label-${obj.id}" value="${escapeHTML(obj.label)}" style="flex-grow: 1;">
+                  <select class="bio-add-select" id="select-edit-obj-type-${obj.id}" style="width: 90px; height: 32px; padding: 0.2rem 0.5rem;">
+                    <option value="object" ${obj.type === 'object' ? 'selected' : ''}>Object</option>
+                    <option value="scene" ${obj.type === 'scene' ? 'selected' : ''}>Scene</option>
+                  </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; width: 100%;">
+                  <button type="button" class="bio-action-btn bio-save-btn" onclick="saveEditObjectLocal('${obj.id}')" style="font-size: 0.8rem; font-weight: 600;">💾 Save</button>
+                  <button type="button" class="bio-action-btn bio-cancel-btn" onclick="cancelEditObjectLocal()" style="font-size: 0.8rem; font-weight: 600;">✕ Cancel</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        const isScene = obj.type === 'scene';
+        return `
+          <div class="bio-item" id="obj-${obj.id}">
+            <div class="bio-meta">
+              <span class="bio-avatar">${isScene ? '🏞️' : '🧸'}</span>
+              <div class="bio-details">
+                <span class="bio-name">${escapeHTML(obj.label)}</span>
+                <span class="bio-id">ID: ${obj.id.slice(0, 8)}… | Type: ${escapeHTML(obj.type || 'object')}</span>
+              </div>
+            </div>
+            <div class="bio-controls-container" style="display: flex; gap: 0.3rem;">
+              <button type="button" class="bio-edit-btn" onclick="startEditObjectLocal('${obj.id}')" title="Edit object/scene details">✏️</button>
+              <button type="button" class="bio-delete-btn" onclick="deleteObjectProfile('${obj.id}')" title="Delete object profile">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startEditObjectLocal(objId) {
+      editingObjectId = objId;
+      renderObjectRoster(currentSharedSettings.registeredObjects || []);
+    }
+
+    function cancelEditObjectLocal() {
+      editingObjectId = null;
+      renderObjectRoster(currentSharedSettings.registeredObjects || []);
+    }
+
+    async function saveEditObjectLocal(objId) {
+      if (!currentUser || !currentSharedSettings.registeredObjects) return;
+      const inputEl = document.getElementById(`input-edit-obj-label-${objId}`);
+      const selectEl = document.getElementById(`select-edit-obj-type-${objId}`);
+      if (!inputEl || !selectEl) return;
+      
+      const newLabel = inputEl.value.trim();
+      const newType = selectEl.value;
+      if (!newLabel) {
+        showToast("Label cannot be empty.", "error");
+        return;
+      }
+
+      const updatedObjs = currentSharedSettings.registeredObjects.map(o => {
+        if (o.id === objId) {
+          return { ...o, label: newLabel, type: newType };
+        }
+        return o;
+      });
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredObjects: updatedObjs
+        }, { merge: true });
+
+        currentSharedSettings.registeredObjects = updatedObjs;
+        editingObjectId = null;
+        renderObjectRoster(updatedObjs);
+        showToast("Object profile updated successfully.", "success");
+      } catch (err) {
+        showToast("Edit failed: " + err.message, "error");
+      }
+    }
+
+    async function addNewObjectProfile() {
+      if (!currentUser) return;
+      const labelInput = document.getElementById('input-new-obj-label');
+      const typeSelect = document.getElementById('select-new-obj-type');
+      if (!labelInput || !typeSelect) return;
+      const label = labelInput.value.trim();
+      const type = typeSelect.value;
+      
+      if (!label) {
+        showToast("Please enter an object label.", "error");
+        return;
+      }
+
+      const existingObjects = currentSharedSettings.registeredObjects || [];
+      const newObj = {
+        id: `obj_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        label: label,
+        type: type,
+        addedAt: Date.now(),
+        descriptor: Array(1024).fill(0) // Pre-allocate standard 1024-D placeholder descriptor for mobileNet scene matcher
+      };
+
+      const updatedObjs = [...existingObjects, newObj];
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredObjects: updatedObjs
+        }, { merge: true });
+
+        currentSharedSettings.registeredObjects = updatedObjs;
+        labelInput.value = '';
+        renderObjectRoster(updatedObjs);
+        showToast(`Object '${label}' registered successfully.`, "success");
+      } catch (err) {
+        showToast("Registration failed: " + err.message, "error");
+      }
+    }
+
+    async function deleteFaceProfile(faceId) {
+      if (!window.confirm("Permanently delete this face biometric profile? The child's device will prompt re-calibration.")) return;
+      if (!currentUser || !currentSharedSettings.registeredFaces) return;
+      
+      const updatedFaces = currentSharedSettings.registeredFaces.filter(f => f.id !== faceId);
+      const faceRecord = currentSharedSettings.registeredFaces.find(f => f.id === faceId);
+      
+      // Manage deleted rosters to allow consistent syncing on offline devices
+      const deletedRecord = { id: faceId, deletedAt: Date.now(), name: faceRecord?.name || 'Unknown' };
+      const currentDeletedList = currentSharedSettings.deletedFaceIds || [];
+      const updatedDeletedList = [...currentDeletedList.filter(d => d.id !== faceId), deletedRecord];
+      
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredFaces: updatedFaces,
+          deletedFaceIds: updatedDeletedList
+        }, { merge: true });
+        
+        // Refresh local cache and list
+        currentSharedSettings.registeredFaces = updatedFaces;
+        currentSharedSettings.deletedFaceIds = updatedDeletedList;
+        renderFaceRoster(updatedFaces);
+        showToast('Face biometric record marked for deletion sync.', 'success');
+      } catch (err) {
+        showToast('Delete action failed: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteObjectProfile(objId) {
+      if (!window.confirm("Permanently delete this registered object profile?")) return;
+      if (!currentUser || !currentSharedSettings.registeredObjects) return;
+      
+      const updatedObjs = currentSharedSettings.registeredObjects.filter(o => o.id !== objId);
+      const objRecord = currentSharedSettings.registeredObjects.find(o => o.id === objId);
+      
+      const deletedRecord = { id: objId, deletedAt: Date.now(), label: objRecord?.label || 'Unknown' };
+      const currentDeletedList = currentSharedSettings.deletedObjectIds || [];
+      const updatedDeletedList = [...currentDeletedList.filter(d => d.id !== objId), deletedRecord];
+      
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc('shared').set({
+          registeredObjects: updatedObjs,
+          deletedObjectIds: updatedDeletedList
+        }, { merge: true });
+        
+        // Refresh local cache and list
+        currentSharedSettings.registeredObjects = updatedObjs;
+        currentSharedSettings.deletedObjectIds = updatedDeletedList;
+        renderObjectRoster(updatedObjs);
+        showToast('Object profile marked for deletion sync.', 'success');
+      } catch (err) {
+        showToast('Delete action failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── DEVICE PROFILES ENGINE ──
+    async function loadDeviceProfiles() {
+      if (!currentUser) return;
+      const listSidebar = document.getElementById('devices-list-sidebar');
+      const detailsContainer = document.getElementById('device-details-container');
+      
+      listSidebar.innerHTML = `<div style="opacity: 0.5; padding: 1rem 0; text-align: center;">Scanning Gaze terminals...</div>`;
+      
+      try {
+        const snap = await db.collection('users').doc(currentUser.uid).collection('settings').get();
+        const devices = [];
+        snap.forEach(docSnap => {
+          const docId = docSnap.id;
+          if (docId.startsWith('device_')) {
+            const devId = docId.slice(7);
+            devices.push({ deviceId: devId, ...docSnap.data() });
+          }
+        });
+        
+        currentDevices = devices;
+        
+        if (devices.length === 0) {
+          listSidebar.innerHTML = `<div style="opacity: 0.5; padding: 1.5rem 0; text-align: center; font-size: 0.9rem;">No Gaze terminals registered.<br><br><small>Connect a client device using the GazeAAC application version 0.2.3.</small></div>`;
+          detailsContainer.innerHTML = `
+            <div class="no-device-selected">
+              <span class="no-device-icon">💻</span>
+              <h3>No Device Synced</h3>
+              <p>Sign in using the same credentials on the desktop GazeAAC application to register your physical hardware mounting rig.</p>
+            </div>
+          `;
+          return;
+        }
+        
+        // Render device list sidebar
+        listSidebar.innerHTML = devices.map(device => {
+          const isSelected = activeDeviceId === device.deviceId;
+          return `
+            <button class="device-item-btn ${isSelected ? 'active' : ''}" onclick="selectGazeDevice('${device.deviceId}')">
+              <span class="device-item-avatar">${device.deviceOS.toLowerCase().includes('win') ? '💻' : '📱'}</span>
+              <div class="device-item-meta">
+                <span class="device-item-name">${escapeHTML(device.deviceName || 'Terminal Terminal')}</span>
+                <span class="device-item-os">${escapeHTML(device.deviceOS || 'Windows 11')}</span>
+              </div>
+            </button>
+          `;
+        }).join('');
+        
+        if (activeDeviceId) {
+          selectGazeDevice(activeDeviceId);
+        } else {
+          detailsContainer.innerHTML = `
+            <div class="no-device-selected">
+              <span class="no-device-icon">💻</span>
+              <h3>Select Active Device</h3>
+              <p>Configure hardware parameters, click sound ranges, and dwell triggers specifically for individual screens.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        listSidebar.innerHTML = `<div style="color: var(--color-red); padding: 1rem 0;">Scan failure: ${err.message}</div>`;
+      }
+    }
+
+    function selectGazeDevice(deviceId) {
+      activeDeviceId = deviceId;
+      activeDeviceData = currentDevices.find(d => d.deviceId === deviceId);
+      
+      // Update sidebar active highlights
+      document.querySelectorAll('.device-item-btn').forEach(btn => btn.classList.remove('active'));
+      loadDeviceProfiles(); // Force re-render list with active state
+      
+      const detailsContainer = document.getElementById('device-details-container');
+      if (!activeDeviceData) return;
+
+      // Fix card binding bug: Initialize the helper variables from the selected device data
+      selectedTtsEngine = activeDeviceData.ttsEngine || 'sapi';
+      selectedVocabStage = activeDeviceData.stage !== undefined ? activeDeviceData.stage : 3;
+      
+      // Renders configuration form for the selected device
+      detailsContainer.innerHTML = `
+        <div class="device-config-form">
+          <div class="panel-header" style="margin-bottom: 1.5rem; padding-bottom: 0.8rem;">
+            <h3 style="font-size: 1.4rem;">🔧 Setup for ${escapeHTML(activeDeviceData.deviceName)}</h3>
+            <span style="font-size: 0.75rem; color: var(--text-dark);">Terminal ID: ${activeDeviceData.deviceId} | Last Active: ${new Date(activeDeviceData.lastActive || Date.now()).toLocaleString()}</span>
+          </div>
+          
+          <form id="device-specific-form" onsubmit="event.preventDefault(); saveSpecificDeviceSettings();">
+            
+            <h4 class="settings-section-title" style="margin-top: 0; color: var(--color-indigo);">💬 1. Device Specific AAC Settings</h4>
+            <div style="border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; background: rgba(255,255,255,0.015);">
+              
+              <h5 class="settings-section-title" style="margin-top: 0; font-size: 1rem; border-bottom: none; padding-bottom: 0;">⏱️ Gaze Dwell Controls</h5>
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Dwell Activation Delay (ms)</label>
+                <div class="slider-container">
+                  <input type="range" class="range-slider" id="dev-dwell-ms" min="200" max="2000" step="50" value="${activeDeviceData.dwellMs !== undefined ? activeDeviceData.dwellMs : 800}">
+                  <span class="slider-val" id="val-dev-dwell-ms">${activeDeviceData.dwellMs !== undefined ? activeDeviceData.dwellMs : 800}ms</span>
+                </div>
+              </div>
+              
+              <div class="row-switch" style="margin-bottom: 1.5rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Mouse Hover Mode</span>
+                  <span class="row-switch-desc">Use mouse position instead of Tobii eye-tracker stream (perfect for switch or head mouse triggers).</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-mouse-hover" ${activeDeviceData.mouseHoverMode ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+              
+              <h5 class="settings-section-title" style="font-size: 1rem; border-bottom: none; padding-bottom: 0;">🔊 Local Text-To-Speech</h5>
+              <label class="form-label" style="margin-bottom: 0.5rem;">Target Speech Engine</label>
+              <div class="cards-row two-cols" id="dev-tts-engine-cards" style="margin-bottom: 1.5rem;">
+                <div class="selection-card ${activeDeviceData.ttsEngine === 'winrt' ? 'active' : ''}" onclick="setTtsEngineLocal('winrt')">
+                  <span class="sel-card-icon">🌟</span>
+                  <span class="sel-card-title">WinRT Engine</span>
+                  <span class="sel-card-desc">Windows natural/neural clear speech voices.</span>
+                </div>
+                <div class="selection-card ${activeDeviceData.ttsEngine !== 'winrt' ? 'active' : ''}" onclick="setTtsEngineLocal('sapi')">
+                  <span class="sel-card-icon">🔊</span>
+                  <span class="sel-card-title">SAPI Engine (Legacy)</span>
+                  <span class="sel-card-desc">Standard Windows Desktop speech voices.</span>
+                </div>
+              </div>
+              
+              <h5 class="settings-section-title" style="font-size: 1rem; border-bottom: none; padding-bottom: 0;">🧱 Vocabulary Masking Stage</h5>
+              <div class="cards-row" id="dev-vocab-stage-cards" style="margin-bottom: 1.5rem;">
+                <div class="selection-card ${activeDeviceData.stage === 1 ? 'active' : ''}" onclick="setVocabStageLocal(1)">
+                  <span class="sel-card-icon">🎯</span>
+                  <span class="sel-card-title">Stage 1 (Emergent)</span>
+                  <span class="sel-card-desc">Highly masked grid focusing on core symbols.</span>
+                </div>
+                <div class="selection-card ${activeDeviceData.stage === 2 ? 'active' : ''}" onclick="setVocabStageLocal(2)">
+                  <span class="sel-card-icon">🚀</span>
+                  <span class="sel-card-title">Stage 2 (Developing)</span>
+                  <span class="sel-card-desc">Intermediate masking with moderately structured layers.</span>
+                </div>
+                <div class="selection-card ${activeDeviceData.stage !== 1 && activeDeviceData.stage !== 2 ? 'active' : ''}" onclick="setVocabStageLocal(3)">
+                  <span class="sel-card-icon">💬</span>
+                  <span class="sel-card-title">Stage 3 (Full Vocab)</span>
+                  <span class="sel-card-desc">Unmasked OBF grid with complete communication matrix.</span>
+                </div>
+              </div>
+
+              <h5 class="settings-section-title" style="font-size: 1rem; border-bottom: none; padding-bottom: 0;">🎨 Gaze Cursor & Calibration Styles</h5>
+              <div class="row-switch" style="margin-bottom: 1rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Show Gaze Cursor Overlay</span>
+                  <span class="row-switch-desc">Displays a real-time cursor indicator representing eye focus.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-show-cursor" ${activeDeviceData.showGazeCursor !== false ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label" for="dev-cursor-color">Cursor Display Color</label>
+                  <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <input type="color" class="form-input" id="dev-cursor-color" value="${rgbaToHex(activeDeviceData.cursorColor || 'rgba(0, 200, 255, 0.7)')}" style="width: 50px; padding: 0.2rem; cursor: pointer; height: 38px;">
+                    <span id="label-cursor-color" style="font-size: 0.85rem; font-family: monospace;">${activeDeviceData.cursorColor || 'rgba(0, 200, 255, 0.7)'}</span>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Cursor Highlight Size (px)</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="dev-cursor-size" min="10" max="60" value="${activeDeviceData.cursorSize || 20}">
+                    <span class="slider-val" id="val-cursor-size">${activeDeviceData.cursorSize || 20}px</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-grid" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                  <label class="form-label" for="dev-cursor-shape">Cursor Shape</label>
+                  <select class="form-input" id="dev-cursor-shape">
+                    <option value="circle" ${activeDeviceData.cursorShape === 'circle' ? 'selected' : ''}>Circle</option>
+                    <option value="crosshair" ${activeDeviceData.cursorShape === 'crosshair' ? 'selected' : ''}>Crosshair</option>
+                    <option value="ring" ${activeDeviceData.cursorShape === 'ring' ? 'selected' : ''}>Expanding Ring</option>
+                    <option value="dot" ${activeDeviceData.cursorShape === 'dot' ? 'selected' : ''}>Minimal Dot</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dev-feedback-pattern">Ocular Feedback Pattern</label>
+                  <select class="form-input" id="dev-feedback-pattern">
+                    <option value="ring-pulse" ${activeDeviceData.feedbackPattern === 'ring-pulse' ? 'selected' : ''}>Ring Pulse Indicator</option>
+                    <option value="spotlight" ${activeDeviceData.feedbackPattern === 'spotlight' ? 'selected' : ''}>Gaze Spotlight</option>
+                    <option value="heat-trail" ${activeDeviceData.feedbackPattern === 'heat-trail' ? 'selected' : ''}>Fading Heat Trail</option>
+                  </select>
+                </div>
+              </div>
+
+              <h5 class="settings-section-title" style="font-size: 1rem; border-bottom: none; padding-bottom: 0;">👁️ Camera & Vision Pipeline</h5>
+              <div class="row-switch">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Context Augmentation</span>
+                  <span class="row-switch-desc">Enable background environment visual indexing to feed AAC contextual prediction.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-cam-augment" ${activeDeviceData.cameraAugmentationEnabled ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+              
+              <div class="row-switch">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Only Augment on Prompt</span>
+                  <span class="row-switch-desc">Only trigger background vision evaluation when the child explicitly requests feedback.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-cam-only-prompt" ${activeDeviceData.cameraAugmentOnlyOnPrompt ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+              
+              <div class="settings-grid" style="margin-bottom: 1.5rem; margin-top: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="dev-cam-interval">Frame Capture Interval (ms)</label>
+                  <input type="number" class="form-input" id="dev-cam-interval" min="500" max="10000" step="100" value="${activeDeviceData.cameraIntervalMs !== undefined ? activeDeviceData.cameraIntervalMs : 2000}">
+                </div>
+                <div class="form-group">
+                  <div class="tooltip-container">
+                    <label class="form-label" style="margin-bottom: 0;">Detection Confidence Threshold</label>
+                    <span class="info-icon" style="margin-left: 4px;">ⓘ</span>
+                    <div class="tooltip-box">
+                      <strong>AI Sensitivity Filter:</strong> Sets the confidence score cut-off (0.10 to 1.00) for face and object detections.
+                      <br><br>
+                      • <strong>Higher values (e.g. 0.80):</strong> Strict detection. Fewer false alarms, but requires very clear lighting.
+                      <br>
+                      • <strong>Lower values (e.g. 0.30):</strong> High sensitivity. Detects faces/objects easily, but may hallucinate background clutter.
+                    </div>
+                  </div>
+                  <div class="slider-container" style="margin-top: 0.5rem;">
+                    <input type="range" class="range-slider" id="dev-cam-confidence" min="0.1" max="1.0" step="0.05" value="${activeDeviceData.cameraMinConfidence !== undefined ? activeDeviceData.cameraMinConfidence : 0.50}">
+                    <span class="slider-val" id="val-dev-cam-confidence">${Number(activeDeviceData.cameraMinConfidence !== undefined ? activeDeviceData.cameraMinConfidence : 0.50).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <h5 class="settings-section-title" style="font-size: 1rem; border-bottom: none; padding-bottom: 0;">🔊 Click Sound Cues</h5>
+              <div class="row-switch" style="margin-bottom: 1rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Enable Click Audio</span>
+                  <span class="row-switch-desc">Play discreet local click/pop sound cues when targets fire.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-click-sound" ${activeDeviceData.navClickSound ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="settings-grid">
+                <div class="form-group">
+                  <label class="form-label" for="dev-click-tone">Click Audio Timbre</label>
+                  <select class="form-input" id="dev-click-tone">
+                    <option value="soft" ${activeDeviceData.navClickTone === 'soft' ? 'selected' : ''}>Soft Chime</option>
+                    <option value="tick" ${activeDeviceData.navClickTone === 'tick' ? 'selected' : ''}>Precise Tick</option>
+                    <option value="pop" ${activeDeviceData.navClickTone === 'pop' ? 'selected' : ''}>Discreet Pop</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Sound Playback Volume</label>
+                  <div class="slider-container">
+                    <input type="range" class="range-slider" id="dev-click-vol" min="0.05" max="1.0" step="0.05" value="${activeDeviceData.navClickVolume !== undefined ? activeDeviceData.navClickVolume : 0.35}">
+                    <span class="slider-val" id="val-click-vol">${Math.round((activeDeviceData.navClickVolume !== undefined ? activeDeviceData.navClickVolume : 0.35) * 100)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h4 class="settings-section-title" style="color: var(--color-pink);">🎬 2. Device Specific Movie Time Settings</h4>
+            <div style="border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; background: rgba(255,255,255,0.015);">
+              
+              <div class="row-switch" style="margin-bottom: 1rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Pause when Gaze is Lost</span>
+                  <span class="row-switch-desc">Automatically pause the video when eye tracker loses tracking completely (e.g. eyes closed, looked away).</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-mt-pauselost" ${activeDeviceData.movieTimePauseOnGazeLost !== false ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="row-switch" style="margin-bottom: 1.5rem;">
+                <div class="row-switch-label">
+                  <span class="row-switch-title">Show Gaze Cursor in Movie Time</span>
+                  <span class="row-switch-desc">Display the real-time eye-gaze cursor indicator while playing a video on this device.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="dev-mt-showcursor" ${activeDeviceData.movieTimeShowGazeCursor !== false ? 'checked' : ''}>
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">Gaze-Away Auto-Pause Duration (ms)</label>
+                <div class="slider-container">
+                  <input type="range" class="range-slider" id="dev-mt-gazeaway" min="500" max="10000" step="500" value="${activeDeviceData.movieTimeGazeAwayMs !== undefined ? activeDeviceData.movieTimeGazeAwayMs : 3000}">
+                  <span class="slider-val" id="val-dev-mt-gazeaway">${activeDeviceData.movieTimeGazeAwayMs !== undefined ? activeDeviceData.movieTimeGazeAwayMs : 3000} ms</span>
+                </div>
+                <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">Dwell lookaway delay before video automatically triggers pause.</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Movie Selection Gate (ms)</label>
+                <div class="slider-container">
+                  <input type="range" class="range-slider" id="dev-mt-selgate" min="0" max="5000" step="100" value="${activeDeviceData.movieTimeSelectionGateMs !== undefined ? activeDeviceData.movieTimeSelectionGateMs : 2000}">
+                  <span class="slider-val" id="val-dev-mt-selgate">${activeDeviceData.movieTimeSelectionGateMs !== undefined ? activeDeviceData.movieTimeSelectionGateMs : 2000} ms</span>
+                </div>
+                <small style="display:block;margin-top:0.3rem;color:var(--color-text-muted,#888);font-size:0.78rem;">Ocular delay before the grid selection cells become dwell-selectable.</small>
+              </div>
+            </div>
+            
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="btn-save-device-details">Save Terminal Calibration</button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      // Set up real-time slider bindings on details layout
+      document.getElementById('dev-dwell-ms').addEventListener('input', function() {
+        document.getElementById('val-dev-dwell-ms').textContent = this.value + 'ms';
+      });
+
+      document.getElementById('dev-cursor-size').addEventListener('input', function() {
+        document.getElementById('val-cursor-size').textContent = this.value + 'px';
+      });
+
+      document.getElementById('dev-cursor-color').addEventListener('input', function() {
+        document.getElementById('label-cursor-color').textContent = this.value;
+      });
+
+      document.getElementById('dev-click-vol').addEventListener('input', function() {
+        document.getElementById('val-click-vol').textContent = Math.round(Number(this.value) * 100) + '%';
+      });
+
+      document.getElementById('dev-cam-confidence').addEventListener('input', function() {
+        document.getElementById('val-dev-cam-confidence').textContent = Number(this.value).toFixed(2);
+      });
+
+      // Bind Movie Time sliders
+      document.getElementById('dev-mt-gazeaway').addEventListener('input', function() {
+        document.getElementById('val-dev-mt-gazeaway').textContent = this.value + ' ms';
+      });
+
+      document.getElementById('dev-mt-selgate').addEventListener('input', function() {
+        document.getElementById('val-dev-mt-selgate').textContent = this.value + ' ms';
+      });
+    }
+
+    // Temporary helper variables for active selected card options
+    let selectedTtsEngine = 'sapi';
+    let selectedVocabStage = 3;
+
+    function setTtsEngineLocal(engine) {
+      selectedTtsEngine = engine;
+      const cards = document.getElementById('dev-tts-engine-cards');
+      if (cards) {
+        cards.querySelectorAll('.selection-card').forEach(c => c.classList.remove('active'));
+        const index = engine === 'winrt' ? 0 : 1;
+        cards.querySelectorAll('.selection-card')[index].classList.add('active');
+      }
+    }
+
+    function setVocabStageLocal(stage) {
+      selectedVocabStage = stage;
+      const cards = document.getElementById('dev-vocab-stage-cards');
+      if (cards) {
+        cards.querySelectorAll('.selection-card').forEach(c => c.classList.remove('active'));
+        const index = stage === 1 ? 0 : stage === 2 ? 1 : 2;
+        cards.querySelectorAll('.selection-card')[index].classList.add('active');
+      }
+    }
+
+    // Commits specific hardware configs
+    async function saveSpecificDeviceSettings() {
+      if (!currentUser || !activeDeviceId || !activeDeviceData) return;
+      
+      const dwellMs = Number(document.getElementById('dev-dwell-ms').value);
+      const mouseHoverMode = document.getElementById('dev-mouse-hover').checked;
+      const showGazeCursor = document.getElementById('dev-show-cursor').checked;
+      const cursorColor = document.getElementById('dev-cursor-color').value;
+      const cursorSize = Number(document.getElementById('dev-cursor-size').value);
+      const cursorShape = document.getElementById('dev-cursor-shape').value;
+      const feedbackPattern = document.getElementById('dev-feedback-pattern').value;
+      const navClickSound = document.getElementById('dev-click-sound').checked;
+      const navClickTone = document.getElementById('dev-click-tone').value;
+      const navClickVolume = Number(document.getElementById('dev-click-vol').value);
+      
+      const cameraAugmentationEnabled = document.getElementById('dev-cam-augment').checked;
+      const cameraAugmentOnlyOnPrompt = document.getElementById('dev-cam-only-prompt').checked;
+      const cameraIntervalMs = Number(document.getElementById('dev-cam-interval').value);
+      const cameraMinConfidence = Number(document.getElementById('dev-cam-confidence').value);
+
+      // Read device specific movie time settings
+      const movieTimePauseOnGazeLost = document.getElementById('dev-mt-pauselost').checked;
+      const movieTimeShowGazeCursor = document.getElementById('dev-mt-showcursor').checked;
+      const movieTimeGazeAwayMs = Number(document.getElementById('dev-mt-gazeaway').value);
+      const movieTimeSelectionGateMs = Number(document.getElementById('dev-mt-selgate').value);
+
+      // Read selected cards states
+      const ttsEngine = selectedTtsEngine;
+      const stage = selectedVocabStage;
+
+      const deviceSettingsPayload = {
+        dwellMs,
+        mouseHoverMode,
+        showGazeCursor,
+        cursorColor,
+        cursorSize,
+        cursorShape,
+        feedbackPattern,
+        navClickSound,
+        navClickTone,
+        navClickVolume,
+        cameraAugmentationEnabled,
+        cameraAugmentOnlyOnPrompt,
+        cameraIntervalMs,
+        cameraMinConfidence,
+        movieTimePauseOnGazeLost,
+        movieTimeShowGazeCursor,
+        movieTimeGazeAwayMs,
+        movieTimeSelectionGateMs,
+        ttsEngine,
+        stage,
+        lastActive: Date.now(),
+        deviceName: activeDeviceData.deviceName,
+        deviceOS: activeDeviceData.deviceOS
+      };
+
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('settings').doc(`device_${activeDeviceId}`).set(deviceSettingsPayload, { merge: true });
+        
+        // Refresh local memory cache
+        const index = currentDevices.findIndex(d => d.deviceId === activeDeviceId);
+        if (index !== -1) {
+          currentDevices[index] = { deviceId: activeDeviceId, ...deviceSettingsPayload };
+        }
+        
+        showToast(`Terminal '${activeDeviceData.deviceName}' calibrated successfully.`, 'success');
+      } catch (err) {
+        showToast('Calibration failed: ' + err.message, 'error');
+      }
+    }
+
+    // ── AUDIT HISTORY ENGINE ──
+    function switchHistoryTab(tabId) {
+      activeHistoryTab = tabId;
+      document.getElementById('hist-tab-sessions').classList.remove('active');
+      document.getElementById('hist-tab-sessions').setAttribute('aria-selected', 'false');
+      document.getElementById('hist-tab-ai').classList.remove('active');
+      document.getElementById('hist-tab-ai').setAttribute('aria-selected', 'false');
+      
+      document.getElementById(`hist-tab-${tabId}`).classList.add('active');
+      document.getElementById(`hist-tab-${tabId}`).setAttribute('aria-selected', 'true');
+      
+      loadHistoryLogs();
+    }
+
+    async function loadHistoryLogs() {
+      if (!currentUser) return;
+      const viewport = document.getElementById('audit-logs-viewport');
+      viewport.innerHTML = `<div style="opacity: 0.5; padding: 2rem 0; text-align: center;">Scanning synced databases...</div>`;
+      
+      try {
+        if (activeHistoryTab === 'sessions') {
+          // Fetch from /sessions sub-collection
+          const snap = await db.collection('users').doc(currentUser.uid).collection('sessions').get();
+          const sessionsList = [];
+          snap.forEach(docSnap => {
+            sessionsList.push(docSnap.data());
+          });
+          
+          // Sort newest active first
+          sessionsList.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+          
+          if (sessionsList.length === 0) {
+            viewport.innerHTML = `<div style="opacity: 0.5; padding: 2rem 0; text-align: center;">No sync sessions recorded yet.</div>`;
+            return;
+          }
+          
+          viewport.innerHTML = sessionsList.map(session => {
+            const date = new Date(session.savedAt || Date.parse(session.date) || Date.now()).toLocaleString();
+            const details = session.logDetails || [];
+            
+            // Standardize parameters with fallback to legacy names
+            const durationSec = session.durationSec || session.durationSeconds || Math.round((session.activeTimeMs || 0) / 1000) || 0;
+            const wordsSpoken = session.wordActivations || session.spokenCount || (Array.isArray(session.sessionLog) ? session.sessionLog.length : 0) || 0;
+            
+            let accuracyString = '95% (High)';
+            if (session.dwellAccuracyPct !== undefined) {
+              accuracyString = `${session.dwellAccuracyPct}%`;
+            } else if (session.accuracy !== undefined) {
+              accuracyString = `${Math.round(session.accuracy * 100)}%`;
+            }
+            
+            let deviceString = 'Unknown Device';
+            if (session.deviceName) {
+              deviceString = session.deviceOS ? `${session.deviceName} (${session.deviceOS})` : session.deviceName;
+            } else if (session.deviceId) {
+              const matchedDev = currentDevices.find(d => d.deviceId === session.deviceId);
+              if (matchedDev) {
+                deviceString = matchedDev.deviceOS ? `${matchedDev.deviceName} (${matchedDev.deviceOS})` : matchedDev.deviceName;
+              } else {
+                deviceString = `Terminal (ID: ${session.deviceId.slice(0, 8)}…)`;
+              }
+            }
+
+            return `
+              <div class="log-item">
+                <div class="log-header">
+                  <span class="log-title">⏱️ Gaze Communication Session</span>
+                  <span class="log-time">${date}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.6rem; margin-top: -0.2rem;">
+                  <span>💻 Terminal Device:</span> <strong style="color: #fff;">${escapeHTML(deviceString)}</strong>
+                </div>
+                <div class="log-meta-grid">
+                  <div class="log-meta-val">Duration: <strong>${Math.floor(durationSec / 60)}m ${durationSec % 60}s</strong></div>
+                  <div class="log-meta-val">Words Spoken: <strong>${wordsSpoken}</strong></div>
+                  <div class="log-meta-val">Accuracy: <strong>${accuracyString}</strong></div>
+                  ${session.stageUsed ? `<div class="log-meta-val">Max Stage: <strong>Stage ${session.stageUsed}</strong></div>` : ''}
+                </div>
+                ${session.topWords && session.topWords.length > 0 ? `
+                  <div style="margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-dim);">Top Words:</span>
+                    ${session.topWords.map(w => `<span class="badge" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; color: #fff;">${escapeHTML(w)}</span>`).join('')}
+                  </div>
+                ` : ''}
+                ${session.notes ? `<div class="log-text-block"><span class="log-text-label">Notes</span>${escapeHTML(session.notes)}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+          
+        } else {
+          // Fetch AI response context from /aiHistory
+          const docSnap = await db.collection('users').doc(currentUser.uid).collection('aiHistory').doc('default').get();
+          
+          if (!docSnap.exists || !docSnap.data().entries || docSnap.data().entries.length === 0) {
+            viewport.innerHTML = `<div style="opacity: 0.5; padding: 2rem 0; text-align: center;">No AI suggestion logs synced yet.</div>`;
+            return;
+          }
+          
+          const aiEntries = [...docSnap.data().entries].reverse(); // Newest active first
+          
+          viewport.innerHTML = aiEntries.map(entry => {
+            const date = new Date(entry.savedAt || Date.now()).toLocaleString();
+            const suggestions = entry.suggestions || [];
+            
+            return `
+              <div class="log-item">
+                <div class="log-header">
+                  <span class="log-title"><span class="log-pill">Ollama / Cloud prediction</span></span>
+                  <span class="log-time">${date}</span>
+                </div>
+                
+                <div class="log-text-block">
+                  <span class="log-text-label">Active Gaze Context</span>
+                  <div style="font-weight: 600; color: #fff;">"${escapeHTML(entry.phraseContext || 'Unnamed conversation context')}"</div>
+                </div>
+                
+                <div class="log-text-block" style="margin-top: 0.2rem;">
+                  <span class="log-text-label">Suggested Selection Grid</span>
+                  <div class="log-suggestions-box">
+                    ${suggestions.map(sug => {
+                      const isSelected = sug === entry.selectedWord;
+                      return `<span class="log-suggestion-tile ${isSelected ? 'selected' : ''}">${escapeHTML(sug)} ${isSelected ? '✅' : ''}</span>`;
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        viewport.innerHTML = `<div style="color: var(--color-red); padding: 2rem 0; text-align: center;">Audit scan failure: ${err.message}</div>`;
+      }
+    }
+
+    // ── GENERAL CLINICAL/UI COMPATIBILITY HELPERS ──
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function rgbaToHex(rgba) {
+      if (rgba.startsWith('#')) return rgba;
+      const parts = rgba.match(/\d+/g);
+      if (!parts || parts.length < 3) return '#00c8ff';
+      const r = parseInt(parts[0]).toString(16).padStart(2, '0');
+      const g = parseInt(parts[1]).toString(16).padStart(2, '0');
+      const b = parseInt(parts[2]).toString(16).padStart(2, '0');
+      return `#${r}${g}${b}`;
+    }
+
+    function hexToRgba(hex, alpha = 0.7) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  </script>
+</body>
+</html>

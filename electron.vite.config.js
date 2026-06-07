@@ -31,6 +31,7 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'src'),
+    base: './',
     publicDir: resolve(__dirname, 'public'),
     build: {
       outDir: resolve(__dirname, 'out/renderer'),

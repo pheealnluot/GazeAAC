@@ -1,6 +1,6 @@
 {
   "name": "gaze-aac",
-  "version": "0.1.0",
+  "version": "0.2.3",
   "description": "Intelligent, high-tolerance eye-gaze assisted communication platform for children with Cerebral Palsy",
   "author": "GazeAAC Contributors",
   "license": "MIT",
@@ -12,11 +12,15 @@
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "lint": "eslint src --ext .js,.jsx --report-unused-disable-directives --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dist": "electron-vite build && electron-builder",
+    "build:bridge": "py -m PyInstaller --onefile --noconsole electron/tobii_bridge.py --distpath bin"
   },
   "dependencies": {
     "electron-store": "^10.0.0",
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "firebase": "^12.13.0",
+    "ws": "^8.18.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
@@ -28,8 +32,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "vite": "^5.4.2",
-    "ws": "^8.18.2"
+    "vite": "^5.4.2"
   },
   "build": {
     "appId": "com.gazeaac.app",
@@ -40,6 +43,26 @@
     "files": [
       "out/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "AACBoards",
+        "to": "AACBoards",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "electron/tobii_bridge.py",
+        "to": "electron/tobii_bridge.py"
+      },
+      {
+        "from": "bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
       "icon": "public/icons/icon.png",
       "target": [
@@ -49,7 +72,12 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "GazeAAC",
+      "uninstallDisplayName": "GazeAAC",
+      "deleteAppDataOnUninstall": false
     }
   }
 }

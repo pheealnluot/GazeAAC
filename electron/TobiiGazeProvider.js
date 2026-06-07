@@ -22,7 +22,9 @@
  */
 
 // MockGazeEmitter import removed — mouse hover mode is the designated fallback
-import { spawn }           from 'child_process'
+import { app }             from 'electron'
+import { spawn, execSync } from 'child_process'
+import { existsSync }      from 'fs'
 import { join, resolve }   from 'path'
 import { fileURLToPath }   from 'url'
 import WebSocket           from 'ws'
@@ -31,23 +33,29 @@ import WebSocket           from 'ws'
 // We navigate two levels up to reach the project root, then into electron/.
 // This is stable regardless of how electron-vite sets up app.getAppPath().
 const __thisDir = fileURLToPath(new URL('.', import.meta.url))
-const _bridgePyPath = resolve(__thisDir, '..', '..', 'electron', 'tobii_bridge.py')
+const isDev = !app.isPackaged
+
+// Standalone production EXE path and production/development bridge python path
+const _bridgeExePath = isDev
+  ? resolve(__thisDir, '..', '..', 'bin', 'tobii_bridge.exe')
+  : join(process.resourcesPath, 'bin', 'tobii_bridge.exe')
+
+const _bridgePyPath = isDev
+  ? resolve(__thisDir, '..', '..', 'electron', 'tobii_bridge.py')
+  : join(process.resourcesPath, 'electron', 'tobii_bridge.py')
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 const WS_URL          = 'ws://127.0.0.1:7070'
-const CONNECT_TIMEOUT = 5_000   // ms to wait for bridge WS to become ready
-const STARTUP_DELAY   = 2_000   // ms to give Python process time to bind port
 const RECONNECT_MAX   = 3       // max silent reconnect attempts on drop
 
-// Python executable: prefer 3.9 (tobii DLL works), fall back to system python
+// Python executable: prefer system python
 // The bridge now works with any Python ≥ 3.7 (only uses ctypes + websockets)
 const PYTHON_EXE = (() => {
-  // Try python launcher 3.9, 3.10, then fallback to bare 'python'
   return process.platform === 'win32' ? 'py' : 'python3'
 })()
 
-const PYTHON_ARGS_PREFIX = process.platform === 'win32' ? ['-3.9'] : []
+const PYTHON_ARGS_PREFIX = []
 
 // ─── SDK availability flag ────────────────────────────────────────────────────
 
@@ -58,9 +66,11 @@ let _sdkAvailable = false
 export class TobiiGazeProvider {
   /**
    * @param {(gazePoint: { x: number, y: number, timestamp: number, valid: boolean }) => void} onData
+   * @param {(status: 'tobii' | 'mouse') => void} [onStatusChange]
    */
-  constructor(onData) {
+  constructor(onData, onStatusChange) {
     this._onData  = onData
+    this._onStatusChange = onStatusChange
     this._running = false
     this._impl    = null
   }
@@ -75,7 +85,7 @@ export class TobiiGazeProvider {
     this._running = true
 
     // Try the real Python bridge first
-    const bridge = new TobiiBridgeImpl(this._onData)
+    const bridge = new TobiiBridgeImpl(this._onData, this._onStatusChange)
     const ok = await bridge.start()
 
     if (ok) {
@@ -83,6 +93,7 @@ export class TobiiGazeProvider {
       this._impl = bridge
       console.log('[TobiiGazeProvider] Started using real Tobii hardware (Python bridge)')
     } else {
+      bridge.stop()
       _sdkAvailable = false
       this._impl = null  // No mock — renderer will use mouse hover mode instead
       console.log('[TobiiGazeProvider] Bridge unavailable — staying idle (mouse hover mode will take over)')
@@ -104,8 +115,9 @@ export class TobiiGazeProvider {
 // ─── Real Tobii Bridge implementation ────────────────────────────────────────
 
 class TobiiBridgeImpl {
-  constructor(onData) {
+  constructor(onData, onStatusChange) {
     this._onData      = onData
+    this._onStatusChange = onStatusChange
     this._proc        = null   // child_process
     this._ws          = null   // WebSocket client
     this._reconnects  = 0
@@ -124,35 +136,70 @@ class TobiiBridgeImpl {
     // Errors are silently ignored (process may not exist).
     if (process.platform === 'win32') {
       try {
-        spawn('cmd', ['/c', 'for /f "tokens=5" %a in (\'netstat -ano ^| findstr :7070\') do taskkill /F /PID %a'], {
-          stdio: 'ignore', windowsHide: true, shell: false
-        })
-        await _sleep(400)  // give OS time to release the port
+        // Kill by process name first (very reliable for packaged exe)
+        try {
+          execSync('taskkill /F /IM tobii_bridge.exe', { stdio: 'ignore', windowsHide: true })
+        } catch (_) {}
+
+        // Kill any process holding port 7070 (covers dev/python mode)
+        // CRITICAL: We only target the LISTENING process to avoid matching Electron client sockets and self-killing!
+        try {
+          execSync('for /f "tokens=5" %a in (\'netstat -ano ^| findstr :7070 ^| findstr LISTENING\') do taskkill /F /PID %a', { stdio: 'ignore', windowsHide: true })
+        } catch (_) {}
+
+        await _sleep(500)  // give OS time to release the port
       } catch (_) {}
     }
 
-    // ── Spawn the Python process ─────────────────────────────────────────────
-    const args = [...PYTHON_ARGS_PREFIX, bridgePath]
-    console.log(`[TobiiBridgeImpl] Spawning: ${PYTHON_EXE} ${args.join(' ')}`)
+    // ── Determine executable and arguments ───────────────────────────────────
+    let exeExists = false
+    if (_bridgeExePath) {
+      try {
+        exeExists = existsSync(_bridgeExePath)
+      } catch (_) {}
+    }
 
+    let spawnExe = PYTHON_EXE
+    let spawnArgs = [...PYTHON_ARGS_PREFIX, bridgePath]
+
+    if (exeExists) {
+      spawnExe = _bridgeExePath
+      spawnArgs = []
+      console.log(`[TobiiBridgeImpl] Standalone production EXE detected. Spawning: ${spawnExe}`)
+    } else {
+      console.log(`[TobiiBridgeImpl] Spawning via Python environment: ${spawnExe} ${spawnArgs.join(' ')}`)
+    }
+
+    // ── Spawn the bridge process ─────────────────────────────────────────────
     try {
-      this._proc = spawn(PYTHON_EXE, args, {
+      this._proc = spawn(spawnExe, spawnArgs, {
         stdio: ['ignore', 'pipe', 'pipe'],
         windowsHide: true,
       })
+      this._proc.on('error', (err) => {
+        console.warn('[TobiiBridgeImpl] Failed to spawn bridge process asynchronously:', err.message)
+        _sdkAvailable = false
+        if (this._onStatusChange) {
+          this._onStatusChange('mouse')
+        }
+      })
     } catch (err) {
-      console.warn('[TobiiBridgeImpl] Failed to spawn Python process:', err.message)
+      console.warn('[TobiiBridgeImpl] Failed to spawn bridge process synchronously:', err.message)
       return false
     }
 
-    this._proc.stdout.on('data', (d) => {
-      const lines = d.toString().trim().split('\n')
-      lines.forEach(l => console.log('[tobii_bridge]', l.trim()))
-    })
-    this._proc.stderr.on('data', (d) => {
-      const lines = d.toString().trim().split('\n')
-      lines.forEach(l => console.warn('[tobii_bridge:err]', l.trim()))
-    })
+    if (this._proc.stdout) {
+      this._proc.stdout.on('data', (d) => {
+        const lines = d.toString().trim().split('\n')
+        lines.forEach(l => console.log('[tobii_bridge]', l.trim()))
+      })
+    }
+    if (this._proc.stderr) {
+      this._proc.stderr.on('data', (d) => {
+        const lines = d.toString().trim().split('\n')
+        lines.forEach(l => console.warn('[tobii_bridge:err]', l.trim()))
+      })
+    }
     this._proc.on('exit', (code) => {
       console.log(`[TobiiBridgeImpl] Python process exited (code ${code})`)
       if (!this._stopping) {
@@ -161,58 +208,98 @@ class TobiiBridgeImpl {
       }
     })
 
-    // ── Wait for the bridge to bind its port ─────────────────────────────────
-    await _sleep(STARTUP_DELAY)
-
-    // ── Connect WebSocket client ──────────────────────────────────────────────
-    const connected = await this._connect()
+    // ── Connect WebSocket client with retry ──────────────────────────────────
+    // In production, PyInstaller standalone EXE can take several seconds to unpack
+    // and start up. We poll repeatedly for up to 20 seconds.
+    const connected = await this._connectWithRetry()
     return connected
   }
 
-  async _connect() {
+  async _connectWithRetry() {
+    const maxAttempts = 40
+    const retryInterval = 500
+    console.log(`[TobiiBridgeImpl] Connecting to WebSocket bridge at ${WS_URL} (max 20s)...`)
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (this._stopping) break
+      const ok = await this._connectOnce()
+      if (ok) {
+        return true
+      }
+      if (attempt < maxAttempts) {
+        await _sleep(retryInterval)
+      }
+    }
+    console.warn('[TobiiBridgeImpl] Failed to connect to WebSocket bridge after all attempts')
+    return false
+  }
+
+  async _connectOnce() {
     return new Promise((resolve) => {
       if (this._stopping) { resolve(false); return }
 
       const ws = new WebSocket(WS_URL)
-      const timer = setTimeout(() => {
-        ws.terminate()
-        console.warn('[TobiiBridgeImpl] WebSocket connection timed out')
-        resolve(false)
-      }, CONNECT_TIMEOUT)
+      
+      const cleanUp = () => {
+        ws.removeAllListeners('open')
+        ws.removeAllListeners('error')
+        ws.removeAllListeners('close')
+        ws.removeAllListeners('message')
+      }
 
       ws.on('open', () => {
-        clearTimeout(timer)
-        console.log('[TobiiBridgeImpl] WebSocket connected to bridge')
+        // Clean up temporary startup listeners
+        ws.removeAllListeners('open')
+        ws.removeAllListeners('error')
+
+        console.log('[TobiiBridgeImpl] WebSocket connected to bridge successfully')
         this._ws = ws
         this._reconnects = 0
+
+        // Attach persistent runtime listeners
+        ws.on('message', (raw) => {
+          try {
+            const msg = JSON.parse(raw)
+            if (msg.status !== undefined) {
+              const isConnected = msg.status === 'connected'
+              _sdkAvailable = isConnected
+              if (this._onStatusChange) {
+                this._onStatusChange(isConnected ? 'tobii' : 'mouse')
+              }
+              return
+            }
+            this._onData({
+              x:         Number(msg.x),
+              y:         Number(msg.y),
+              timestamp: Number(msg.timestamp),
+              valid:     Boolean(msg.valid),
+            })
+          } catch (_) { /* malformed frame — ignore */ }
+        })
+
+        ws.on('error', (err) => {
+          console.warn('[TobiiBridgeImpl] WebSocket error:', err.message)
+        })
+
+        ws.on('close', () => {
+          if (!this._stopping && this._reconnects < RECONNECT_MAX) {
+            this._reconnects++
+            console.log(`[TobiiBridgeImpl] WS closed unexpectedly — reconnect attempt ${this._reconnects}`)
+            setTimeout(() => {
+              if (!this._stopping) {
+                this._connectWithRetry()
+              }
+            }, 1000)
+          }
+        })
+
         resolve(true)
       })
 
-      ws.on('message', (raw) => {
-        try {
-          const gp = JSON.parse(raw)
-          // gp: { x, y, timestamp, valid }
-          this._onData({
-            x:         Number(gp.x),
-            y:         Number(gp.y),
-            timestamp: Number(gp.timestamp),
-            valid:     Boolean(gp.valid),
-          })
-        } catch (_) { /* malformed frame — ignore */ }
-      })
-
-      ws.on('error', (err) => {
-        clearTimeout(timer)
-        console.warn('[TobiiBridgeImpl] WebSocket error:', err.message)
+      ws.on('error', () => {
+        ws.terminate()
+        cleanUp()
         resolve(false)
-      })
-
-      ws.on('close', () => {
-        if (!this._stopping && this._reconnects < RECONNECT_MAX) {
-          this._reconnects++
-          console.log(`[TobiiBridgeImpl] WS closed — reconnect attempt ${this._reconnects}`)
-          setTimeout(() => this._connect(), 1000)
-        }
       })
     })
   }

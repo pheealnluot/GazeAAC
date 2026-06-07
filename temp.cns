@@ -9,3 +9,257 @@ b. rearrange the options in this order:
 5. display the board in the settings that is defined in the OBF including foreground and background colour, symbol, link to 2nd page, symbols. 
 
 in eye tracker settings, add a new setting between show cursor and cursor colour -> Cursor size. Allow the user to select visually the size and shape of the cursor 
+
+the custom vocab settings is to display all boxes but the actual grid only shows 2 boxes. th e correct behaviour is for the actual grid to follow the board settings 
+
+in board settings:
+1. do not show the entire list of available boards on the main settings screen. instead, let the user open another screen where he can select/add/remove boards, including importing with obz files. 
+2. increase the size of the custom vocabulary part so that it is almost the same size as the actual grid. display as if it is the actual grid including the symbold
+3.  when the label scale is changed, the custom vocab label grid should reflect immediately
+4. add a default font colour for the grid which will be the colour of the text unless the obf file explicitly defines it. 
+
+in core 24 board, the flow of "I -> want -> it -> it" should bring me back to the home screen. however, it doesn't. check if that's missing in the obf definitions or a lack of implementation 
+
+in the board settings -> edit board, 
+it should allow edit of the url/link to second/third/base layer. make sure all settings defined in the obf file is available for editing. 
+
+add another setting along with font size to adjust the symbol size. 
+add another setting to determine if the symbol or the text should be on top.
+
+in the actual grid, the for boxes with a link, there should be a small quarter circle in the top right corner to indicate. see screenshot on 'do' 
+
+in the demo version shown in the url below, when the path "I -> want -> it -> it" is followed, "it" is only read aloud at the second selection if 'it'. but in the app it is read twice. explain why? is it defined in the obf parameters or a mis-implementation
+https://app.mycoughdrop.com/example/core-24-it
+
+
+in the board settings, 
+1. changes to the font, symbol size should reflect on the Custom vocabulary board instantly. the current board does not show the symbols. 
+2. increase the range of the font and symbol scale to be 50% - 500%, with a default at 200% 
+3. all changes in settings should persist across devices and instances 
+
+
+In the main grid add the top bar like in the demo screenshot 
+the home button should go back to the base grid, back button to the previous grid and a large word+symbol bar to capture what has been said. a back space and clear button. 
+instead of the settoings button, add a sidebar button which shows yes/no, inflections/ keyboard, social, alert 
+
+the home grid should be the same height as the each box in the grid. the buttons on the home grid will need to be selectable by dwell as well. 
+the current progress circle shows up in the top left corner of the acutal grid box but it should be in the middle (as will be for the home grid) add transparency option in Eye Gaze settings for the progress circle/bar. 
+
+
+let's build the calibration test which will required the user to follow a set of instructions and look at specific parts of the screen. afterwhich, a score will be provided and commentary on the accuracy of the eyegaze. search online to see what is a high fidelity test that is easy for the user (a 9yr child with CP) to complete. the test can be triggered from eyegaze settings. 
+
+in the grid, the words and symbols should not overlap, space them out so that they don't overlap by pushing them further apart 
+
+the words should fit within the boxes. either word wrap or reduce the font size dynamically  or reduce the symbol size or position further apart. 
+
+
+the symbol is still not showing in the preview 
+
+do not breakup a while word in the actual grid, eg "upstairs" should not be broken into 2 rows. find another way to fit the words 
+
+[REDACTED_GH_TOKEN]
+
+increase the width of each button in the home bar to be twice the current width. The Speak button should also be a regular button like the Home button
+
+increase the width of each button in the home bar to be twice the current width. The Speak button should also be a regular button like the Home button. However, do not change or fix the width the boxes in the actual grid. they should always dynamically size with the available window space 
+
+the buttons on the home bar (home, back, speak, backspace, clear, sidebar) should be 10% of the width of the window each. the remaining space is taken up by the sentence builder. 
+
+in board settings, when clicking on "load & select", show a progress bar and counter to let the user know that the board is being loaded and will take some time
+
+the first screenshot is the actual grid, the second is the preview in board settings. 
+the symbol and fonts should be of similar size (but they are not now). changing the slider bars in settings should be reflected in the preview immediately, which should be a good reflection of how the actual boxes will look.
+
+https://aaclanguagelab.com/resources/lamp-words-for-life-manual-boards
+
+let's build a board that will generate 2-4 possible responses based on the context. the response can be anything from words, phrases, sentences, questions or expressions. 
+create a new settings dropdown called Contextual Response. When this board is selected from Contextual Response settings, there will be an addition context window above the home bar which will take up one quarter of the vertical space. the context window can take input from the surroundings, eg by typing a question inside, or from listening to an audio, or from capturing video/images. the response should be generated in super low latency with a local AI model. 
+the responses will still be shown in the OBF compliant manner and be selected using the AAC and Eye gaze settings. 
+
+change  the setting in Contextual Response from "Number of suggestison" to "Max number of suggestions". AI will decide how many with a minimum of 2 to a maximum of 6.  
+If there are 2 responses, layout is 1 row, 2 columns
+3 responses, 1 row, 3 columns
+4 responses, 2 rows, 2 columns
+5 responses, 2 rows, 3 columns
+6 responses, 2 rows, 3 columns
+
+train the model to know that it is generating responses onbehalf of a 9 year old boy called Caden Chye who lives in Singapore with his parents James and Venus. 
+Make sure the model remembers the questions and responses over time so it gets better at predicting the right response 
+
+you are the voice of user profile. give succint responses. if the question presents choices, ensure the responses contain the choices to allow the user to select them
+
+you are the voice of user profile. give succint responses. if the question presents choices, ensure the responses contain the choices to allow the user to select them. EG, IF THE QUESTION IS WHETHER YOU WANT CHOICE A OR CHOICE B, THE RESPONSE COULD BE 1) CHOICE A, 2) CHOICE B, 3) BOTH, 4) NONE
+
+
+change the default system prompt to: 
+You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of the [User Name]. 
+Your job is to suggest between 2 and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say.
+Vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+Example: ["I want to play!", "Can we call Daddy?", "Not now, please"]
+prioritize the usefulness of the responses 
+if the question presents choices, ensure the responses contain the choices to allow the user to select them. for example, if the question is for CHOICE A OR CHOICE B, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) BOTH, 4) NONE. 
+
+(User Name, Age, Location, and parents are filled from the User Profile above)
+
+when I or my or mine is referenced, it refers to the person that the user is speaking to. when you or your or yours is referenced, it refers to the user. for eg, if the context is "What is my name?", this refers to the person who could be a friend or the mother asking and not the user. 
+
+
+replace the default system prompt to the following:
+
+You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of [User Name].
+Your job is to suggest between [Min] and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say.
+Vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+Example: ["I want to play!", "Can we call Daddy?", "Not now, please"]
+Prioritize the usefulness of the responses.
+
+You are a Multiple-Choice Question Reformatter. Whenever the user asks you a question, your task is NOT to answer it directly, but to rephrase the response into a list of structured options that the user can choose from to answer their own question. 
+
+For every question, you must provide a comprehensive set of choices that covers all bases. Follow these strict formatting rules:
+
+1. **Direct Answers:** Include the most direct answers (e.g., "Yes" and "No" for binary questions, or specific categories for open questions).
+2. **The Uncertainty Buffer:** Always include options for when the responder doesn't know, is unsure, or needs more context (e.g., "Maybe", "I don't know", "It depends").
+3. **The 'None of the Above' Buffer:** Always include an option for when the predefined choices don't fit (e.g., "Neither", "Other / Not applicable").
+
+Example Input: "Are you sick?"
+Example Output: 
+* Yes
+* No
+* Maybe / Not sure
+* Neither 
+
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A OR CHOICE B, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) BOTH, 4) NONE.
+
+
+
+
+You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of [User Name]. (User Name, Age, Location, and parents are filled from the User Profile above)
+Your job is to suggest between [Min] and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say. This means that you are effectively a Multiple-Choice Question Reformatter. Whenever the user asks you a question, your task is NOT to answer it directly, but to rephrase the response into a list of plausible options that the user can choose from to answer their own question. 
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+For every question, you must provide a comprehensive set of choices that covers all bases. Follow these strict formatting rules:
+
+1. **Direct Answers:** Include the most direct answers (e.g., "Yes" and "No" for binary questions, the listed choices for choice questions, or specific categories for open questions).
+2. **The Uncertainty Buffer:** Always include options for when the responder doesn't know, is unsure, or needs more context (e.g., "Maybe", "I don't know", "It depends").
+3. **The 'None of the Above' Buffer:** Always include an option for when the predefined choices don't fit (e.g., "Neither", "Other / Not applicable").
+
+Example Input: "Are you sick?"
+Example Output: 
+* Yes
+* No
+* Maybe / Not sure
+* Neither 
+
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A, B or C, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) CHOICE C, 4) BOTH, 5) NONE.
+
+When the question is not a strict yes/no or choice question, vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+
+
+incontextual response, answergate cannot be completed as it keeps resetting. correct behaviour is for answergate to be completed as long as the hover is above the answerboxes for the requisite time. the hover can be above any box and different boxes.  time spent on different boxes add up to cover the requisite time. 
+
+
+You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of [User Name]. (User Name, Age, Location, and parents are filled from the User Profile above)
+Your job is to suggest between [Min] and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say. This means that you are effectively a Multiple-Choice Question Reformatter. Whenever the user asks you a question, your task is NOT to answer it directly, but to rephrase the response into a list of plausible options that the user can choose from to answer their own question. 
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+For every question, you must provide a comprehensive set of choices that covers all bases. Follow these strict formatting rules:
+
+1. **Direct Answers:** Include the most direct answers (e.g., "Yes" and "No" for binary questions, the listed choices for choice questions, or specific categories for open questions).
+2. **The Uncertainty Buffer:** Always include options for when the responder doesn't know, is unsure, or needs more context (e.g., "Maybe", "I don't know", "It depends").
+3. **The 'None of the Above' Buffer:** Always include an option for when the predefined choices don't fit (e.g., "Neither", "Other / Not applicable").
+
+Example Input: "Are you sick?"
+Example Output: 
+* Yes
+* No
+* Maybe / Not sure
+* Neither 
+
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A, B or C, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) CHOICE C, 4) BOTH, 5) NONE.
+
+When the question is not a strict yes/no or choice question, vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+
+
+add another switch on the title bar beside "Board/AI" that toggles BaseBoard in the contextual response screen. 
+if BaseBoard is on, allocate the space just below the "Home-Back-Words-speak bar" to house the BaseBoard. the height should be the same height as the "Home-Back-Words-speak bar", and will dynamically change along with the window
+
+it appears the base board toggle incorrectly affects the board mode. base board toggle only affects in contextual response (AI) mode. in AI mode, when base board is on, the base board is allocated a space. In regular board mode, ignore baseboard toggle and display whatever board is selected in the board settings. 
+
+
+You are an AAC assistant generating responses on behalf of [User Name], a [Age]-year-old child who lives in [Location]. Father is [Father] and Mother is [Mother]. You will speak as the voice of [User Name]. (User Name, Age, Location, and parents are filled from the User Profile above)
+Your job is to suggest between [Min] and [Max] short, natural, age-appropriate communication phrases that [User Name] might actually say. This means that you are effectively a Multiple-Choice Question Reformatter. Whenever the user asks you a question, your task is NOT to answer it directly, but to rephrase the response into a list of plausible options that the user can choose from to answer their own question. 
+Return ONLY a valid JSON array of strings — no explanation, no markdown, no extra text.
+For every question, you must provide a comprehensive set of choices that covers all bases. Follow these strict formatting rules:
+
+1. **Direct Answers:** Include the most direct answers (e.g., "Yes" and "No" for binary questions, the listed choices for choice questions, or specific categories for open questions).
+2. **The Uncertainty Buffer:** Always include options for when the responder doesn't know, is unsure, or needs more context (e.g., "Maybe", "I don't know", "It depends").
+3. **The 'None of the Above' Buffer:** Always include an option for when the predefined choices don't fit (e.g., "Neither", "Other / Not applicable").
+
+Example Input: "Are you sick?"
+Example Output: 
+* Yes
+* No
+* Maybe / Not sure
+* Neither 
+
+If the question presents choices, ensure the responses contain the choices to allow the user to select them. For example, if the question is for CHOICE A, B or C, the response should at least include 1) CHOICE A, 2) CHOICE B, 3) CHOICE C, 4) BOTH, 5) NONE.
+
+When the question is not a strict yes/no or choice question, vary the responses: mix single words, short phrases, full sentences, questions, and expressions.
+
+
+in contextual response mode, add another quick setting on the title bar for "Single Reply". 
+if enabled, after the user selects a response box, no further responses can be selected and all other boxes are greyed out. The response boxes will be enabled again if the "Clear" or "Backspace" button is selected. then all responses boxes with the same responses will be available for choosing again once more. once selected. the rest will be greyed out again. 
+
+All boxes become selectable when a new prompt or response boxes is generated. 
+
+Baymax (big hero 6)
+Savanah kids
+Barefoot books
+Home alone 1
+Youtube songs
+Going on a bear hunt
+Noisy nora
+Tiger came to tea
+Encanto
+Luca
+Totoro
+Kiki delivery
+Castle in the sky
+Up
+Dug days
+Bluey
+Lilo and stitch
+Moana
+Frozen
+Brave
+Tangled
+Beauty and the beast
+Inside out
+Coco
+Aladdin
+Mulan
+Mufasa
+Princess and the frog
+Cat returns
+Those are the main ones now
+
+create a landing page after log in. 
+It should have an AAC tile, which is the current AAC mode 
+add a "Movie Time" tile, which will enter the Movie Time mode
+
+Movie time mode will allow the user to select a show from youtube to watch. if the user doesn't like any of the shows, he can dwell on a button to refresh the options. 
+Once selected, the user will need to solve a simple question before being able to watch the show. 
+every x minutes (as set in the Movie TIme settings that also has to be created) (use youtube iframe player api), the show will pause and will require using eye gaze to complete a short puzzle or game or quiz before continuing. the types of games/puzzles/question can be set in settings and will be aided with AI. 
+if the user looks away from the screen for more than y ms (also set in settings), the video will pause. 
+In settings create a full fledge filter with AI to configure types of videos that can be made available including a list of whitelist keywords, blacklist keywords, length criteria, topics, safesearch etc. allow options for using gamer loophole, eg high quality fan creations 
+
+
+in movie time settings, break it into 3 tabs: 
+1) Playback 
+2) Content 
+a. (add a "interest" list similar to the whitelist where the user can add topics, however, this is an OR operator search. ie the search must include at least one topic from this list. 
+b. add a youtube URL list where the user can also add and remove. videos from this list can always be made available for user to select. Add a button to allow ONLY videos from this list. 
+3) puzzle  
+
+1. build both implicit and explicit but have options to toggle them on or off. add settings to eye tracker settings. for the explicit version, feel free to change the positions and number of dots required for a balance of speed and accuracy 
+2. correction should persist across sessions. it should also be visible to the user in eye tracker settings graphically. 
+3. show the quality of eye tracking discreetly near the title bar or at the bottom somewhere in all parts of the screen where eyetracking is used. 

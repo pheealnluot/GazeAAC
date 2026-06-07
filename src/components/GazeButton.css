@@ -35,7 +35,7 @@
 
 /* ── Activation flash ────────────────────────────────────────────────── */
 .gaze-button--activated {
-  animation: cell-flash 0.6s ease forwards;
+  animation: cell-flash 0.6s ease;
 }
 
 @keyframes cell-flash {
@@ -127,13 +127,13 @@
 }
 
 .gaze-button__ring-track {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.18);
 }
 
 .gaze-button__ring-arc {
-  stroke: var(--color-accent);
+  stroke: #ffffff;
   transition: stroke-dashoffset 0.05s linear;
-  filter: drop-shadow(0 0 4px var(--color-accent));
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 3px var(--color-accent));
 }
 
 /* ── Label & icon ────────────────────────────────────────────────────── */

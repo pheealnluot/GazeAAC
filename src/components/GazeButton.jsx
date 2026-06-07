@@ -219,7 +219,7 @@ export function GazeButton({
             )}
             <span
               className="gaze-button__label"
-              style={textColor ? { color: textColor } : { color: 'var(--grid-font-color, #ffffff)' }}
+              style={{ color: textColor != null ? textColor : 'var(--grid-font-color, #ffffff)' }}
             >
               {displayLabel}
             </span>
@@ -229,7 +229,7 @@ export function GazeButton({
           <>
             <span
               className="gaze-button__label"
-              style={textColor ? { color: textColor } : { color: 'var(--grid-font-color, #ffffff)' }}
+              style={{ color: textColor != null ? textColor : 'var(--grid-font-color, #ffffff)' }}
             >
               {displayLabel}
             </span>

@@ -1,3 +1,5 @@
+import { SyncAdapter } from './SyncAdapter'
+
 /**
  * SessionLogger — Milestone 5
  *
@@ -117,8 +119,52 @@ export class SessionLogger {
 
     const record = this.buildRecord()
     try {
-      await window.gazeAPI?.sessions?.log(record)
-      console.log('[SessionLogger] Session record flushed:', record)
+      if (window.gazeAPI?.sessions) {
+        await window.gazeAPI.sessions.log(record)
+        console.log('[SessionLogger] Session record flushed via gazeAPI:', record)
+
+        // Background push of the complete session log to the cloud
+        try {
+          const fullLog = await window.gazeAPI.sessions.getAll() ?? []
+          await SyncAdapter.getInstance().pushSessionLog(fullLog)
+        } catch (syncErr) {
+          console.warn('[SessionLogger] Background cloud sync failed:', syncErr)
+        }
+      } else {
+        // Fallback for Web/Browser mode
+        const webDeviceId = localStorage.getItem('gaze_deviceId') || 'web_anonymous'
+        const webDeviceName = localStorage.getItem('gaze_deviceName') || 'Web Client'
+        const webDeviceOS = localStorage.getItem('gaze_deviceOS') || 'Web'
+
+        const fullRecord = {
+          ...record,
+          deviceId: webDeviceId,
+          deviceName: webDeviceName,
+          deviceOS: webDeviceOS,
+          savedAt: Date.now()
+        }
+
+        let webLog = []
+        try {
+          const existing = localStorage.getItem('gaze_session_log')
+          if (existing) webLog = JSON.parse(existing)
+        } catch (e) {
+          console.warn('[SessionLogger] Failed to parse local session log:', e)
+        }
+
+        webLog.push(fullRecord)
+        // Cap at 90
+        const trimmed = webLog.slice(-90)
+        localStorage.setItem('gaze_session_log', JSON.stringify(trimmed))
+        console.log('[SessionLogger] Session record flushed to localStorage:', fullRecord)
+
+        // Push to cloud
+        try {
+          await SyncAdapter.getInstance().pushSessionLog(trimmed)
+        } catch (syncErr) {
+          console.warn('[SessionLogger] Web background cloud sync failed:', syncErr)
+        }
+      }
     } catch (err) {
       console.warn('[SessionLogger] Failed to flush session record:', err)
     }

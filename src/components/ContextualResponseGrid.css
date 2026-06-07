@@ -218,13 +218,13 @@
 }
 
 .ctx-cell__ring-track {
-  stroke: rgba(255, 255, 255, 0.1);
+  stroke: rgba(255, 255, 255, 0.18);
 }
 
 .ctx-cell__ring-arc {
-  stroke: hsl(var(--ctx-hue, 220), 85%, 65%);
+  stroke: #ffffff;
   transition: stroke-dashoffset 0.05s linear;
-  filter: drop-shadow(0 0 3px hsl(var(--ctx-hue, 220), 80%, 60%));
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 3px hsl(var(--ctx-hue, 220), 85%, 65%));
 }
 
 /* ── Content ─────────────────────────────────────────────────────────────── */
@@ -302,23 +302,14 @@
   width: 100% !important;
 }
 
-/* ── Grid gated state — dim all tiles while locked ───────────────────────── */
+/* ── Grid gated state — lock all tiles while gate is active (keep standard colors/opacity) ── */
 .ctx-grid--gated .ctx-cell {
   cursor: default;
-  opacity: 0.5;
-  filter: grayscale(0.3);
   transform: none !important;
   box-shadow: none !important;
-  border-color: hsl(var(--ctx-hue, 220), 28%, 20%) !important;
-  transition:
-    opacity 0.2s ease,
-    filter 0.2s ease;
 }
 
 .ctx-grid--gated .ctx-cell:hover {
-  opacity: 0.68;
-  filter: grayscale(0.1);
-  border-color: hsl(var(--ctx-hue, 220), 42%, 30%) !important;
   box-shadow: none !important;
   transform: none !important;
 }
@@ -333,4 +324,70 @@
   100% { box-shadow: none; }
 }
 
+/* ── Single Reply mode — locked-out tiles ─────────────────────────────────── */
+/* Background is desaturated to greyscale; text stays bright so words are     */
+/* just as readable as the selected tile.                                      */
+.ctx-cell--locked-out {
+  opacity: 0.75;
+  cursor: not-allowed;
+  pointer-events: auto;        /* keep visible/hoverable; dwell is blocked in JS */
+  /* No filter — we grey out via explicit colour overrides so text stays crisp */
+  background: hsl(220, 6%, 16%) !important;
+  border-color: hsl(220, 8%, 28%) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition:
+    opacity 0.35s ease,
+    background 0.35s ease,
+    border-color 0.35s ease;
+}
+
+/* Text stays bright white — same readability as the selected tile */
+.ctx-cell--locked-out .ctx-cell__text {
+  color: hsl(0, 0%, 92%) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+}
+
+.ctx-cell--locked-out .ctx-cell__index {
+  opacity: 0.45;
+  color: hsl(220, 10%, 55%) !important;
+}
+
+.ctx-cell--locked-out:hover {
+  opacity: 0.75;
+  background: hsl(220, 8%, 20%) !important;
+  border-color: hsl(220, 14%, 36%) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* ── Single Reply mode — the selected tile ────────────────────────────────── */
+/* Glows with a warm accent to confirm it was chosen.                          */
+.ctx-cell--selected {
+  border-color: hsl(145, 65%, 48%) !important;
+  background: linear-gradient(
+    145deg,
+    hsl(145, 40%, 16%) 0%,
+    hsl(145, 30%, 11%) 100%
+  ) !important;
+  box-shadow:
+    0 0 0 2px hsl(145, 60%, 42%),
+    0 0 20px rgba(60, 210, 110, 0.22),
+    inset 0 0 16px rgba(60, 210, 110, 0.06) !important;
+  animation: ctx-cell-selected-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ctx-cell-selected-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px hsl(145, 60%, 42%), 0 0 20px rgba(60, 210, 110, 0.22), inset 0 0 16px rgba(60, 210, 110, 0.06); }
+  50%       { box-shadow: 0 0 0 3px hsl(145, 70%, 52%), 0 0 32px rgba(60, 210, 110, 0.38), inset 0 0 22px rgba(60, 210, 110, 0.10); }
+}
+
+.ctx-cell--selected .ctx-cell__index {
+  color: hsl(145, 70%, 65%);
+}
+
+.ctx-cell--selected .ctx-cell__text {
+  color: hsl(145, 20%, 96%);
+  text-shadow: 0 0 10px rgba(80, 220, 130, 0.2);
+}
 

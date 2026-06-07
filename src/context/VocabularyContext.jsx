@@ -302,6 +302,28 @@ export function VocabularyProvider({ children }) {
 
   const resetGrid = useCallback(() => setStage(1), [setStage])
 
+  // ── Re-apply stage masking when customVocabIds changes ────────────────────
+  // This fires when the caregiver saves a new custom vocabulary selection in
+  // Board Settings, so the grid reflects the change immediately (without the
+  // user having to press Home first).
+  useEffect(() => {
+    const boardSet = boardSetRef.current
+    if (!boardSet) return
+
+    const homeId = boardSet.rootId ?? HOME_BOARD_ID
+    const isOnHome = activeBoardId === homeId || activeBoardId === HOME_BOARD_ID
+    if (!isOnHome) return  // don't re-mask sub-pages
+
+    ;(async () => {
+      const homeBoard = await boardSet.getBoard(homeId)
+      if (!homeBoard) return
+      const rawCells = boardModelToCells(homeBoard)
+      setCells(applyStage(rawCells, stage, customVocabIds))
+    })()
+  // customVocabIds identity changes only when the array contents change (new ref from updateSetting)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customVocabIds])
+
   // ── Cell-level mask overrides ──────────────────────────────────────────────
   const unmaskCell = useCallback((id) => {
     setCells(prev => prev.map(c => c.id === id ? { ...c, active: true } : c))

@@ -4,7 +4,7 @@ import './GazeAccuracyTest.css'
 
 // ─── 5-Point test grid (corners + centre) ────────────────────────────────────
 // Positions expressed as fractions of viewport [0–1], with safe margin inset
-const MARGIN = 0.10  // keep targets away from edges so they're fully visible
+const MARGIN = 0.05  // keep targets away from edges so they're fully visible
 const TEST_POINTS = [
   { id: 'top-left',     label: 'Top Left',     nx: MARGIN,        ny: MARGIN        },
   { id: 'top-right',    label: 'Top Right',    nx: 1 - MARGIN,    ny: MARGIN        },
@@ -15,7 +15,7 @@ const TEST_POINTS = [
 
 const DWELL_MS        = 1200   // ms to dwell on each target to capture it
 const SAMPLE_WINDOW   = 600    // ms of samples to average for offset calculation
-const TARGET_RADIUS   = 44     // px — large enough for CP users
+const TARGET_RADIUS   = 11     // px — 25% of original size for improved accuracy
 const HIT_RADIUS      = 80     // px — generous hit zone
 
 // ─── Scoring thresholds (normalised to screen width) ─────────────────────────

@@ -8,10 +8,12 @@ import './TopBar.css'
  * TopBar — Main AAC grid top bar (replaces PhraseBar)
  *
  * Layout (left → right):
- *   [🏠 Home] [← Back]  [... word chips phrase bar ...]  [⌫] [✕]  [≡ Sidebar]
+ *   [🏠 Home] [← Back]  [... word chips phrase bar ...]  [⌫] [✕]  [≡ Action]
  *
- * Sidebar (toggleable panel on the right side) shows:
- *   Yes/No | Inflections/Keyboard | Social | Alert
+ * The rightmost button is a general-use action button whose appearance and
+ * behavior change depending on actionMode:
+ *   'default'  → shows ≡, toggles the sidebar dropdown
+ *   'proceed'  → shows ✓ with a green glow, crossing the Manual AnswerGate
  *
  * Dwell support:
  *   Each nav and action button carries a data-cell-id attribute so the
@@ -20,7 +22,7 @@ import './TopBar.css'
  *   then feeds back topBarGazeState = { cellId, dwellProgress } so we can
  *   render the progress ring without any React render on every gaze frame.
  */
-export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureReady, dwellRingOpacity = 1.0 }) {
+export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureReady, dwellRingOpacity = 1.0, singleReplyLocked = false, actionMode = 'default', onActionClick, onLockClick, onAgain, onBackspace, onClear }) {
   const { words, phraseText, speakPhrase, deleteWord, clearPhrase } = usePhrase()
   const { goHome, goBack, activePage } = useVocabulary()
   const { settings } = useGazeSettings()
@@ -76,42 +78,61 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
     onSidebarItemClick?.(id)
   }
 
+  // ── General-use button click handler ────────────────────────────────────
+  const handleActionClick = () => {
+    if (actionMode === 'proceed') {
+      setSidebarOpen(false)
+      onActionClick?.()
+    } else if (actionMode === 'lock') {
+      setSidebarOpen(false)
+      onLockClick?.()
+    } else if (actionMode === 'again') {
+      setSidebarOpen(false)
+      onAgain?.()
+    } else {
+      // Default: toggle sidebar
+      setSidebarOpen(v => !v)
+    }
+  }
+
   return (
     <div className="top-bar" role="banner" ref={barRef}>
       {/* ── Left nav button group ─────────────────────────────── */}
-      <div className="top-bar__nav">
-        <DwellNavButton
-          id="topbar-home"
-          className="top-bar__nav-btn top-bar__nav-btn--home"
-          aria-label="Go to home board"
-          title="Home"
-          onClick={goHome}
-          isGazed={gazedId === 'topbar-home'}
-          dwellProgress={gazedId === 'topbar-home' ? dwellProgress : 0}
-          opacity={opacity}
-        >
-          <span className="top-bar__nav-icon" aria-hidden="true">🏠</span>
-          <span className="top-bar__nav-label">Home</span>
-        </DwellNavButton>
+      {!(settings.contextualResponseEnabled && settings.cameraAugmentationEnabled && settings.cameraStreamingEnabled) && (
+        <div className="top-bar__nav">
+          <DwellNavButton
+            id="topbar-home"
+            className="top-bar__nav-btn top-bar__nav-btn--home"
+            aria-label="Go to home board"
+            title="Home"
+            onClick={goHome}
+            isGazed={gazedId === 'topbar-home'}
+            dwellProgress={gazedId === 'topbar-home' ? dwellProgress : 0}
+            opacity={opacity}
+          >
+            <span className="top-bar__nav-icon" aria-hidden="true">🏠</span>
+            <span className="top-bar__nav-label">Home</span>
+          </DwellNavButton>
 
-        <DwellNavButton
-          id="topbar-back"
-          className={[
-            'top-bar__nav-btn top-bar__nav-btn--back',
-            isAtHome ? 'top-bar__nav-btn--disabled' : ''
-          ].join(' ').trim()}
-          aria-label="Go back to previous board"
-          title="Back"
-          onClick={goBack}
-          disabled={isAtHome}
-          isGazed={gazedId === 'topbar-back'}
-          dwellProgress={gazedId === 'topbar-back' ? dwellProgress : 0}
-          opacity={opacity}
-        >
-          <span className="top-bar__nav-icon" aria-hidden="true">←</span>
-          <span className="top-bar__nav-label">Back</span>
-        </DwellNavButton>
-      </div>
+          <DwellNavButton
+            id="topbar-back"
+            className={[
+              'top-bar__nav-btn top-bar__nav-btn--back',
+              isAtHome ? 'top-bar__nav-btn--disabled' : ''
+            ].join(' ').trim()}
+            aria-label="Go back to previous board"
+            title="Back"
+            onClick={goBack}
+            disabled={isAtHome}
+            isGazed={gazedId === 'topbar-back'}
+            dwellProgress={gazedId === 'topbar-back' ? dwellProgress : 0}
+            opacity={opacity}
+          >
+            <span className="top-bar__nav-icon" aria-hidden="true">←</span>
+            <span className="top-bar__nav-label">Back</span>
+          </DwellNavButton>
+        </div>
+      )}
 
       {/* ── Phrase / word-chip bar ────────────────────────────── */}
       <div
@@ -161,7 +182,7 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
           className="top-bar__action-btn top-bar__action-btn--delete"
           aria-label="Delete last word"
           title="Backspace"
-          onClick={deleteWord}
+          onClick={onBackspace ?? deleteWord}
           isGazed={gazedId === 'topbar-backspace'}
           dwellProgress={gazedId === 'topbar-backspace' ? dwellProgress : 0}
           opacity={opacity}
@@ -173,7 +194,7 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
           className="top-bar__action-btn top-bar__action-btn--clear"
           aria-label="Clear all words"
           title="Clear"
-          onClick={clearPhrase}
+          onClick={onClear ?? clearPhrase}
           isGazed={gazedId === 'topbar-clear'}
           dwellProgress={gazedId === 'topbar-clear' ? dwellProgress : 0}
           opacity={opacity}
@@ -182,21 +203,50 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
         </DwellNavButton>
       </div>
 
-      {/* ── Sidebar toggle ─────────────────────────────────────── */}
+      {/* ── General-use / Proceed / Again button ─────────────── */}
+      {/* In 'proceed' mode: ✓ green glow — crosses the Manual AnswerGate.
+          In 'again' mode:  🔄 + "Again" label — resets Single Reply lock. */}
       <div className="top-bar__sidebar-wrap">
-        <button
-          id="top-bar-sidebar"
-          className={['top-bar__sidebar-btn', sidebarOpen ? 'top-bar__sidebar-btn--open' : ''].join(' ').trim()}
-          aria-label="Toggle sidebar"
-          aria-expanded={sidebarOpen}
-          title="Sidebar"
-          onClick={() => setSidebarOpen(v => !v)}
+        <DwellNavButton
+          id="topbar-action"
+          className={[
+            'top-bar__nav-btn top-bar__nav-btn--action',
+            actionMode === 'proceed' ? 'top-bar__nav-btn--action-proceed' : '',
+            actionMode === 'lock'    ? 'top-bar__nav-btn--action-lock'    : '',
+            actionMode === 'again'   ? 'top-bar__nav-btn--action-again'   : '',
+            actionMode === 'default' && sidebarOpen ? 'top-bar__nav-btn--action-open' : '',
+          ].filter(Boolean).join(' ')}
+          aria-label={
+            actionMode === 'proceed' ? 'Proceed — unlock response tiles' :
+            actionMode === 'lock'    ? 'Lock — lock response tiles' :
+            actionMode === 'again'   ? 'Again — reset selection to reconsider' :
+            'Toggle sidebar'
+          }
+          aria-pressed={actionMode === 'default' ? sidebarOpen : undefined}
+          title={
+            actionMode === 'proceed' ? 'Proceed' :
+            actionMode === 'lock'    ? 'Lock' :
+            actionMode === 'again'   ? 'Again' :
+            'Sidebar'
+          }
+          onClick={handleActionClick}
+          isGazed={gazedId === 'topbar-action'}
+          dwellProgress={gazedId === 'topbar-action' ? dwellProgress : 0}
+          opacity={opacity}
         >
-          <span aria-hidden="true">≡</span>
-          <span className="top-bar__nav-label">Sidebar</span>
-        </button>
+          <span className="top-bar__nav-icon" aria-hidden="true">
+            {actionMode === 'proceed' ? '✓' : actionMode === 'lock' ? '🔒' : actionMode === 'again' ? '🔄' : '≡'}
+          </span>
+          {actionMode === 'again' && (
+            <span className="top-bar__nav-label">Again</span>
+          )}
+          {actionMode === 'lock' && (
+            <span className="top-bar__nav-label">Lock</span>
+          )}
+        </DwellNavButton>
 
-        {sidebarOpen && (
+        {/* Sidebar dropdown — only in default mode */}
+        {actionMode === 'default' && sidebarOpen && (
           <div className="top-bar__sidebar" role="menu" aria-label="Quick access sidebar">
             <button
               className="top-bar__sidebar-close"
@@ -231,7 +281,7 @@ export function TopBar({ onSidebarItemClick, topBarGazeState = {}, onMeasureRead
  * DwellNavButton — A TopBar button that renders an SVG dwell progress ring
  * centered on itself, similar to GazeButton's ring.
  */
-function DwellNavButton({ id, className, 'aria-label': ariaLabel, title, onClick, disabled, children, isGazed, dwellProgress, opacity }) {
+function DwellNavButton({ id, className, 'aria-label': ariaLabel, 'aria-pressed': ariaPressed, title, onClick, disabled, children, isGazed, dwellProgress, opacity }) {
   const circumference = 2 * Math.PI * 38   // r=38 in a 100x100 viewBox
   const dashOffset    = circumference * (1 - (dwellProgress ?? 0))
 
@@ -242,6 +292,7 @@ function DwellNavButton({ id, className, 'aria-label': ariaLabel, title, onClick
       data-gazed={isGazed ? 'true' : 'false'}
       className={className}
       aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
       title={title}
       onClick={onClick}
       disabled={disabled}

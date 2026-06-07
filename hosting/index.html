@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>GazeAAC – Intelligent Eye-Gaze Assisted Communication for Children</title>
+  <meta name="description" content="GazeAAC is an open-source, intelligent, high-tolerance eye-gaze communication platform tailored for children with Cerebral Palsy. Download the installer now.">
+  <meta name="keywords" content="GazeAAC, eye gaze, AAC, Cerebral Palsy, Tobii eye tracker, assistive communication, speech synthesis, AI response">
+  <meta name="author" content="GazeAAC Contributors">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="GazeAAC – Intelligent Assistive Communication">
+  <meta property="og:description" content="High-tolerance eye-gaze assisted communication platform with intelligent predictive vocabulary and Firebase syncing.">
+  <meta property="og:type" content="website">
+  
+  <!-- Fonts & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=0.2.3">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://gazeaac-app-sync.web.app/icons/icon.png" onerror="this.href='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👁️</text></svg>'">
+</head>
+<body>
+
+  <!-- Background Gradients -->
+  <div class="bg-gradient bg-indigo"></div>
+  <div class="bg-gradient bg-pink"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="container header-container">
+      <a href="#" class="logo" id="logo-link">
+        <span class="logo-icon">👁️</span>
+        <span class="logo-text">Gaze<span>AAC</span></span>
+      </a>
+      <nav>
+        <a href="#features" id="nav-features">Features</a>
+        <a href="#simulation" id="nav-simulation">Live Demo</a>
+        <a href="#requirements" id="nav-requirements">Requirements</a>
+        <a href="admin.html" id="nav-admin">Caregiver Portal</a>
+        <a href="#downloads" class="btn btn-secondary btn-sm" id="nav-download-btn">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container hero-container">
+      <div class="hero-badge" id="hero-status-badge">
+        <span class="badge-dot"></span>
+        <span>Version 0.2.3 Released</span>
+      </div>
+      
+      <h1 class="hero-title" id="main-hero-title">
+        Empowering Voices Through <span class="text-gradient">Intelligent Gaze</span>
+      </h1>
+      
+      <p class="hero-subtitle" id="main-hero-subtitle">
+        An intelligent, high-tolerance eye-gaze communication platform specifically designed for children with complex communication needs, featuring Tobii eye tracker support, robust word prediction, and real-time syncing.
+      </p>
+
+      <div class="hero-download-actions" id="hero-download-actions">
+        <a href="/GazeAAC-Setup-0.2.3.zip" class="btn btn-primary btn-lg" id="btn-download-installer" download>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          Download Installer
+          <span class="btn-subtext">Windows Setup ZIP (376 MB)</span>
+        </a>
+        
+        <a href="/GazeAAC-0.2.3.zip" class="btn btn-outline btn-lg" id="btn-download-portable" download>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+            <path d="M12 18V6M6 12l6 6 6-6"/>
+          </svg>
+          Download Portable
+          <span class="btn-subtext">Standalone ZIP (376 MB)</span>
+        </a>
+      </div>
+
+      <div class="hero-meta" id="hero-features-meta">
+        <span>✓ Windows 10 & 11 Optimized</span>
+        <span>✓ Free & Open Source</span>
+        <span>✓ Offline-First Architecture</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Dwell Simulation -->
+  <section class="simulation-section" id="simulation">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Experience <span class="text-gradient">Dwell Interaction</span></h2>
+        <p class="section-subtitle">
+          Hover your cursor over a card below. Hold your position to fill the progress circle and trigger the selection, simulating our adaptive eye-gaze dwell control system.
+        </p>
+      </div>
+
+      <!-- Phrase Bar Simulator -->
+      <div class="phrase-bar-container" id="sim-phrase-container">
+        <div class="phrase-bar-label">Simulated Phrase Bar</div>
+        <div class="phrase-bar" id="sim-phrase-bar">
+          <span class="phrase-placeholder" id="sim-phrase-placeholder">Hover and dwell on a tile below to build a phrase...</span>
+        </div>
+        <button class="phrase-clear-btn" id="btn-clear-phrase" title="Clear Phrase">
+          Clear
+        </button>
+      </div>
+
+      <!-- Simulation Grid -->
+      <div class="sim-grid" id="sim-tiles-grid">
+        <!-- Yes Tile -->
+        <div class="sim-tile border-green" data-word="Yes" id="tile-yes">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">✅</div>
+          </div>
+          <span class="tile-label">Yes</span>
+        </div>
+
+        <!-- No Tile -->
+        <div class="sim-tile border-red" data-word="No" id="tile-no">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">❌</div>
+          </div>
+          <span class="tile-label">No</span>
+        </div>
+
+        <!-- Help Tile -->
+        <div class="sim-tile border-amber" data-word="Help" id="tile-help">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">🆘</div>
+          </div>
+          <span class="tile-label">Help</span>
+        </div>
+
+        <!-- Play Tile -->
+        <div class="sim-tile border-blue" data-word="Play" id="tile-play">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">🧸</div>
+          </div>
+          <span class="tile-label">Play</span>
+        </div>
+
+        <!-- Sleep Tile -->
+        <div class="sim-tile border-indigo" data-word="Sleep" id="tile-sleep">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">💤</div>
+          </div>
+          <span class="tile-label">Sleep</span>
+        </div>
+
+        <!-- Speak Tile -->
+        <div class="sim-tile border-pink" data-word="Speak" id="tile-speak">
+          <div class="tile-circle-wrapper">
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+              <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+            </svg>
+            <div class="tile-emoji">🗣️</div>
+          </div>
+          <span class="tile-label">Speak</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Augmentation Section -->
+  <section class="video-aug-section" id="video-aug">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Intelligent <span class="text-gradient">Video Augmentation</span></h2>
+        <p class="section-subtitle">
+          GazeAAC reads physical surroundings in real-time or on-demand to empower non-verbal kids. Try our interactive visual pipeline simulator below to see how face registration, custom object recognition, and AI-prompted suggestions merge together!
+        </p>
+      </div>
+
+      <div class="video-aug-container">
+        <!-- Viewport Grid -->
+        <div class="video-aug-viewport-wrap">
+          <div class="video-aug-viewport" id="sim-camera-viewport">
+            <!-- Grid overlays & reticle -->
+            <div class="viewport-overlay-grid"></div>
+            <div class="viewport-reticle">
+              <div class="reticle-circle"></div>
+              <div class="reticle-line reticle-h"></div>
+              <div class="reticle-line reticle-v"></div>
+            </div>
+            
+            <!-- Scan line -->
+            <div class="viewport-scanline" id="sim-scanline"></div>
+
+            <!-- Simulated live scene elements -->
+            <div class="viewport-scene" id="sim-scene-bg">
+              <div class="scene-element element-mom" id="elem-mom">
+                <span class="element-emoji">👩‍👦</span>
+              </div>
+              <div class="scene-element element-cup" id="elem-cup">
+                <span class="element-emoji">🥤</span>
+              </div>
+              <div class="scene-element element-teddy" id="elem-teddy">
+                <span class="element-emoji">🧸</span>
+              </div>
+            </div>
+
+            <!-- Bounding Box Overlays -->
+            <div class="hud-box box-green" id="hud-mom">
+              <span class="hud-box-label">👤 Caregiver (Mom) (Happy)</span>
+            </div>
+            <div class="hud-box box-amber" id="hud-cup">
+              <span class="hud-box-label">📦 Blue Cup (94%)</span>
+            </div>
+            <div class="hud-box box-amber" id="hud-teddy">
+              <span class="hud-box-label">📦 Teddy Bear (88%)</span>
+            </div>
+
+            <div class="viewport-hud-badge" id="viewport-hud-status">📷 FEED ACTIVE — STANDBY</div>
+          </div>
+        </div>
+
+        <!-- Controls & Results -->
+        <div class="video-aug-controls">
+          <h3 class="controls-title">Vision Pipeline Diagnostics</h3>
+          
+          <div class="controls-toggles">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-name">Camera Augmentation</span>
+                <span class="toggle-desc">Analyze surroundings and inject observed people & objects into the AI engine.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="web-toggle-augment" checked>
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-name">Augment Only on Prompt (On-Demand)</span>
+                <span class="toggle-desc">Run vision models only when prompted, optimizing tokens and bandwidth.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="web-toggle-ondemand" checked>
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="prompt-input-wrap">
+            <label class="prompt-label">Simulated Prompt Input (Optional context prefix)</label>
+            <div class="prompt-input-row">
+              <input type="text" class="prompt-text-input" id="web-prompt-input" placeholder="e.g., I want..., Give me..." value="I want">
+              <button class="btn btn-primary" id="btn-trigger-scan" style="flex-direction: row; padding: 0 1.5rem; font-size: 0.95rem; border-radius: 10px; height: 38px; line-height: 38px;">
+                🔬 Scan & Augment
+              </button>
+            </div>
+          </div>
+
+          <div class="scan-telemetry" id="scan-telemetry">
+            <div class="telemetry-empty">Click "Scan & Augment" above to trigger a simulated environment evaluation.</div>
+          </div>
+
+          <div class="suggested-tiles-title" id="suggested-tiles-title" style="display: none;">Generated Contextual Speech Tiles (Dwell Enabled)</div>
+          <div class="suggested-tiles-grid" id="suggested-tiles-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gamified Movie Mode Section -->
+  <section class="moviemode-section" id="moviemode">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Gamified Attention: <span class="text-gradient">Movie Mode</span></h2>
+        <p class="section-subtitle">
+          Transform passive screen time into an active, highly motivating communication training tool. Movie Mode uses instant positive reinforcement and AI-generated pauses to teach kids that their eye gaze is a powerful tool of control and expression.
+        </p>
+      </div>
+
+      <div class="moviemode-container">
+        <!-- Interactive Player Mockup -->
+        <div class="moviemode-mockup-wrap">
+          <div class="moviemode-player" id="mock-player">
+            <!-- Simulated Video Frame (Watching State) -->
+            <div class="player-video-frame" id="mock-video-frame">
+              <div class="video-overlay-tint"></div>
+              <!-- Play/Pause Indicator HUD -->
+              <div class="player-hud-badge" id="player-hud-state">👁️ GAZE DETECTED — PLAYING</div>
+              
+              <!-- Video Mock Visual Elements -->
+              <div class="video-content-mock">
+                <span class="video-emoji">🎬</span>
+                <span class="video-caption">"Exploring the Solar System..."</span>
+              </div>
+
+              <!-- Puzzle Overlay (Dynamic State Transition) -->
+              <div class="puzzle-overlay" id="mock-puzzle-overlay">
+                <div class="puzzle-card">
+                  <div class="puzzle-header">
+                    <span class="puzzle-badge">🧠 Dynamic Quiz Phase</span>
+                    <h4>Which planet is closest to the Sun?</h4>
+                  </div>
+                  <!-- Progress Gate Indicator -->
+                  <div class="puzzle-gate-bar">
+                    <div class="puzzle-gate-fill" style="width: 100%;"></div>
+                  </div>
+                  <div class="puzzle-choices-grid">
+                    <div class="puzzle-choice-tile border-blue">
+                      <div class="puzzle-choice-circle">🪐</div>
+                      <span>Jupiter</span>
+                    </div>
+                    <div class="puzzle-choice-tile border-green correct pulse">
+                      <div class="puzzle-choice-circle success-circle">☀️</div>
+                      <span>Mercury</span>
+                    </div>
+                    <div class="puzzle-choice-tile border-red">
+                      <div class="puzzle-choice-circle">🔴</div>
+                      <span>Mars</span>
+                    </div>
+                  </div>
+                  <div class="puzzle-hud">🗣️ Reading options... "Mercury"</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive Toggle Controls -->
+            <div class="player-controls-bar">
+              <button class="player-btn active" id="btn-toggle-playing" onclick="toggleMockPlayerState(true)">
+                <span class="btn-indicator"></span> Focus Mode (Gaze Active)
+              </button>
+              <button class="player-btn" id="btn-toggle-paused" onclick="toggleMockPlayerState(false)">
+                <span class="btn-indicator"></span> Look Away Mode (Gaze Lost)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features and Clinical Value -->
+        <div class="moviemode-features">
+          <h3 class="features-title">How It Motivates & Trains</h3>
+          
+          <div class="mm-features-list">
+            <!-- Feature Item 1 -->
+            <div class="mm-feature-item">
+              <div class="mm-feat-icon bg-pink-soft">🎯</div>
+              <div class="mm-feat-content">
+                <h4>Gaze-Away Auto-Pause</h4>
+                <p>Pauses playback instantly when the child looks away and resumes once they return, creating an immediate positive reinforcement loop that rewards sustained focus.</p>
+              </div>
+            </div>
+
+            <!-- Feature Item 2 -->
+            <div class="mm-feature-item">
+              <div class="mm-feat-icon bg-amber-soft">🧠</div>
+              <div class="mm-feat-content">
+                <h4>AI-Powered Video Puzzles</h4>
+                <p>Gemini AI scrapes video transcripts on-the-fly to insert custom, context-aware interactive puzzles, turning passive viewing into active learning.</p>
+              </div>
+            </div>
+
+            <!-- Feature Item 3 -->
+            <div class="mm-feature-item">
+              <div class="mm-feat-icon bg-indigo-soft">👁️</div>
+              <div class="mm-feat-content">
+                <h4>Double-Gate calibration</h4>
+                <p>Progressive circular Dwell Gates (Question & Answer) prevent accidental clicks ("Midas Touch") while keeping kids relaxed with child-friendly audio read-alouds.</p>
+              </div>
+            </div>
+
+            <!-- Feature Item 4 -->
+            <div class="mm-feature-item">
+              <div class="mm-feat-icon bg-green-soft">⚙️</div>
+              <div class="mm-feat-content">
+                <h4>Caregiver Remote Control</h4>
+                <p>Whitelist channels, configure learning topics, and set daily watch limits remotely via the caregiver portal, syncing instantly to the device.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Key Core Pillars</h2>
+        <p class="section-subtitle">GazeAAC combines robust low-level eye-tracking technology with advanced user interface design tailored for ultimate accessibility.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card" id="feat-tobii">
+          <div class="feature-icon bg-indigo-soft">🔌</div>
+          <h3>Tobii Gaze Bridge</h3>
+          <p>Features a custom python-based background service that bridges Tobii Eye Tracker APIs to Electron via WebSockets, supporting local, low-latency gaze polling.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card" id="feat-tolerance">
+          <div class="feature-icon bg-pink-soft">🎯</div>
+          <h3>CP-Optimized Tolerance</h3>
+          <p>Features custom dampening buffers and manual gate switches designed specifically for kids with spasticity, preventing accidental double-clicks and mis-selections.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card" id="feat-vocab">
+          <div class="feature-icon bg-green-soft">📁</div>
+          <h3>OBF Grid Compatibility</h3>
+          <p>Fully supports Open Board Format (OBF), allowing custom symbols, vocabulary trees, and grid dimensions to be imported and synced seamlessly.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card" id="feat-ai">
+          <div class="feature-icon bg-amber-soft">🤖</div>
+          <h3>Contextual AI Responses</h3>
+          <p>Uses offline-first cache syncing powered by Firebase combined with intelligent AI query engines for quick, contextually relevant conversational responses.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card" id="feat-vision">
+          <div class="feature-icon bg-green-soft" style="background: rgba(16, 172, 132, 0.1); color: var(--color-teal);">📷</div>
+          <h3>Intelligent Video Augmentation</h3>
+          <p>Features live background camera indexing via FaceNet and MobileNet models, feeding identified objects and face emotions directly into the predictive AI.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card" id="feat-sync">
+          <div class="feature-icon bg-indigo-soft" style="background: rgba(99, 102, 241, 0.1); color: var(--color-indigo);">👤</div>
+          <h3>Biometrics Caregiver Sync</h3>
+          <p>Allows caregivers to remotely add family face profiles and custom object embeddings inside their caregiver panel, syncing instantly across devices.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- System Requirements & Guide -->
+  <section class="requirements-section" id="requirements">
+    <div class="container requirements-container">
+      <div class="req-block" id="block-spec">
+        <h3>System Requirements</h3>
+        <ul class="specs-list">
+          <li><strong>OS:</strong> Windows 10 or Windows 11 (64-bit)</li>
+          <li><strong>Memory:</strong> 4 GB RAM minimum (8 GB recommended)</li>
+          <li><strong>Hardware:</strong> Tobii Eye Tracker 4C / 5 / PCEye (Optional, supports standard Mouse Emulation mode out-of-the-box!)</li>
+          <li><strong>Frameworks:</strong> Microsoft VC++ Redistributable (included in installer)</li>
+        </ul>
+      </div>
+
+      <div class="req-block" id="block-guide">
+        <h3>How to Get Started</h3>
+        <ol class="guide-list">
+          <li>Download the installer package (`GazeAAC-Setup-0.2.3.zip`), extract the `.exe` inside, and double-click to install.</li>
+          <li>Connect your Tobii Eye Tracker (if available) and run the Tobii Calibration utility.</li>
+          <li>Launch **GazeAAC** from the desktop shortcut. The Python Eye Gaze bridge will start automatically in the background.</li>
+          <li>If using a standard mouse, the app functions in **Dwell Click** mode—perfect for testing and screen-based navigation!</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final Download Footer Section -->
+  <section class="downloads-section" id="downloads">
+    <div class="container">
+      <div class="download-box">
+        <h2>Get Started with GazeAAC</h2>
+        <p>Choose the installation format that fits your device. Our NSIS setup contains everything needed to initialize GazeAAC and the Tobii Eye Tracker bridge.</p>
+        
+        <div class="hero-actions downloads-actions">
+          <a href="/GazeAAC-Setup-0.2.3.zip" class="btn btn-primary btn-lg" id="btn-footer-download-installer" download>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Download Setup ZIP (376 MB)
+          </a>
+          <a href="/GazeAAC-0.2.3.zip" class="btn btn-outline btn-lg" id="btn-footer-download-portable" download>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+              <path d="M12 18V6M6 12l6 6 6-6"/>
+            </svg>
+            Download Standalone ZIP (376 MB)
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-container">
+      <p class="footer-copy">&copy; 2026 GazeAAC. Built for clinical excellence and clinical impact.</p>
+      <div class="footer-links">
+        <a href="https://github.com/pheealnluot/GazeAAC" target="_blank" rel="noopener noreferrer" id="btn-github-link">
+          <svg class="github-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          GitHub Repository
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Simulation JavaScript -->
+  <script>
+    // Audio Context Setup for pleasant chime synthesize
+    let audioCtx = null;
+
+    function playDwellChime() {
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        const now = audioCtx.currentTime;
+        
+        // pleasant electronic chime (Arpeggio effect)
+        // First tone (E5)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now); // E5
+        gain1.gain.setValueAtTime(0.15, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.5);
+
+        // Second tone (A5) slightly delayed
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(880.00, now + 0.1); // A5
+        gain2.gain.setValueAtTime(0.2, now + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.1);
+        osc2.stop(now + 0.6);
+      } catch (err) {
+        console.error("Audio playback failed: ", err);
+      }
+    }
+
+    // Dwell Simulation Logic
+    const tiles = document.querySelectorAll('.sim-tile');
+    const phraseBar = document.getElementById('sim-phrase-bar');
+    const placeholder = document.getElementById('sim-phrase-placeholder');
+    const clearBtn = document.getElementById('btn-clear-phrase');
+    
+    let currentTile = null;
+    let dwellStart = null;
+    let dwellInterval = null;
+    const dwellDuration = 1000; // 1 second dwell
+    const wordsList = [];
+
+    // Reusable function to bind hover-dwell timing logic to any tile
+    function bindDwellCircle(tile) {
+      const circleProgress = tile.querySelector('.circle-progress');
+      if (!circleProgress) return;
+      const r = circleProgress.r.baseVal.value;
+      const circumference = 2 * Math.PI * r;
+      
+      // Initialize stroke-dasharray & offset
+      circleProgress.style.strokeDasharray = circumference;
+      circleProgress.style.strokeDashoffset = circumference;
+
+      // Mouse Hover Interaction (simulating Eye gaze entrance)
+      tile.addEventListener('mouseenter', () => {
+        currentTile = tile;
+        dwellStart = Date.now();
+        tile.classList.add('dwelling');
+
+        // Smoothly update visual offset
+        dwellInterval = setInterval(() => {
+          const elapsed = Date.now() - dwellStart;
+          const progress = Math.min(elapsed / dwellDuration, 1);
+          
+          circleProgress.style.strokeDashoffset = circumference - (progress * circumference);
+
+          if (progress >= 1) {
+            // Trigger selection!
+            clearInterval(dwellInterval);
+            circleProgress.style.strokeDashoffset = circumference;
+            tile.classList.remove('dwelling');
+            triggerSelection(tile.getAttribute('data-word'));
+          }
+        }, 30);
+      });
+
+      // Mouse Exit (simulating Eye gaze exit / clear progress)
+      tile.addEventListener('mouseleave', () => {
+        if (currentTile === tile) {
+          clearInterval(dwellInterval);
+          circleProgress.style.strokeDashoffset = circumference;
+          tile.classList.remove('dwelling');
+          currentTile = null;
+        }
+      });
+    }
+
+    // Bind static grid tiles
+    tiles.forEach(bindDwellCircle);
+
+    function triggerSelection(word) {
+      // Play synthesis chime sound
+      playDwellChime();
+
+      // Pulse the selected tile visually
+      const activeTile = currentTile;
+      if (activeTile) {
+        activeTile.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          activeTile.style.transform = '';
+        }, 150);
+      }
+
+      // Add word to phrase bar
+      wordsList.push(word);
+      updatePhraseBar();
+
+      // Trigger standard speech synthesis (speak the selected word)
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.1; // Slightly child-like friendly pitch
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function updatePhraseBar() {
+      if (wordsList.length === 0) {
+        phraseBar.innerHTML = `<span class="phrase-placeholder" id="sim-phrase-placeholder">Hover and dwell on a tile below to build a phrase...</span>`;
+      } else {
+        phraseBar.innerHTML = wordsList.join(' ');
+      }
+    }
+
+    clearBtn.addEventListener('click', () => {
+      wordsList.length = 0;
+      updatePhraseBar();
+    });
+
+    // ── Video Augmentation Simulation Controls ──
+    const btnTriggerScan = document.getElementById('btn-trigger-scan');
+    const simScanline = document.getElementById('sim-scanline');
+    const hudStatus = document.getElementById('viewport-hud-status');
+    const hudMom = document.getElementById('hud-mom');
+    const hudCup = document.getElementById('hud-cup');
+    const hudTeddy = document.getElementById('hud-teddy');
+    const scanTelemetry = document.getElementById('scan-telemetry');
+    const suggestedTitle = document.getElementById('suggested-tiles-title');
+    const suggestedGrid = document.getElementById('suggested-tiles-grid');
+    const promptInput = document.getElementById('web-prompt-input');
+    const toggleAugment = document.getElementById('web-toggle-augment');
+    const toggleOnDemand = document.getElementById('web-toggle-ondemand');
+
+    btnTriggerScan.addEventListener('click', () => {
+      if (!toggleAugment.checked) {
+        alert("Camera Augmentation is disabled. Please toggle 'Camera Augmentation' on in the diagnostics panel first!");
+        return;
+      }
+
+      // Standby UI state
+      btnTriggerScan.disabled = true;
+      btnTriggerScan.innerText = "⏳ Process...";
+      hudStatus.innerText = "🔬 SCANNING ENVIRONMENT SURROUNDINGS...";
+      hudStatus.style.color = "var(--color-pink)";
+      
+      // Hide former visual overlays
+      hudMom.classList.remove('visible');
+      hudCup.classList.remove('visible');
+      hudTeddy.classList.remove('visible');
+      suggestedTitle.style.display = 'none';
+      suggestedGrid.innerHTML = '';
+
+      // Trigger high-tech scanline sweep animation
+      simScanline.classList.remove('scanning');
+      void simScanline.offsetWidth; // Force visual reflow
+      simScanline.classList.add('scanning');
+
+      // Synthesize scan start chime
+      if (audioCtx) {
+        try {
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 1.2);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 1.2);
+        } catch (e) {}
+      }
+
+      // Simulate TF-JS biometric and object inference latency (1.5 seconds)
+      setTimeout(() => {
+        btnTriggerScan.disabled = false;
+        btnTriggerScan.innerText = "🔬 Scan & Augment";
+        hudStatus.innerText = "🔬 3 DETECTIONS (FaceNet & MobileNet Synced)";
+        hudStatus.style.color = "var(--color-teal)";
+
+        // Show bounding boxes in camera HUD viewport
+        hudMom.classList.add('visible');
+        hudCup.classList.add('visible');
+        hudTeddy.classList.add('visible');
+
+        // Synthesize sweep finish chime
+        if (audioCtx) {
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(987.77, now); // B5
+            osc.frequency.setValueAtTime(1318.51, now + 0.15); // E6
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.4);
+          } catch(e) {}
+        }
+
+        // Render beautiful diagnostics telemetry log
+        const prefix = promptInput.value.trim() || "I want";
+        scanTelemetry.innerHTML = `
+          <div class="telemetry-header">🧬 Diagnostics Scene Matrix Synced</div>
+          <div class="telemetry-item"><strong>👤 Face Registered:</strong> Mom (Happy) · FaceNet Model Vector Match (98.6%)</div>
+          <div class="telemetry-item"><strong>📦 Object Match:</strong> Blue Cup · MobileNet Custom Embedding Register (94.2%)</div>
+          <div class="telemetry-item"><strong>📦 Object Match:</strong> Teddy Bear · COCO-SSD Classifier (88.4%)</div>
+          <div class="telemetry-item"><strong>🏠 Current Scene:</strong> Living Room · Scene Context Match (95.1%)</div>
+          <div class="telemetry-item" style="color: var(--color-teal); font-weight: bold; margin-top: 0.3rem;">
+            <strong>💬 Context Prompt:</strong> [Surroundings: living_room | Objects: cup, teddy | People: Mom (Happy) | Prefix: "${prefix}"]
+          </div>
+        `;
+
+        // Generate contextual tiles
+        suggestedTitle.style.display = 'block';
+        suggestedGrid.innerHTML = '';
+
+        let speechOptions = [];
+        if (prefix.toLowerCase().startsWith("i want") || prefix.toLowerCase().startsWith("want")) {
+          speechOptions = [
+            { word: `${prefix} Mom`, emoji: "👩‍👦", border: "border-green" },
+            { word: `${prefix} Teddy`, emoji: "🧸", border: "border-indigo" },
+            { word: `${prefix} Cup`, emoji: "🥤", border: "border-blue" },
+            { word: `${prefix} Drink`, emoji: "🥤", border: "border-teal" }
+          ];
+        } else if (prefix.toLowerCase().startsWith("give me") || prefix.toLowerCase().startsWith("give")) {
+          speechOptions = [
+            { word: "Give me cup", emoji: "🥤", border: "border-blue" },
+            { word: "Give me teddy", emoji: "🧸", border: "border-indigo" },
+            { word: "Give me water", emoji: "🥤", border: "border-teal" },
+            { word: "Give Mommy hug", emoji: "👩‍👦", border: "border-pink" }
+          ];
+        } else {
+          speechOptions = [
+            { word: "Play with teddy", emoji: "🧸", border: "border-indigo" },
+            { word: "Drink from cup", emoji: "🥤", border: "border-blue" },
+            { word: "Talk to Mom", emoji: "👩‍👦", border: "border-green" },
+            { word: `${prefix} Mom`, emoji: "👩‍👦", border: "border-pink" }
+          ];
+        }
+
+        // Dynamically build speech cards
+        speechOptions.forEach(opt => {
+          const tile = document.createElement('div');
+          tile.className = `sim-tile ${opt.border}`;
+          tile.setAttribute('data-word', opt.word);
+          tile.innerHTML = `
+            <div class="tile-circle-wrapper">
+              <svg class="tile-svg" viewBox="0 0 100 100">
+                <circle class="circle-bg" cx="50" cy="50" r="40"></circle>
+                <circle class="circle-progress" cx="50" cy="50" r="40"></circle>
+              </svg>
+              <div class="tile-emoji">${opt.emoji}</div>
+            </div>
+            <span class="tile-label" style="font-size: 0.88rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 100%;">${opt.word}</span>
+          `;
+          suggestedGrid.appendChild(tile);
+          bindDwellCircle(tile); // Enable hover-dwell activation!
+        });
+
+      }, 1500);
+    });
+
+    // Toggle events
+    toggleAugment.addEventListener('change', function() {
+      const sceneBg = document.getElementById('sim-scene-bg');
+      if (this.checked) {
+        sceneBg.style.opacity = '1';
+        hudStatus.innerText = "📷 FEED ACTIVE — STANDBY";
+        hudStatus.style.color = "var(--color-teal)";
+      } else {
+        sceneBg.style.opacity = '0.15';
+        hudStatus.innerText = "📷 FEED INACTIVE — PIPELINE SHUTDOWN";
+        hudStatus.style.color = "var(--color-red)";
+        hudMom.classList.remove('visible');
+        hudCup.classList.remove('visible');
+        hudTeddy.classList.remove('visible');
+        suggestedTitle.style.display = 'none';
+        suggestedGrid.innerHTML = '';
+        scanTelemetry.innerHTML = `<div class="telemetry-empty">Camera Augmentation is shut down. Toggle it on in the diagnostics panel to proceed.</div>`;
+      }
+    });
+
+    toggleOnDemand.addEventListener('change', function() {
+      if (toggleAugment.checked) {
+        if (this.checked) {
+          hudStatus.innerText = "📷 FEED ACTIVE — STANDBY (ON-DEMAND MODE)";
+        } else {
+          hudStatus.innerText = "📷 FEED ACTIVE — RUNNING REAL-TIME DIAGNOSTICS";
+        }
+      }
+    });
+
+    // Movie Mode Mock Player Interaction
+    function toggleMockPlayerState(isPlaying) {
+      const btnPlaying = document.getElementById('btn-toggle-playing');
+      const btnPaused = document.getElementById('btn-toggle-paused');
+      const playerState = document.getElementById('player-hud-state');
+      const videoContent = document.querySelector('.video-content-mock');
+      const puzzleOverlay = document.getElementById('mock-puzzle-overlay');
+      
+      if (isPlaying) {
+        btnPlaying.classList.add('active');
+        btnPaused.classList.remove('active');
+        playerState.innerText = "👁️ GAZE DETECTED — PLAYING";
+        playerState.classList.remove('paused');
+        videoContent.style.opacity = '1';
+        puzzleOverlay.classList.remove('visible');
+      } else {
+        btnPlaying.classList.remove('active');
+        btnPaused.classList.add('active');
+        playerState.innerText = "❌ GAZE LOST — AUTO-PAUSED";
+        playerState.classList.add('paused');
+        videoContent.style.opacity = '0.2';
+        puzzleOverlay.classList.add('visible');
+        
+        // play a small chime synthesized for look away
+        if (audioCtx) {
+          try {
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(392, now); // G4
+            osc.frequency.setValueAtTime(261.63, now + 0.15); // C4
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.4);
+          } catch(e) {}
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+.gho-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 7500;
+  pointer-events: none; /* Let clicks pass through to underneath buttons */
+  width: 100vw;
+  height: 100vh;
+}
+
+.gho-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Floating HUD */
+.gho-hud {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  width: 300px;
+  background: rgba(22, 25, 32, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(0, 200, 255, 0.22);
+  border-radius: 1rem;
+  padding: 1.2rem;
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(0, 200, 255, 0.08);
+  pointer-events: auto; /* Allow clicks on the control buttons */
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  animation: gho-slide-up 0.35s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes gho-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gho-hud__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+  padding-bottom: 0.5rem;
+}
+
+.gho-hud__logo {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #00c8ff;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.gho-hud__badge {
+  background: rgba(0, 200, 255, 0.15);
+  color: #00c8ff;
+  border: 1px solid rgba(0, 200, 255, 0.3);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gho-hud__text {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #a0b8cc;
+  line-height: 1.5;
+}
+
+.gho-hud__text strong {
+  color: #fff;
+}
+
+.gho-hud__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.gho-hud__btn {
+  flex: 1;
+  padding: 0.45rem 0.8rem;
+  border-radius: 0.55rem;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gho-hud__btn--clear {
+  background: rgba(255, 60, 80, 0.15);
+  color: #ff607a;
+  border: 1px solid rgba(255, 60, 80, 0.25);
+}
+
+.gho-hud__btn--clear:hover {
+  background: rgba(255, 60, 80, 0.28);
+  border-color: rgba(255, 60, 80, 0.4);
+  transform: translateY(-1px);
+}
+
+.gho-hud__btn--close {
+  background: rgba(0, 200, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(0, 200, 255, 0.35);
+}
+
+.gho-hud__btn--close:hover {
+  background: rgba(0, 200, 255, 0.35);
+  border-color: rgba(0, 200, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.gho-hud__btn:active {
+  transform: scale(0.97);
+}
+
+.gho-hud__footer {
+  font-size: 0.65rem;
+  color: rgba(136, 153, 170, 0.6);
+  text-align: center;
+  margin-top: 0.2rem;
+}

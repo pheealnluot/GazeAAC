@@ -34,3 +34,21 @@ Thumbs.db
 # Cache
 .eslintcache
 .vite/
+
+# Firebase cache
+.firebase/
+
+# Large ZIP archives and installer files
+*.zip
+
+# PyInstaller / Python cache
+__pycache__/
+*.pyc
+
+# Temporary Electron/Vite config files
+electron.vite.config.*.mjs
+
+# Temp files and scratch directories
+temp.cns
+scratch/
+src/out_test/

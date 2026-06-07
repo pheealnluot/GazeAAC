@@ -1,87 +1,484 @@
 import { useState, useEffect, useRef } from 'react'
+import { GazeCalibrationEngine } from '../engine/GazeCalibrationEngine'
 import './CalibrationScreen.css'
 
 /**
- * CalibrationScreen – 9-point gaze calibration UI.
+ * CalibrationScreen – 5-point gaze calibration UI.
  *
- * Milestone 1 placeholder: renders nine target dots in a 3×3 grid.
- * The user dwells on each dot to "capture" it. When all 9 are captured,
- * `onComplete` is called and the main grid becomes active.
- *
- * In Milestone 2+ this will drive actual calibration data to the Tobii SDK.
+ * Renders five target dots at center + four corners. The user dwells on each
+ * dot for 500ms while raw gaze samples are collected. After all 5 dots are
+ * captured the engine computes a correction transform, persists it, and shows
+ * a brief quality result before calling `onComplete`.
  *
  * Props:
- *   onComplete   () => void   – Called when all 9 points are captured.
+ *   onComplete   (correctionData | null) => void  – Called with correction JSON
+ *                 when calibration finishes, or null when skipped / disabled.
  *   gazeRef      React.RefObject<{ x, y }|null>  – Direct ref to latest gaze pos.
  *                 Read inside the rAF loop for zero-latency position access.
  *                 Does NOT go through React state — no re-render on gaze move.
- *   dwellMs      number      – Dwell threshold for capturing a point.
+ *   dwellMs      number      – Dwell threshold for capturing a point (unused, kept for API compat).
+ *   enabled      boolean     – If false, immediately calls onComplete(null).
  */
 
-const POINTS = [
-  { id: 'p1', row: 1, col: 1 }, { id: 'p2', row: 1, col: 2 }, { id: 'p3', row: 1, col: 3 },
-  { id: 'p4', row: 2, col: 1 }, { id: 'p5', row: 2, col: 2 }, { id: 'p6', row: 2, col: 3 },
-  { id: 'p7', row: 3, col: 1 }, { id: 'p8', row: 3, col: 2 }, { id: 'p9', row: 3, col: 3 }
+const CALIBRATION_POINTS = [
+  { id: 'c',  x: 0.5,  y: 0.5  },  // Center
+  { id: 'tl', x: 0.04, y: 0.04 },  // Top-Left
+  { id: 'tr', x: 0.96, y: 0.04 },  // Top-Right
+  { id: 'bl', x: 0.04, y: 0.96 },  // Bottom-Left
+  { id: 'br', x: 0.96, y: 0.96 },  // Bottom-Right
 ]
 
-const DOT_RADIUS_PX = 28      // Hit radius in CSS pixels
-const CALIBRATION_DWELL = 800 // ms to capture each point
+const CALIBRATION_DWELL_MS = 800    // ms to capture each point (slowed down from 500ms for more stable staring)
 
-export function CalibrationScreen({ onComplete, gazeRef = null, dwellMs = CALIBRATION_DWELL }) {
+// Synthesize a premium audio confirmation chord chime using Web Audio API
+function playSuccessChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    osc1.connect(gainNode)
+    osc2.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    osc1.type = 'sine'
+    // C5 (523.25 Hz) -> E5 (659.25 Hz) -> G5 (783.99 Hz)
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime)
+    osc1.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15)
+    osc1.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.3)
+
+    osc2.type = 'triangle'
+    osc2.frequency.setValueAtTime(261.63, ctx.currentTime) // C4
+    osc2.frequency.exponentialRampToValueAtTime(329.63, ctx.currentTime + 0.15) // E4
+    osc2.frequency.exponentialRampToValueAtTime(392.00, ctx.currentTime + 0.3) // G4
+
+    gainNode.gain.setValueAtTime(0.001, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.05)
+    gainNode.gain.exponentialRampToValueAtTime(0.09, ctx.currentTime + 0.18)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6)
+
+    osc1.start(ctx.currentTime)
+    osc2.start(ctx.currentTime)
+    osc1.stop(ctx.currentTime + 0.6)
+    osc2.stop(ctx.currentTime + 0.6)
+    osc1.onended = () => ctx.close()
+  } catch (_) { /* audio context not supported or blocked */ }
+}
+
+// Spoken announcements for gaze-dwell instructions
+function speakText(text) {
+  if (window.gazeAPI?.speak) {
+    window.gazeAPI.speak(text)
+  } else if (window.speechSynthesis) {
+    // Cancel any ongoing speech so new guidance is immediately audible
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 0.95
+    window.speechSynthesis.speak(utterance)
+  }
+}
+
+export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null, dwellMs, enabled = true }) {
   const [captured, setCaptured] = useState(new Set())
-  const [active, setActive] = useState(0)        // index of current target point
+  const [hoveredDotId, setHoveredDotId] = useState(null)
   const [progress, setProgress] = useState(0)    // 0→1 for current point
-  const entryTimeRef = useRef(null)
-  const frameRef = useRef(null)
+  const [resultOverlay, setResultOverlay] = useState(null) // { quality, level, ...improvement }
 
-  const currentPoint = POINTS[active]
+  // Results phase states
+  const [phase, setPhase] = useState('calibrating') // 'calibrating' | 'results'
+  const [buttonDwellProgress, setButtonDwellProgress] = useState(0)
+  const [buttonRetryDwellProgress, setButtonRetryDwellProgress] = useState(0)
+  const [caregiverTrigger, setCaregiverTrigger] = useState(false)
+  const caregiverTriggerRef = useRef(caregiverTrigger)
 
-  // Animate the dwell progress for the active dot
   useEffect(() => {
+    caregiverTriggerRef.current = caregiverTrigger
+  }, [caregiverTrigger])
+
+  const entryTimeRef = useRef(null)
+  const hoveredDotIdRef = useRef(null)
+  const capturedRef = useRef(new Set())
+  const frameRef = useRef(null)
+  const btnDwellStartRef = useRef(null)
+  const btnRetryDwellStartRef = useRef(null)
+  const resultOverlayRef = useRef(null)
+  const cursorRef = useRef(null)
+  const mousePosRef = useRef(null)
+  const localGazeRef = useRef(null)
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mousePosRef.current = {
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      }
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  // Listen for Spacebar key presses when caregiverTrigger is active
+  useEffect(() => {
+    if (phase !== 'calibrating') return
+
+    const handleKeyDown = (e) => {
+      if (!caregiverTriggerRef.current) return
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault() // Prevent screen scroll
+        const uncaptured = CALIBRATION_POINTS.filter(p => !capturedRef.current.has(p.id))
+        const activeTarget = uncaptured[0]
+        if (activeTarget) {
+          // Capture immediately using current gaze position or mouse position
+          const activeGaze = localGazeRef.current || gazeRef?.current || mousePosRef.current
+          const finalX = activeGaze ? activeGaze.x : activeTarget.x
+          const finalY = activeGaze ? activeGaze.y : activeTarget.y
+          
+          captureDot(activeTarget.id, finalX, finalY, false)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [phase, gazeRef])
+
+  // Backup and complete trackers to avoid stale or double calibration corrections
+  const originalCorrectionRef = useRef(null)
+  const isCompletedRef = useRef(false)
+
+  // Per-dot sample collection
+  const currentSamplesRef = useRef([])
+  // Accumulated calibration pairs: { id, observed: {x, y}, target: {x, y} }
+  const calibrationPairsRef = useRef([])
+
+  const triggerRecalibration = () => {
+    // Reset all calibration states
+    setCaptured(new Set())
+    capturedRef.current = new Set()
+    setProgress(0)
+    setHoveredDotId(null)
+    hoveredDotIdRef.current = null
+    currentSamplesRef.current = []
+    calibrationPairsRef.current = []
+    setResultOverlay(null)
+    setButtonDwellProgress(0)
+    setButtonRetryDwellProgress(0)
+    btnDwellStartRef.current = null
+    btnRetryDwellStartRef.current = null
+    
+    // Clear in-app correction from gazeAPI (so next calibration is also uncorrected raw)
+    if (window.gazeAPI?.gazeCorrection) {
+      window.gazeAPI.gazeCorrection.reset()
+    }
+    
+    isCompletedRef.current = false
+    setPhase('calibrating')
+    console.log('[CalibrationScreen] Recalibration triggered.')
+  }
+
+  const captureDot = (dotId, observedX, observedY, isSimulated = false) => {
+    const pt = CALIBRATION_POINTS.find(p => p.id === dotId)
+    if (!pt) return
+
+    // Calculate exact window-relative target coordinates rather than grid fractions
+    const el = document.querySelector(`[data-point-id="${dotId}"]`)
+    let targetX = pt.x
+    let targetY = pt.y
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      targetX = (rect.left + rect.width / 2) / window.innerWidth
+      targetY = (rect.top + rect.height / 2) / window.innerHeight
+    }
+
+    // If simulated (mouse click), observed is very close to target so it acts as perfect demo calibration
+    const finalObservedX = isSimulated ? targetX + (Math.random() - 0.5) * 0.005 : observedX
+    const finalObservedY = isSimulated ? targetY + (Math.random() - 0.5) * 0.005 : observedY
+
+    calibrationPairsRef.current.push({
+      id: dotId,
+      observed: { x: finalObservedX, y: finalObservedY },
+      target: { x: targetX, y: targetY },
+    })
+
+    const nextCaptured = new Set(capturedRef.current)
+    nextCaptured.add(dotId)
+    capturedRef.current = nextCaptured
+    setCaptured(nextCaptured)
+
+    hoveredDotIdRef.current = null
+    setHoveredDotId(null)
+    entryTimeRef.current = null
+    setProgress(0)
+    currentSamplesRef.current = []
+
+    if (nextCaptured.size === CALIBRATION_POINTS.length) {
+      // ── All dots captured — compute correction ─────────
+      const engine = new GazeCalibrationEngine()
+      engine.computeExplicitCorrection(calibrationPairsRef.current)
+      const correctionData = engine.toJSON()
+      
+      // Only persist the correction if it was NOT a simulated/mouse test run!
+      if (!isSimulated) {
+        window.gazeAPI?.gazeCorrection?.set(correctionData)
+      } else {
+        // If simulated, clear any actual correction from memory so we don't mess up eye tracking
+        window.gazeAPI?.gazeCorrection?.reset()
+      }
+
+      // Compute comparative metrics
+      const improvementPoints = calibrationPairsRef.current.map(pair => {
+        const { observed, target } = pair
+        const rawDx = observed.x - target.x
+        const rawDy = observed.y - target.y
+        const rawErr = Math.sqrt(rawDx * rawDx + rawDy * rawDy)
+
+        const corrected = engine.apply(observed.x, observed.y)
+        const corrDx = corrected.x - target.x
+        const corrDy = corrected.y - target.y
+        const corrErr = Math.sqrt(corrDx * corrDx + corrDy * corrDy)
+
+        return {
+          target,
+          observed,
+          corrected,
+          rawErr,
+          corrErr
+        }
+      })
+
+      const avgRawErr = improvementPoints.reduce((acc, cur) => acc + cur.rawErr, 0) / improvementPoints.length
+      const avgCorrErr = improvementPoints.reduce((acc, cur) => acc + cur.corrErr, 0) / improvementPoints.length
+      const reductionPct = avgRawErr > 0
+        ? Math.max(0, Math.min(100, Math.round(((avgRawErr - avgCorrErr) / avgRawErr) * 100)))
+        : 100
+
+      const level = engine.getQualityLevel()
+
+      isCompletedRef.current = true // Mark calibration complete so unmount doesn't restore backup
+
+      // Play auditory feedback chime and announce complete
+      playSuccessChime()
+      speakText('Calibration complete. Look at the button to continue.')
+
+      setResultOverlay({
+        quality: engine.getQuality(),
+        level,
+        avgRawErr,
+        avgCorrErr,
+        reductionPct,
+        points: improvementPoints,
+        correctionData,
+        isSimulated
+      })
+
+      setPhase('results')
+    }
+  }
+
+  // Backup existing calibration on mount and clear so we perform calibration on pure raw coords
+  useEffect(() => {
+    let active = true
+    if (window.gazeAPI?.gazeCorrection) {
+      window.gazeAPI.gazeCorrection.get().then(corr => {
+        if (active) {
+          originalCorrectionRef.current = corr
+          window.gazeAPI.gazeCorrection.reset()
+          console.log('[CalibrationScreen] Backed up and cleared existing correction.')
+        }
+      })
+    }
+
+    return () => {
+      active = false
+      // If we unmount and did not complete, restore the original calibration
+      if (!isCompletedRef.current && originalCorrectionRef.current && window.gazeAPI?.gazeCorrection) {
+        window.gazeAPI.gazeCorrection.set(originalCorrectionRef.current)
+        console.log('[CalibrationScreen] Restored original gaze correction on cancel/unmount.')
+      }
+    }
+  }, [])
+
+  // Subscribe directly to raw eye tracking data stream on mount
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.gazeAPI) return
+
+    console.log('[CalibrationScreen] Subscribing directly to raw gaze stream...')
+    window.gazeAPI.startStream((gp) => {
+      if (gp && gp.x != null && gp.y != null && gp.valid !== false) {
+        localGazeRef.current = { x: gp.x, y: gp.y }
+        if (gazeRef) {
+          gazeRef.current = { x: gp.x, y: gp.y, timestamp: gp.timestamp || Date.now() }
+        }
+      } else {
+        localGazeRef.current = null
+        if (gazeRef) {
+          gazeRef.current = null
+        }
+      }
+    })
+
+    return () => {
+      if (routerRef?.current) {
+        console.log('[CalibrationScreen] Requesting parent router to reconnect...')
+        routerRef.current.reconnect()
+      } else {
+        console.log('[CalibrationScreen] Stopping raw gaze stream direct subscription...')
+        try {
+          window.gazeAPI.stopStream()
+        } catch (err) {
+          console.error('[CalibrationScreen] Error stopping stream on unmount:', err)
+        }
+      }
+    }
+  }, [gazeRef, routerRef])
+
+  // Keep resultOverlayRef synchronized to prevent stale closures in rAF loops
+  useEffect(() => {
+    resultOverlayRef.current = resultOverlay
+  }, [resultOverlay])
+
+  // ── If disabled, skip immediately ──────────────────────────────────
+  useEffect(() => {
+    if (!enabled) {
+      onComplete?.(null)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled])
+
+  if (!enabled) return null
+
+  // ── Quality result labels ──────────────────────────────────────────
+  const QUALITY_LABELS = {
+    good: 'Good',
+    fair: 'Fair',
+    poor: 'Poor',
+    learning: 'Fair',
+  }
+
+  const QUALITY_ICONS = {
+    good: '✓',
+    fair: '✓',
+    poor: '⚠',
+    learning: '✓',
+  }
+
+  // ── Main calibrating rAF gaze-dwell loop ───────────────────────────
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (phase !== 'calibrating') return
+
     function tick() {
-      // Read the latest gaze pos from the ref — no React re-render needed
-      const gazePos = gazeRef?.current
-      if (!gazePos || !currentPoint) {
+      // Prioritize direct raw gaze from localGazeRef first, then fallback to passed gazeRef, and then mousePosRef
+      const activeGaze = localGazeRef.current || gazeRef?.current
+      const hasActiveStream = !!activeGaze
+      const gazePos = activeGaze || mousePosRef.current
+      const cursorEl = cursorRef.current
+
+      if (!gazePos) {
+        if (cursorEl) {
+          cursorEl.style.display = 'none'
+        }
+        if (hoveredDotIdRef.current !== null) {
+          hoveredDotIdRef.current = null
+          setHoveredDotId(null)
+          entryTimeRef.current = null
+          setProgress(0)
+          currentSamplesRef.current = []
+        }
         frameRef.current = requestAnimationFrame(tick)
         return
       }
       const { x, y } = gazePos
 
-      // Convert normalized gaze to approximate screen fraction per cell
-      // Calibration grid occupies 60% of viewport width and 60% height,
-      // centered. Each column/row is 1/3 of that.
-      const gridW = 0.6, gridH = 0.6
-      const gridOffX = (1 - gridW) / 2, gridOffY = (1 - gridH) / 2
-      const cellW = gridW / 3, cellH = gridH / 3
+      if (cursorEl) {
+        const px = x * window.innerWidth
+        const py = y * window.innerHeight
+        cursorEl.style.transform = `translate(${px}px, ${py}px)`
+        cursorEl.style.display = 'block'
+      }
 
-      const targetX = gridOffX + (currentPoint.col - 0.5) * cellW
-      const targetY = gridOffY + (currentPoint.row - 0.5) * cellH
+      if (caregiverTriggerRef.current) {
+        // In caregiver trigger mode, the current highlighted dot is determined sequentially,
+        // and we don't perform any automatic hover-based captures.
+        frameRef.current = requestAnimationFrame(tick)
+        return
+      }
 
-      const dx = x - targetX
-      const dy = y - targetY
-      const dist = Math.sqrt(dx * dx + dy * dy)
+      // Convert normalized gaze coordinates to absolute screen pixels
+      const gazeX_px = x * window.innerWidth
+      const gazeY_px = y * window.innerHeight
 
-      // Hit tolerance: ~DOT_RADIUS_PX / viewport_px → normalized
-      const hitNorm = DOT_RADIUS_PX / window.innerWidth
+      let foundHoveredDot = null
+      for (const pt of CALIBRATION_POINTS) {
+        if (capturedRef.current.has(pt.id)) continue
 
-      if (dist < hitNorm) {
-        if (entryTimeRef.current === null) entryTimeRef.current = Date.now()
-        const elapsed = Date.now() - entryTimeRef.current
-        setProgress(Math.min(elapsed / dwellMs, 1))
+        const el = document.querySelector(`[data-point-id="${pt.id}"]`)
+        if (!el) continue
 
-        if (elapsed >= dwellMs) {
-          setCaptured(prev => new Set([...prev, currentPoint.id]))
-          entryTimeRef.current = null
+        const rect = el.getBoundingClientRect()
+        // Compute exact center of the dot element in screen pixels
+        const targetX_px = rect.left + rect.width / 2
+        const targetY_px = rect.top + rect.height / 2
+
+        const dx = gazeX_px - targetX_px
+        const dy = gazeY_px - targetY_px
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        // Hit tolerance: exact dot radius + 40px padding for ease of use
+        const hitTolerance = rect.width / 2 + 40
+
+        if (dist < hitTolerance) {
+          foundHoveredDot = pt
+          break
+        }
+      }
+
+      if (foundHoveredDot) {
+        if (hoveredDotIdRef.current !== foundHoveredDot.id) {
+          // Entered a new dot — reset timer and samples
+          hoveredDotIdRef.current = foundHoveredDot.id
+          setHoveredDotId(foundHoveredDot.id)
+          entryTimeRef.current = Date.now()
           setProgress(0)
-          if (active < POINTS.length - 1) {
-            setActive(prev => prev + 1)
+          currentSamplesRef.current = []
+        } else {
+          // ONLY accumulate progress automatically if we have actual tracker stream data
+          if (hasActiveStream) {
+            const elapsed = Date.now() - entryTimeRef.current
+            const currentProgress = Math.min(elapsed / CALIBRATION_DWELL_MS, 1)
+            setProgress(currentProgress)
+
+            // Collect gaze sample on every frame during dwell
+            if (gazePos.x != null && gazePos.y != null) {
+              currentSamplesRef.current.push({ x: gazePos.x, y: gazePos.y })
+            }
+
+            if (elapsed >= CALIBRATION_DWELL_MS) {
+              // ── Dot captured ─────────────────────────────────────
+              const samples = currentSamplesRef.current
+              let meanX = foundHoveredDot.x
+              let meanY = foundHoveredDot.y
+              if (samples.length > 0) {
+                meanX = samples.reduce((s, p) => s + p.x, 0) / samples.length
+                meanY = samples.reduce((s, p) => s + p.y, 0) / samples.length
+              }
+              captureDot(foundHoveredDot.id, meanX, meanY, false)
+            }
           } else {
-            onComplete?.()
+            // Hovering with mouse fallback: no auto-dwell capture to avoid bad calibration correction
+            setProgress(0)
           }
         }
       } else {
-        entryTimeRef.current = null
-        setProgress(0)
+        if (hoveredDotIdRef.current !== null) {
+          hoveredDotIdRef.current = null
+          setHoveredDotId(null)
+          entryTimeRef.current = null
+          setProgress(0)
+          currentSamplesRef.current = []
+        }
       }
 
       frameRef.current = requestAnimationFrame(tick)
@@ -89,47 +486,424 @@ export function CalibrationScreen({ onComplete, gazeRef = null, dwellMs = CALIBR
 
     frameRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameRef.current)
-  // gazeRef is a stable ref object — it never changes identity, so we
-  // intentionally omit it from deps. The loop always reads .current directly.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, currentPoint, dwellMs, onComplete])
+  }, [phase, onComplete])
+
+  // ── Results phase rAF loop (Gaze Dwell Selection Only) ─────────────
+  useEffect(() => {
+    if (phase !== 'results') return
+
+    let resultsFrameId = null
+
+    function tickResults() {
+      // Button Dwell selection logic (1.0s eye-gaze hover)
+      // Prioritize direct raw gaze from localGazeRef first, then fallback to passed gazeRef, and then mousePosRef
+      const gazePos = localGazeRef.current || gazeRef?.current || mousePosRef.current
+      const btnEl = document.getElementById('btn-calibration-done')
+      const retryBtnEl = document.getElementById('btn-calibration-retry')
+      const cursorEl = cursorRef.current
+
+      if (gazePos && gazePos.x != null) {
+        const gx = gazePos.x * window.innerWidth
+        const gy = gazePos.y * window.innerHeight
+
+        if (cursorEl) {
+          cursorEl.style.transform = `translate(${gx}px, ${gy}px)`
+          cursorEl.style.display = 'block'
+        }
+
+        // Check Continue Button
+        let isContinueHovered = false
+        if (btnEl) {
+          const rect = btnEl.getBoundingClientRect()
+          isContinueHovered = (gx >= rect.left && gx <= rect.right && gy >= rect.top && gy <= rect.bottom)
+        }
+
+        // Check Recalibrate Button
+        let isRetryHovered = false
+        if (retryBtnEl) {
+          const rect = retryBtnEl.getBoundingClientRect()
+          isRetryHovered = (gx >= rect.left && gx <= rect.right && gy >= rect.top && gy <= rect.bottom)
+        }
+
+        // Handle Continue Button dwell
+        if (isContinueHovered) {
+          if (btnDwellStartRef.current === null) {
+            btnDwellStartRef.current = Date.now()
+          }
+          const dwellElapsed = Date.now() - btnDwellStartRef.current
+          const dwellProg = Math.min(dwellElapsed / 1000, 1)
+          setButtonDwellProgress(dwellProg)
+
+          if (dwellElapsed >= 1000) {
+            playSuccessChime()
+            onComplete?.(resultOverlayRef.current?.correctionData)
+            return
+          }
+        } else {
+          if (btnDwellStartRef.current !== null) {
+            btnDwellStartRef.current = null
+            setButtonDwellProgress(0)
+          }
+        }
+
+        // Handle Recalibrate Button dwell
+        if (isRetryHovered) {
+          if (btnRetryDwellStartRef.current === null) {
+            btnRetryDwellStartRef.current = Date.now()
+          }
+          const dwellElapsed = Date.now() - btnRetryDwellStartRef.current
+          const dwellProg = Math.min(dwellElapsed / 1000, 1)
+          setButtonRetryDwellProgress(dwellProg)
+
+          if (dwellElapsed >= 1000) {
+            playSuccessChime()
+            triggerRecalibration()
+            return
+          }
+        } else {
+          if (btnRetryDwellStartRef.current !== null) {
+            btnRetryDwellStartRef.current = null
+            setButtonRetryDwellProgress(0)
+          }
+        }
+      } else {
+        if (cursorEl) {
+          cursorEl.style.display = 'none'
+        }
+        if (btnDwellStartRef.current !== null) {
+          btnDwellStartRef.current = null
+          setButtonDwellProgress(0)
+        }
+        if (btnRetryDwellStartRef.current !== null) {
+          btnRetryDwellStartRef.current = null
+          setButtonRetryDwellProgress(0)
+        }
+      }
+
+      resultsFrameId = requestAnimationFrame(tickResults)
+    }
+
+    resultsFrameId = requestAnimationFrame(tickResults)
+    return () => cancelAnimationFrame(resultsFrameId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, onComplete])
 
   const circumference = 2 * Math.PI * 20 // r=20
 
   return (
     <div className="calibration-screen">
-      <div className="calibration-screen__header">
-        <h1 className="calibration-screen__title">GazeAAC</h1>
-        <p className="calibration-screen__subtitle">
-          Look at each dot and hold your gaze to calibrate.
-        </p>
-        <p className="calibration-screen__counter">
-          {captured.size} / {POINTS.length} captured
-        </p>
-      </div>
+      {/* Ocular feedback dot inside CalibrationScreen for zero-latency calibration visual cue */}
+      <div
+        ref={cursorRef}
+        className="calibration-screen__gaze-cursor"
+        aria-hidden="true"
+      />
+
+      {phase !== 'results' && (
+        <div className="calibration-screen__header">
+          <div className="calibration-screen__header-left">
+            <h1 className="calibration-screen__title">GazeAAC Calibration</h1>
+            <p className="calibration-screen__subtitle">
+              {caregiverTrigger
+                ? "Caregiver: Ask user to look at the highlighted dot and press Spacebar (or click it)"
+                : "Look at each dot for a moment"}
+            </p>
+          </div>
+          <div className="calibration-screen__header-right">
+            <label className="calibration-screen__caregiver-toggle" title="Let a caregiver manually capture dots using Spacebar or click">
+              <input
+                type="checkbox"
+                checked={caregiverTrigger}
+                onChange={(e) => {
+                  const val = e.target.checked
+                  setCaregiverTrigger(val)
+                  speakText(val ? "Caregiver trigger enabled. Press spacebar or click to capture." : "Automatic dwell capture enabled.")
+                }}
+              />
+              <span className="calibration-screen__caregiver-toggle-text">Caregiver Mode</span>
+            </label>
+            <div className="calibration-screen__counter">
+              {captured.size} / {CALIBRATION_POINTS.length} Captured
+            </div>
+            <button
+              className="calibration-screen__skip-btn"
+              onClick={() => {
+                // Restore original calibration if skipped
+                if (originalCorrectionRef.current && window.gazeAPI?.gazeCorrection) {
+                  window.gazeAPI.gazeCorrection.set(originalCorrectionRef.current)
+                }
+                onComplete?.(null)
+              }}
+              title="Skip calibration and open the communication board"
+            >
+              Skip Calibration
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="calibration-screen__grid">
-        {POINTS.map((pt, idx) => {
+        {/* Visual Improvement Results Overlay */}
+        {phase === 'results' && resultOverlay && (
+          <div className="calibration-results-overlay">
+            <div className="calibration-results-card">
+              <div className="calibration-results-card__header">
+                <div className="calibration-results-card__success-badge">
+                  <span className="calibration-results-card__success-icon">✨</span>
+                  Calibration Successful
+                </div>
+                <h2 className="calibration-results-card__title">Gaze Accuracy Improved</h2>
+                <p className="calibration-results-card__subtitle">
+                  We've successfully calculated a precision correction layer to reduce tracking drift.
+                </p>
+              </div>
+
+              <div className="calibration-results-card__body">
+                {/* Left Panel: Performance Metrics */}
+                <div className="calibration-results-card__panel calibration-results-card__panel--metrics">
+                  <div className="calibration-results-card__improvement-circle-wrapper">
+                    <div className="calibration-results-card__improvement-circle">
+                      <svg viewBox="0 0 100 100" className="calibration-results-card__circle-svg">
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="6" />
+                        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-success)" strokeWidth="6"
+                          strokeDasharray={2 * Math.PI * 42}
+                          strokeDashoffset={2 * Math.PI * 42 * (1 - resultOverlay.reductionPct / 100)}
+                          strokeLinecap="round"
+                          transform="rotate(-90 50 50)"
+                          className="calibration-results-card__circle-path"
+                        />
+                      </svg>
+                      <div className="calibration-results-card__circle-content">
+                        <span className="calibration-results-card__improvement-val">{resultOverlay.reductionPct}%</span>
+                        <span className="calibration-results-card__improvement-lbl">Error Reduction</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="calibration-results-card__bars">
+                    <div className="calibration-results-card__bar-item">
+                      <div className="calibration-results-card__bar-info">
+                        <span className="calibration-results-card__bar-lbl">Uncorrected Error</span>
+                        <span className="calibration-results-card__bar-val">{(resultOverlay.avgRawErr * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="calibration-results-card__bar-track">
+                        <div className="calibration-results-card__bar-fill calibration-results-card__bar-fill--raw" 
+                             style={{ width: `${Math.min(100, (resultOverlay.avgRawErr / 0.10) * 100)}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="calibration-results-card__bar-item">
+                      <div className="calibration-results-card__bar-info">
+                        <span className="calibration-results-card__bar-lbl">Corrected Error</span>
+                        <span className="calibration-results-card__bar-val" style={{ color: 'var(--color-success)' }}>
+                          {(resultOverlay.avgCorrErr * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="calibration-results-card__bar-track">
+                        <div className="calibration-results-card__bar-fill calibration-results-card__bar-fill--corrected" 
+                             style={{ width: `${Math.min(100, (resultOverlay.avgCorrErr / 0.10) * 100)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="calibration-results-card__quality-badge">
+                    Accuracy Quality: <span className={`quality-badge-text quality-badge-text--${resultOverlay.level}`}>{QUALITY_LABELS[resultOverlay.level] || 'Good'}</span>
+                  </div>
+                </div>
+
+                {/* Right Panel: Accuracy Map */}
+                <div className="calibration-results-card__panel calibration-results-card__panel--map">
+                  <div className="calibration-results-card__map-title">Precision Mapping</div>
+                  <div className="calibration-results-card__map-container">
+                    <svg viewBox="0 0 300 180" className="calibration-results-card__map-svg">
+                      {/* Screen Grid background lines */}
+                      <line x1="0" y1="90" x2="300" y2="90" stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="5,5" />
+                      <line x1="150" y1="0" x2="150" y2="180" stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="5,5" />
+                      
+                      {/* Draw error segment connectors */}
+                      {resultOverlay.points.map((pt, idx) => {
+                        const cx = pt.target.x * 300
+                        const cy = pt.target.y * 180
+                        const rx = pt.observed.x * 300
+                        const ry = pt.observed.y * 180
+                        const cxCorr = pt.corrected.x * 300
+                        const cyCorr = pt.corrected.y * 180
+
+                        return (
+                          <g key={`lines-${idx}`}>
+                            {/* Raw drift error line (dashed red) */}
+                            <line 
+                              x1={rx} y1={ry} 
+                              x2={cx} y2={cy} 
+                              stroke="hsl(350, 70%, 65%)" 
+                              strokeWidth="1.5" 
+                              strokeDasharray="3,3" 
+                              opacity="0.85" 
+                            />
+                            {/* Corrected drift error line (solid green) */}
+                            <line 
+                              x1={cxCorr} y1={cyCorr} 
+                              x2={cx} y2={cy} 
+                              stroke="var(--color-success)" 
+                              strokeWidth="2" 
+                              opacity="0.9"
+                            />
+                          </g>
+                        )
+                      })}
+
+                      {/* Draw coordinate indicators */}
+                      {resultOverlay.points.map((pt, idx) => {
+                        const cx = pt.target.x * 300
+                        const cy = pt.target.y * 180
+                        const rx = pt.observed.x * 300
+                        const ry = pt.observed.y * 180
+                        const cxCorr = pt.corrected.x * 300
+                        const cyCorr = pt.corrected.y * 180
+
+                        return (
+                          <g key={`dots-${idx}`}>
+                            {/* Raw gaze coordinate */}
+                            <circle 
+                              cx={rx} cy={ry} 
+                              r="5" 
+                              fill="hsl(350, 70%, 65%)" 
+                              opacity="0.95"
+                            />
+                            {/* Corrected gaze coordinate */}
+                            <circle 
+                              cx={cxCorr} cy={cyCorr} 
+                              r="6" 
+                              fill="var(--color-success)" 
+                              className="map-svg-corrected-dot"
+                            />
+                            {/* Target Coordinate Anchor */}
+                            <circle 
+                              cx={cx} cy={cy} 
+                              r="3.5" 
+                              fill="#ffffff" 
+                              stroke="rgba(0,0,0,0.6)" 
+                              strokeWidth="1"
+                            />
+                          </g>
+                        )
+                      })}
+                    </svg>
+                    
+                    <div className="calibration-results-card__map-legend">
+                      <div className="legend-item"><span className="legend-dot legend-dot--target"></span> Target</div>
+                      <div className="legend-item"><span className="legend-dot legend-dot--raw"></span> Raw Gaze</div>
+                      <div className="legend-item"><span className="legend-dot legend-dot--corrected"></span> Corrected</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action area with Dwell and Recalibrate */}
+              <div className="calibration-results-card__footer">
+                <button
+                  id="btn-calibration-retry"
+                  className="calibration-results__recalibrate-btn"
+                  onClick={() => {
+                    playSuccessChime()
+                    triggerRecalibration()
+                  }}
+                  title="Hover or click to reset and try calibrating again"
+                >
+                  <div className="recalibrate-btn__dwell-wrapper">
+                    <svg viewBox="0 0 36 36" className="recalibrate-btn__dwell-svg">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+                      <circle 
+                        cx="18" cy="18" r="15" 
+                        fill="none" 
+                        stroke="hsl(195, 100%, 60%)" 
+                        strokeWidth="5" 
+                        strokeDasharray={2 * Math.PI * 15}
+                        strokeDashoffset={2 * Math.PI * 15 * (1 - buttonRetryDwellProgress)}
+                        strokeLinecap="round"
+                        transform="rotate(-90 18 18)"
+                        className="recalibrate-btn__dwell-path"
+                      />
+                    </svg>
+                  </div>
+                  <span className="recalibrate-btn__text">
+                    {buttonRetryDwellProgress > 0 ? "Dwelling to Recalibrate..." : "Recalibrate"}
+                  </span>
+                </button>
+
+                <button
+                  id="btn-calibration-done"
+                  className="calibration-results__continue-btn"
+                  onClick={() => {
+                    playSuccessChime()
+                    onComplete?.(resultOverlay.correctionData)
+                  }}
+                  title="Hover or click to continue to the main board"
+                >
+                  <div className="continue-btn__dwell-wrapper">
+                    <svg viewBox="0 0 36 36" className="continue-btn__dwell-svg">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="5" />
+                      <circle 
+                        cx="18" cy="18" r="15" 
+                        fill="none" 
+                        stroke="#ffffff" 
+                        strokeWidth="5" 
+                        strokeDasharray={2 * Math.PI * 15}
+                        strokeDashoffset={2 * Math.PI * 15 * (1 - buttonDwellProgress)}
+                        strokeLinecap="round"
+                        transform="rotate(-90 18 18)"
+                        className="continue-btn__dwell-path"
+                      />
+                    </svg>
+                  </div>
+                  <span className="continue-btn__text">
+                    {buttonDwellProgress > 0 ? "Dwelling to Continue..." : "Continue to GazeAAC"}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {phase !== 'results' && CALIBRATION_POINTS.map((pt) => {
           const isCaptured = captured.has(pt.id)
-          const isCurrent  = idx === active && !isCaptured
+          const uncaptured = CALIBRATION_POINTS.filter(p => !captured.has(p.id))
+          const currentTarget = uncaptured[0]
+          const isCurrent  = caregiverTrigger ? (currentTarget && pt.id === currentTarget.id) : (pt.id === hoveredDotId)
           const ptProgress = isCurrent ? progress : 0
           const dashOffset = circumference * (1 - ptProgress)
 
           return (
             <div
               key={pt.id}
+              onClick={() => {
+                if (caregiverTrigger && !isCaptured) {
+                  // Capture immediately on click
+                  const activeGaze = localGazeRef.current || gazeRef?.current || mousePosRef.current
+                  const finalX = activeGaze ? activeGaze.x : pt.x
+                  const finalY = activeGaze ? activeGaze.y : pt.y
+                  captureDot(pt.id, finalX, finalY, false)
+                }
+              }}
               className={[
                 'calibration-dot',
                 isCaptured ? 'calibration-dot--captured' : '',
-                isCurrent  ? 'calibration-dot--active'   : ''
+                isCurrent  ? 'calibration-dot--active'   : '',
+                caregiverTrigger && !isCaptured ? 'calibration-dot--clickable' : ''
               ].join(' ').trim()}
               data-point-id={pt.id}
+              style={{ 
+                left: `${pt.x * 100}%`, 
+                top: `${pt.y * 100}%`, 
+                cursor: caregiverTrigger && !isCaptured ? 'pointer' : 'default' 
+              }}
             >
               <svg viewBox="0 0 60 60" className="calibration-dot__svg">
                 {/* Track */}
                 <circle cx="30" cy="30" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
                 {/* Progress */}
-                {isCurrent && (
+                {isCurrent && !caregiverTrigger && (
                   <circle
                     cx="30" cy="30" r="20"
                     fill="none"
@@ -153,14 +927,7 @@ export function CalibrationScreen({ onComplete, gazeRef = null, dwellMs = CALIBR
           )
         })}
       </div>
-
-      {/* Skip button for dev / demo mode */}
-      <button
-        className="calibration-screen__skip"
-        onClick={() => onComplete?.()}
-      >
-        Skip Calibration (Dev Mode)
-      </button>
     </div>
   )
 }
+

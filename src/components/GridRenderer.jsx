@@ -27,9 +27,24 @@ import './GridRenderer.css'
  *   { id: string, x0: number, y0: number, x1: number, y1: number }
  *   All coordinates in [0, 1], relative to window.innerWidth / window.innerHeight.
  */
-export function GridRenderer({ gazeState = {}, onActivate, onGridMeasured, onMeasureTriggerReady }) {
-  const { cells, isLoading, cols: COLS = 12, rows: ROWS = 7 } = useVocabulary()
+export function GridRenderer({
+  gazeState = {},
+  onActivate,
+  onGridMeasured,
+  onMeasureTriggerReady,
+  cells: customCells,
+  cols: customCols,
+  rows: customRows,
+  isLoading: customIsLoading,
+  cellIdPrefix = ''
+}) {
+  const vocab = useVocabulary()
   const { settings } = useGazeSettings()
+
+  const cells = customCells ?? vocab.cells
+  const isLoading = customIsLoading ?? vocab.isLoading
+  const COLS = customCols ?? vocab.cols ?? 12
+  const ROWS = customRows ?? vocab.rows ?? 7
 
   // Apply board edit deltas (from AACBoardContext) to cells before rendering
   let aacBoardCtx = null
@@ -39,11 +54,12 @@ export function GridRenderer({ gazeState = {}, onActivate, onGridMeasured, onMea
   } catch { /* not wrapped — ok */ }
 
   const activeCells = useMemo(() => {
+    if (customCells) return customCells
     if (!aacBoardCtx) return cells
     const entry = aacBoardCtx.library.find(e => e.id === aacBoardCtx.activeLibraryId)
     if (!entry) return cells
     return aacBoardCtx.applyEdits(cells, entry.fileName, entry.rootId)
-  }, [cells, aacBoardCtx])
+  }, [cells, aacBoardCtx, customCells])
 
   const gridRef = useRef(null)
 
@@ -62,7 +78,7 @@ export function GridRenderer({ gazeState = {}, onActivate, onGridMeasured, onMea
   // ── Constraint-solver: compute spans ──────────────────────────────────────
   const spanMap = useMemo(() => {
     return solveHitBoxes(activeCells, COLS, ROWS, maxSpanMultiplier)
-  }, [activeCells, maxSpanMultiplier])
+  }, [activeCells, COLS, ROWS, maxSpanMultiplier])
 
   // ── Layout cells list ──────────────────────────────────────────────────────
   // Tracks which cells have been consumed by a span so placeholders are skipped.
@@ -90,7 +106,7 @@ export function GridRenderer({ gazeState = {}, onActivate, onGridMeasured, onMea
     }
 
     return { layoutCells }
-  }, [activeCells, spanMap])
+  }, [activeCells, spanMap, ROWS, COLS])
 
   // ── DOM measurement: getBoundingClientRect → normalized coords ─────────────
   const measureGrid = useCallback(() => {
@@ -209,19 +225,20 @@ export function GridRenderer({ gazeState = {}, onActivate, onGridMeasured, onMea
         // anchor so the content anchors correctly even for large natural spans.
         const anchorX = 50 / cell.spanCols   // percent from left
         const anchorY = 50 / cell.spanRows   // percent from top
+        const prefixedId = `${cellIdPrefix}${cell.id}`
 
         return (
           <GazeButton
             key={cell.id}
-            cellId={cell.id}
+            cellId={prefixedId}
             label={cell.label}
             icon={cell.icon}
             active={cell.active}
             category={cell.category}
             spanCols={cell.spanCols}
             spanRows={cell.spanRows}
-            isGazed={cell.id === gazedCellId}
-            dwellProgress={cell.id === gazedCellId ? dwellProgress : 0}
+            isGazed={prefixedId === gazedCellId}
+            dwellProgress={prefixedId === gazedCellId ? dwellProgress : 0}
             onActivate={onActivate}
             contentAnchorX={anchorX}
             contentAnchorY={anchorY}

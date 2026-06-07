@@ -1,0 +1,466 @@
+/* balloon-pop-game.css — Eye-gaze balloon popping game for children */
+
+.balloon-pop-game {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0a0f1a 0%, #0d1b2a 40%, #1a0d2e 100%);
+  z-index: 9999;
+  cursor: none;
+}
+
+/* Animated star background */
+.balloon-pop-game__stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.balloon-pop-game__star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: starTwinkle var(--dur, 3s) ease-in-out infinite;
+  opacity: 0;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: var(--max-opacity, 0.6); transform: scale(1.3); }
+}
+
+/* Header bar */
+.balloon-pop-game__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(10, 15, 26, 0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.balloon-pop-game__score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.balloon-pop-game__score-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+}
+
+.balloon-pop-game__score {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s;
+}
+
+.balloon-pop-game__score.scored {
+  color: #34d399;
+}
+
+.balloon-pop-game__level-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.balloon-pop-game__level-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+}
+
+.balloon-pop-game__level-num {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #a78bfa;
+  line-height: 1;
+}
+
+.balloon-pop-game__controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.balloon-pop-game__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+}
+
+.balloon-pop-game__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.balloon-pop-game__btn.exit {
+  padding: 0 16px;
+  width: auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Game canvas area */
+.balloon-pop-game__canvas {
+  position: absolute;
+  inset: 0;
+  top: 80px;
+  z-index: 10;
+}
+
+/* Balloons */
+.balloon {
+  position: absolute;
+  cursor: none;
+  transition: none;
+  user-select: none;
+  z-index: 20;
+}
+
+.balloon__body {
+  width: var(--size, 80px);
+  height: calc(var(--size, 80px) * 1.25);
+  border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
+  background: var(--color, #ef4444);
+  position: relative;
+  box-shadow:
+    inset -8px -12px 0 rgba(0,0,0,0.15),
+    inset 4px 6px 0 rgba(255,255,255,0.25),
+    0 4px 20px rgba(0,0,0,0.3);
+  transition: transform 0.15s ease;
+}
+
+.balloon__shine {
+  position: absolute;
+  top: 12%;
+  left: 18%;
+  width: 28%;
+  height: 22%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.balloon__knot {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color, #ef4444);
+  filter: brightness(0.7);
+}
+
+.balloon__string {
+  position: absolute;
+  top: calc(var(--size, 80px) * 1.25 - 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+  border-radius: 1px;
+}
+
+/* Dwell ring around balloon */
+.balloon__dwell-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  pointer-events: none;
+}
+
+.balloon__dwell-ring svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+/* Pop animation */
+@keyframes balloonPop {
+  0% { transform: scale(1); opacity: 1; }
+  20% { transform: scale(1.4); opacity: 0.9; }
+  40% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.balloon.popping .balloon__body {
+  animation: balloonPop 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Confetti burst */
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 50;
+  animation: confettiFly var(--dur, 0.8s) ease-out forwards;
+}
+
+@keyframes confettiFly {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 0px), var(--ty, 100px)) rotate(var(--rot, 360deg)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Score pop */
+.score-pop {
+  position: absolute;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #34d399;
+  text-shadow: 0 2px 8px rgba(52, 211, 153, 0.5);
+  pointer-events: none;
+  z-index: 100;
+  animation: scorePop 0.8s ease-out forwards;
+}
+
+@keyframes scorePop {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-40px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.8); opacity: 0; }
+}
+
+/* Missed balloon flash */
+.balloon.missed .balloon__body {
+  animation: missedFlash 0.4s ease-out forwards;
+}
+
+@keyframes missedFlash {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.1); filter: brightness(2); }
+  100% { transform: scale(0); filter: brightness(1); opacity: 0; }
+}
+
+/* Gaze cursor */
+.balloon-pop-game__cursor {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.1s, height 0.1s;
+  box-shadow: 0 0 12px rgba(255,255,255,0.3);
+}
+
+.balloon-pop-game__cursor.on-balloon {
+  width: 32px;
+  height: 32px;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.2);
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
+}
+
+/* Win / Game over overlay */
+.balloon-pop-game__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 26, 0.88);
+  backdrop-filter: blur(16px);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.balloon-pop-game__result-card {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-radius: 2.5rem;
+  padding: 3.5rem;
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+  animation: cardBounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cardBounceIn {
+  from { transform: scale(0.7) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.balloon-pop-game__result-emoji {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  display: block;
+  animation: emojiPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275) 0.2s both;
+}
+
+@keyframes emojiPop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+.balloon-pop-game__result-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  margin-bottom: 0.5rem;
+}
+
+.balloon-pop-game__result-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.balloon-pop-game__result-score {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #34d399;
+  margin: 1rem 0 2rem;
+  line-height: 1;
+}
+
+.balloon-pop-game__result-btns {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.balloon-pop-game__result-btn {
+  padding: 16px 32px;
+  border-radius: 14px;
+  border: none;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.balloon-pop-game__result-btn:hover {
+  transform: scale(1.05);
+}
+
+.balloon-pop-game__result-btn.primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+}
+
+.balloon-pop-game__result-btn.secondary {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #94a3b8;
+}
+
+/* Pause banner */
+.balloon-pop-game__pause-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 26, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+.balloon-pop-game__pause-text {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #f1f5f9;
+  text-align: center;
+  animation: pausePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pausePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Progress bar (time-based) */
+.balloon-pop-game__progress-bar-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  z-index: 100;
+}
+
+.balloon-pop-game__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+  transition: width 0.1s linear;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Level up flash */
+@keyframes levelUpFlash {
+  0% { opacity: 0; transform: scale(0.5); }
+  30% { opacity: 1; transform: scale(1.1); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+.level-up-flash {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #a78bfa;
+  text-shadow: 0 0 30px rgba(167,139,250,0.8);
+  pointer-events: none;
+  z-index: 500;
+  animation: levelUpFlash 1.2s ease forwards;
+}

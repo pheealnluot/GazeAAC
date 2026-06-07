@@ -234,37 +234,188 @@
   color: #ff7070;
 }
 
-/* ── Sidebar button + panel ────────────────────────────────────────────────── */
+/* ── Single Reply unlock hint ────────────────────────────────────────────────
+   Shown on Backspace and Clear when tiles are locked. Pulsing amber border
+   signals "press me to un-grey the response tiles".                          */
+.top-bar__action-btn--unlock-hint {
+  border: 2px solid hsl(38, 85%, 55%);
+  color: hsl(42, 90%, 68%);
+  background: hsl(38, 60%, 10%);
+  box-shadow:
+    inset 0 0 10px rgba(240, 160, 30, 0.08),
+    0 0 0 1px hsl(38, 70%, 40% / 0.4);
+  animation: topbar-unlock-pulse 1.6s ease-in-out infinite;
+  z-index: 1;
+}
 
+.top-bar__action-btn--unlock-hint:hover {
+  background: hsl(38, 60%, 15%);
+  border-color: hsl(42, 90%, 65%);
+  box-shadow:
+    inset 0 0 14px rgba(240, 160, 30, 0.15),
+    0 0 0 2px hsl(42, 85%, 55% / 0.6),
+    0 0 14px rgba(240, 160, 30, 0.3);
+  animation: none;
+}
+
+@keyframes topbar-unlock-pulse {
+  0%, 100% {
+    border-color: hsl(38, 85%, 45%);
+    box-shadow:
+      inset 0 0 8px rgba(240, 160, 30, 0.06),
+      0 0 0 1px hsl(38, 70%, 35% / 0.35);
+  }
+  50% {
+    border-color: hsl(42, 95%, 62%);
+    box-shadow:
+      inset 0 0 12px rgba(240, 170, 40, 0.14),
+      0 0 0 2px hsl(42, 88%, 52% / 0.55),
+      0 0 12px rgba(240, 160, 30, 0.22);
+  }
+}
+
+
+/* ── General-use / Proceed action button modifiers ─────────────────────────
+   The button reuses .top-bar__nav-btn for shape/size. These modifiers only
+   change colour/glow — the full rectangular hit area is preserved.         */
+
+/* Default: sidebar-open state — subtle blue tint */
+.top-bar__nav-btn--action-open {
+  background: rgba(80, 100, 220, 0.18);
+  color: #a0b8ff;
+}
+
+/* Proceed state — amber/orange pulsing border, same aesthetic as unlock-hint.
+   The icon colour stays white/light so it reads well on any background.      */
+.top-bar__nav-btn--action-proceed {
+  border: 2px solid hsl(38, 85%, 55%);
+  color: hsl(42, 90%, 68%);
+  background: hsl(38, 60%, 10%);
+  box-shadow:
+    inset 0 0 10px rgba(240, 160, 30, 0.08),
+    0 0 0 1px hsl(38, 70%, 40% / 0.4);
+  animation: topbar-proceed-pulse 1.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.top-bar__nav-btn--action-proceed:hover {
+  background: hsl(38, 60%, 15%);
+  border-color: hsl(42, 90%, 65%);
+  color: #fff;
+  box-shadow:
+    inset 0 0 14px rgba(240, 160, 30, 0.15),
+    0 0 0 2px hsl(42, 85%, 55% / 0.6),
+    0 0 14px rgba(240, 160, 30, 0.3);
+  animation: none;
+}
+
+@keyframes topbar-proceed-pulse {
+  0%, 100% {
+    border-color: hsl(38, 85%, 45%);
+    box-shadow:
+      inset 0 0 8px rgba(240, 160, 30, 0.06),
+      0 0 0 1px hsl(38, 70%, 35% / 0.35);
+  }
+  50% {
+    border-color: hsl(42, 95%, 62%);
+    box-shadow:
+      inset 0 0 12px rgba(240, 170, 40, 0.14),
+      0 0 0 2px hsl(42, 88%, 52% / 0.55),
+      0 0 12px rgba(240, 160, 30, 0.22);
+  }
+}
+
+/* Lock state — crimson pulsing border signals "lock manual answergate again" */
+.top-bar__nav-btn--action-lock {
+  border: 2px solid hsl(0, 85%, 55%);
+  color: hsl(0, 90%, 68%);
+  background: hsl(0, 60%, 10%);
+  box-shadow:
+    inset 0 0 10px rgba(240, 30, 30, 0.08),
+    0 0 0 1px hsl(0, 70%, 40% / 0.4);
+  animation: topbar-lock-pulse 1.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.top-bar__nav-btn--action-lock:hover {
+  background: hsl(0, 60%, 15%);
+  border-color: hsl(0, 90%, 65%);
+  color: #fff;
+  box-shadow:
+    inset 0 0 14px rgba(240, 30, 30, 0.15),
+    0 0 0 2px hsl(0, 85%, 55% / 0.6),
+    0 0 14px rgba(240, 30, 30, 0.3);
+  animation: none;
+}
+
+@keyframes topbar-lock-pulse {
+  0%, 100% {
+    border-color: hsl(0, 85%, 45%);
+    box-shadow:
+      inset 0 0 8px rgba(240, 30, 30, 0.06),
+      0 0 0 1px hsl(0, 70%, 35% / 0.35);
+  }
+  50% {
+    border-color: hsl(0, 95%, 62%);
+    box-shadow:
+      inset 0 0 12px rgba(240, 40, 40, 0.14),
+      0 0 0 2px hsl(0, 88%, 52% / 0.55),
+      0 0 12px rgba(240, 30, 30, 0.22);
+  }
+}
+
+/* Again state — teal pulsing border signals "reset selection / try again" */
+.top-bar__nav-btn--action-again {
+  border: 2px solid hsl(185, 75%, 48%);
+  color: hsl(185, 85%, 72%);
+  background: hsl(185, 50%, 9%);
+  box-shadow:
+    inset 0 0 10px rgba(0, 200, 210, 0.08),
+    0 0 0 1px hsl(185, 65%, 35% / 0.4);
+  animation: topbar-again-pulse 1.6s ease-in-out infinite;
+  z-index: 1;
+}
+
+.top-bar__nav-btn--action-again:hover {
+  background: hsl(185, 50%, 14%);
+  border-color: hsl(185, 85%, 62%);
+  color: #fff;
+  box-shadow:
+    inset 0 0 14px rgba(0, 200, 210, 0.15),
+    0 0 0 2px hsl(185, 80%, 50% / 0.6),
+    0 0 14px rgba(0, 200, 210, 0.3);
+  animation: none;
+}
+
+@keyframes topbar-again-pulse {
+  0%, 100% {
+    border-color: hsl(185, 70%, 40%);
+    box-shadow:
+      inset 0 0 8px rgba(0, 200, 210, 0.06),
+      0 0 0 1px hsl(185, 60%, 30% / 0.35);
+  }
+  50% {
+    border-color: hsl(185, 85%, 58%);
+    box-shadow:
+      inset 0 0 12px rgba(0, 210, 220, 0.14),
+      0 0 0 2px hsl(185, 80%, 48% / 0.55),
+      0 0 12px rgba(0, 200, 210, 0.22);
+  }
+}
+
+/* Wrapper provides relative positioning for the sidebar dropdown.
+   align-items: stretch ensures the button fills the full bar height,
+   matching every other nav/action button. */
 .top-bar__sidebar-wrap {
   position: relative;
   flex-shrink: 0;
-}
-
-.top-bar__sidebar-btn {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  width: 10vw;
-  flex-shrink: 0;
-  height: 100%;
-  padding: 0 clamp(8px, 1.2vw, 18px);
-  background: #141824;
-  border: none;
-  color: #c8d8f0;
-  font-size: 1.35rem;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  -webkit-app-region: no-drag;
-  outline: none;
+  align-items: stretch;
 }
 
-.top-bar__sidebar-btn:hover,
-.top-bar__sidebar-btn--open {
-  background: rgba(80, 100, 220, 0.2);
-  color: #a0b8ff;
+/* The action button must fill the full wrapper height */
+.top-bar__sidebar-wrap .top-bar__nav-btn {
+  height: 100%;
 }
 
 /* The sidebar panel drops down from the right edge */
@@ -351,6 +502,7 @@
   color: color-mix(in srgb, var(--item-color, #00c8ff) 80%, #c8d8f0);
 }
 
+
 /* ── TopBar dwell ring (SVG arc, same visual as GazeButton ring) ───────────── */
 
 .top-bar__dwell-ring {
@@ -365,13 +517,13 @@
 
 /* The SVG circle is always rendered; arc visibility controlled by opacity on button */
 .top-bar__dwell-ring-track {
-  stroke: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.18);
 }
 
 .top-bar__dwell-ring-arc {
-  stroke: #00c8ff;
+  stroke: #ffffff;
   transition: stroke-dashoffset 0.05s linear;
-  filter: drop-shadow(0 0 4px #00c8ff);
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 3px #00c8ff);
 }
 
 /* Show ring SVG only while the button is actively being dwelled */

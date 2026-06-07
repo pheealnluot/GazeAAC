@@ -1,0 +1,1608 @@
+/* ─── MovieTime – Full-screen YouTube movie experience ─────────────────────── */
+
+.movie-time {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  background: hsl(260 30% 5%);
+  overflow: hidden;
+  color: var(--color-text-primary);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SHARED BACKGROUND
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-time__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, hsl(280 70% 14% / 0.7) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 80%, hsl(220 80% 10% / 0.6) 0%, transparent 55%),
+    hsl(260 30% 5%);
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-time__topbar {
+  position: relative;
+  /* Must exceed quiz overlay (z-index 100) and feedback flash (z-index 200)
+     so caregiver Back + Settings buttons are always reachable. */
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.movie-time__back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.movie-time__back-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--color-text-primary);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.movie-time__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, hsl(280 85% 72%), hsl(195 100% 65%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.movie-time__topbar-spacer { flex: 1; }
+
+/* ── Quiz info chips row inside the topbar ── */
+.movie-time__quiz-topbar-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  /* Slide in from the left */
+  animation: mq-q-in 0.3s ease both;
+}
+
+/* Topbar-variant overrides for mq-* chips — slightly smaller, no animation, no margin */
+.mq-param--topbar {
+  font-size: clamp(0.52rem, 0.95vw, 0.64rem);
+  padding: 2px 8px;
+  animation: none;
+  margin: 0;
+}
+.mq-source-chip--topbar {
+  font-size: clamp(0.52rem, 0.95vw, 0.64rem);
+  padding: 3px 10px;
+  animation: none;
+  margin: 0;
+  margin-left: 0;
+}
+.mq-progress-pill--topbar {
+  font-size: clamp(0.52rem, 0.95vw, 0.64rem);
+  padding: 3px 10px;
+  animation: none;
+  margin: 0;
+  margin-left: 0;
+}
+
+.movie-time__status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* Clickable variant */
+.movie-time__status-badge--btn {
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.movie-time__status-badge--btn:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.18);
+  color: var(--color-text-primary);
+}
+
+/* Primed (blue) state — button has been clicked once */
+.movie-time__status-badge--primed {
+  background: hsl(210 90% 35% / 0.85);
+  border-color: hsl(210 90% 60% / 0.7);
+  color: hsl(210 100% 90%);
+  box-shadow: 0 0 10px hsl(210 90% 55% / 0.4);
+  animation: mt-badge-pulse 1s ease-in-out infinite;
+}
+.movie-time__status-badge--primed:hover {
+  background: hsl(210 90% 42% / 0.9);
+  border-color: hsl(210 90% 70% / 0.9);
+  box-shadow: 0 0 16px hsl(210 90% 60% / 0.5);
+}
+@keyframes mt-badge-pulse {
+  0%, 100% { box-shadow: 0 0 10px hsl(210 90% 55% / 0.4); }
+  50%       { box-shadow: 0 0 18px hsl(210 90% 65% / 0.65); }
+}
+
+/* ── Settings gear ── */
+.movie-time__gear-btn {
+  width: 28px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text-secondary, #8899aa);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  margin-left: 4px;
+}
+.movie-time__gear-btn:hover {
+  background: hsl(260 50% 28%);
+  color: hsl(280 85% 78%);
+}
+
+.movie-time__gear-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 7000;
+  min-width: 210px;
+  background: #1a1d28;
+  border: 1px solid rgba(0,200,255,0.18);
+  border-radius: 0.65rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,255,0.06);
+  overflow: hidden;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: mt-popover-in 0.12s ease-out;
+}
+@keyframes mt-popover-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.movie-time__gear-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.45rem;
+  color: #c8d8f0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.movie-time__gear-popover-item:hover {
+  background: rgba(0,200,255,0.1);
+  color: #fff;
+}
+
+.movie-time__gear-popover-divider {
+  height: 1px;
+  background: rgba(0,200,255,0.1);
+  margin: 2px 4px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   BROWSE STATE
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-browse {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md);
+  gap: var(--space-md);
+  overflow: hidden;
+}
+
+.movie-browse__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.movie-browse__heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.movie-browse__refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 40px;
+  background: hsl(280 60% 18% / 0.8);
+  border: 1.5px solid hsl(280 70% 55% / 0.4);
+  border-radius: 999px;
+  color: hsl(280 85% 80%);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.movie-browse__refresh-btn:hover {
+  background: hsl(280 60% 22% / 0.9);
+  border-color: hsl(280 80% 65% / 0.7);
+  box-shadow: 0 0 16px hsl(280 70% 55% / 0.3);
+}
+.movie-browse__refresh-btn--loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+.movie-browse__refresh-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: hsl(280 85% 70%);
+  border-radius: 0 0 999px 999px;
+  transition: width 0.05s linear;
+}
+
+/* Video grid */
+.movie-browse__grid {
+  display: grid;
+  /* grid-template-columns set dynamically via inline style in JSX */
+  gap: clamp(8px, 1.5vw, 16px);
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Video card */
+.movie-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: hsl(225 20% 9% / 0.9);
+  border: 1.5px solid rgba(255,255,255,0.07);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.movie-card:hover,
+.movie-card--gazed {
+  transform: translateY(-4px) scale(1.02);
+  border-color: hsl(280 70% 60% / 0.5);
+  box-shadow: 0 12px 36px hsl(280 60% 40% / 0.25);
+}
+
+/* Thumbnail wrapper — position context for duration + HD badges */
+.movie-card__thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.movie-card__thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: hsl(225 20% 13%);
+  display: block;
+}
+
+.movie-card__info {
+  padding: 10px 12px 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.movie-card__title {
+  font-size: clamp(1.0rem, 1.6vw, 1.35rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.movie-card__channel {
+  font-size: clamp(0.75rem, 1.05vw, 0.9rem);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Duration badge — bottom-right corner of the thumbnail */
+.movie-card__duration {
+  position: absolute;
+  bottom: 5px; right: 6px;
+  background: rgba(0,0,0,0.80);
+  color: #fff;
+  font-size: clamp(0.6rem, 0.95vw, 0.72rem);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+/* HD badge — top-left corner of the thumbnail */
+.movie-card__hd-badge {
+  position: absolute;
+  top: 5px; left: 6px;
+  background: hsl(145 65% 25% / 0.9);
+  color: hsl(145 80% 72%);
+  border: 1px solid hsl(145 70% 45% / 0.5);
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+}
+
+/* Stats row — views + likes */
+.movie-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.movie-card__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: clamp(0.7rem, 0.95vw, 0.82rem);
+  font-weight: 600;
+  color: hsl(220 20% 60%);
+  white-space: nowrap;
+}
+
+.movie-card__stat-icon {
+  font-size: 0.78em;
+  opacity: 0.85;
+}
+
+
+.movie-card__dwell-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 4px;
+  background: hsl(280 85% 70%);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: width 0.05s linear;
+}
+
+/* Empty / loading states */
+.movie-browse__loading,
+.movie-browse__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.movie-browse__loading-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: hsl(280 85% 70%);
+  border-radius: 50%;
+  animation: mt-spin 0.8s linear infinite;
+}
+@keyframes mt-spin { to { transform: rotate(360deg); } }
+
+.movie-browse__empty-icon { font-size: 3rem; }
+.movie-browse__empty-msg {
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: 32ch;
+  line-height: 1.5;
+}
+
+.movie-browse__api-warn {
+  background: hsl(38 80% 15% / 0.8);
+  border: 1.5px solid hsl(38 80% 50% / 0.4);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  text-align: center;
+  color: hsl(38 90% 75%);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.movie-browse__api-warn strong { color: hsl(38 95% 80%); }
+
+/* Quota-exceeded banner — shown above grid when using cached results */
+.movie-browse__quota-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  background: hsl(38 70% 12% / 0.85);
+  border: 1.5px solid hsl(38 80% 50% / 0.4);
+  border-radius: var(--radius-md);
+  color: hsl(38 90% 78%);
+  font-size: 0.80rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+  animation: mt-fade-in 0.3s ease;
+}
+.movie-browse__quota-banner-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.movie-browse__quota-banner strong {
+  color: hsl(38 95% 82%);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   VIDEO SELECTION GATE  (.movie-browse__selection-gate)
+   Displayed above the grid while the gaze-based readiness gate is filling.
+   Disappears once the gate passes and video selection is unlocked.
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-browse__selection-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px;
+  background: hsl(220 35% 8% / 0.9);
+  border: 1.5px solid hsl(195 80% 55% / 0.4);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  animation: mt-gate-slide-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mt-gate-slide-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.movie-browse__selection-gate-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(0.72rem, 1.3vw, 0.88rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(195 90% 75%);
+}
+
+.movie-browse__selection-gate-icon {
+  font-size: 1.1rem;
+  animation: mq-eye-blink 1.4s ease-in-out infinite;
+}
+
+.movie-browse__selection-gate-track {
+  position: relative;
+  height: clamp(4px, 0.625vh, 6px);
+  background: rgba(255,255,255,0.07);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+}
+
+.movie-browse__selection-gate-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    hsl(195 90% 40%),
+    hsl(175 85% 52%),
+    hsl(195 90% 68%)
+  );
+  box-shadow: 0 0 6px hsl(195 85% 60% / 0.7),
+              inset 0 0.5px 0 rgba(255,255,255,0.25);
+}
+.movie-browse__selection-gate-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: mq-shimmer 1.2s ease-in-out infinite;
+}
+
+.movie-browse__selection-gate-pct {
+  display: none;
+}
+
+/* Locked video card — fully visible, just not yet selectable.
+   The gate progress bar above the grid communicates the locked state;
+   no visual dimming needed on individual cards. */
+.movie-card--locked {
+  cursor: default;
+  /* No opacity / filter changes — cards remain clearly visible */
+}
+.movie-card--locked .movie-card__dwell-bar {
+  background: linear-gradient(90deg, hsl(195 90% 50%), hsl(175 85% 52%)) !important;
+}
+/* Suppress hover lift effect so locked cards don't mislead the user */
+.movie-card--locked:hover {
+  transform: none;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: none;
+}
+
+/* Lock veil hidden (kept for DOM compatibility but invisible) */
+.movie-card__lock-veil {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   WATCHING STATE
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-watching {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  overflow: hidden;
+}
+
+.movie-watching__player-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.movie-watching__player-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.movie-watching__gaze-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  z-index: 20;
+  animation: mt-fade-in 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+@keyframes mt-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.movie-watching__gaze-icon { font-size: 3rem; }
+.movie-watching__gaze-msg { color: hsl(38 90% 72%); font-family: var(--font-display); }
+
+/* ── Puzzle countdown banner — shown 5 s before puzzle interrupts video ── */
+.movie-watching__puzzle-countdown {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, hsl(35 90% 15% / 0.92), hsl(20 80% 12% / 0.95));
+  border: 1.5px solid hsl(38 90% 55% / 0.6);
+  border-radius: 999px;
+  color: hsl(38 95% 78%);
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow:
+    0 4px 24px hsl(35 80% 40% / 0.4),
+    0 0 0 1px hsl(38 80% 50% / 0.15),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
+  animation: mt-countdown-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), mt-countdown-pulse 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.movie-watching__puzzle-countdown-icon {
+  font-size: 1.2em;
+  animation: mt-countdown-bounce 1s ease-in-out infinite;
+}
+
+.movie-watching__puzzle-countdown-text strong {
+  color: hsl(38 100% 68%);
+  font-weight: 900;
+  font-size: 1.1em;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: -0.02em;
+}
+
+@keyframes mt-countdown-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0)      scale(1);   }
+}
+@keyframes mt-countdown-pulse {
+  0%, 100% { box-shadow: 0 4px 24px hsl(35 80% 40% / 0.4), 0 0 0 1px hsl(38 80% 50% / 0.15), inset 0 1px 0 rgba(255,255,255,0.08); }
+  50%       { box-shadow: 0 4px 32px hsl(35 85% 50% / 0.6), 0 0 0 2px hsl(38 90% 60% / 0.3),  inset 0 1px 0 rgba(255,255,255,0.08); }
+}
+@keyframes mt-countdown-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+.movie-watching__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.movie-watching__ctrl-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.movie-watching__ctrl-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--color-text-primary);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FULL-SCREEN QUIZ OVERLAY  (.mq-*)
+   Used for both pre-watch and mid-video puzzle breaks.
+══════════════════════════════════════════════════════════════════════════════ */
+.mq-overlay {
+  position: absolute;
+  inset: 0;
+  /* Push content below the topbar (z-index 300) so the question is never hidden */
+  top: var(--mq-topbar-offset, 44px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: hsl(255 30% 6% / 0.97);
+  backdrop-filter: blur(16px);
+  animation: mq-fade-in 0.3s ease;
+  overflow: hidden;
+}
+@keyframes mq-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Question Gate Progress Bar (top of screen) ── */
+.mq-gate-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  z-index: 10;
+  flex-shrink: 0;
+}
+.mq-gate-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(280 85% 65%), hsl(195 90% 65%));
+  border-radius: 0 999px 999px 0;
+  box-shadow: 0 0 12px hsl(280 80% 65% / 0.6);
+}
+
+/* ── Answer Gate Progress Bar (shown after answers appear but before selection unlocks) ── */
+.mq-answer-gate-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: rgba(255,255,255,0.06);
+  z-index: 10;
+  flex-shrink: 0;
+}
+.mq-answer-gate-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(195 90% 55%), hsl(145 80% 55%));
+  border-radius: 0 999px 999px 0;
+  box-shadow: 0 0 12px hsl(195 80% 60% / 0.5);
+}
+
+/* ── Prominent Gaze-Gate Progress Section ── */
+.mq-gate-progress-section {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0 clamp(8px, 2vw, 24px) clamp(4px, 0.8vh, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0.6;
+  transition: opacity 0.5s ease;
+}
+/* When outside the question box (answer gate), restore full-width padding */
+.mq-overlay > .mq-gate-progress-section {
+  padding: 0 clamp(16px, 4vw, 64px) clamp(4px, 0.8vh, 8px);
+}
+/* Once all gates are complete, fade almost invisible but keep space */
+.mq-gate-progress-section--done {
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.mq-gate-progress-track {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mq-gate-progress-track--complete {
+  opacity: 0.3;
+}
+
+.mq-gate-progress-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: clamp(0.58rem, 1vw, 0.72rem);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.mq-gate-progress-track--question .mq-gate-progress-label {
+  color: hsl(285 70% 72%);
+}
+.mq-gate-progress-track--answer .mq-gate-progress-label {
+  color: hsl(185 70% 65%);
+}
+
+.mq-gate-progress-icon {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+@keyframes mq-eye-blink {
+  0%, 85%, 100% { opacity: 1; transform: scaleY(1); }
+  90%            { opacity: 0.3; transform: scaleY(0.3); }
+}
+
+.mq-gate-progress-bar {
+  position: relative;
+  height: clamp(2.5px, 0.4vh, 4px);
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.mq-gate-progress-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  border-radius: 999px;
+}
+.mq-gate-progress-fill--question {
+  background: linear-gradient(90deg,
+    hsl(275 70% 48%),
+    hsl(300 65% 55%),
+    hsl(285 70% 62%)
+  );
+  box-shadow: 0 0 3px hsl(285 65% 55% / 0.4);
+}
+.mq-gate-progress-fill--answer {
+  background: linear-gradient(90deg,
+    hsl(185 70% 38%),
+    hsl(165 65% 48%),
+    hsl(185 70% 55%)
+  );
+  box-shadow: 0 0 3px hsl(185 65% 48% / 0.4);
+}
+
+.mq-gate-progress-pct {
+  /* Percentage label sits below/outside the bar — no longer inside it */
+  display: none;
+}
+
+/* ── Header (badge) ── */
+.mq-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(10px, 2vh, 20px) var(--space-md) 0;
+  flex-shrink: 0;
+}
+
+.mq-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: hsl(280 60% 16% / 0.9);
+  border: 1px solid hsl(280 70% 55% / 0.4);
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: hsl(280 90% 78%);
+  animation: mq-badge-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes mq-badge-in {
+  from { transform: scale(0.85) translateY(-8px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ── Question-source chip (Gemini / Offline fallback indicator) ── */
+.mq-source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: clamp(0.6rem, 1.2vw, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  animation: mq-badge-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+  cursor: default;
+}
+.mq-source-chip--gemini {
+  background: hsl(260 55% 14% / 0.9);
+  border: 1px solid hsl(260 70% 55% / 0.45);
+  color: hsl(270 85% 78%);
+}
+.mq-source-chip--openai {
+  background: hsl(142 50% 10% / 0.9);
+  border: 1px solid hsl(142 65% 42% / 0.45);
+  color: hsl(142 75% 68%);
+}
+.mq-source-chip--ollama {
+  background: hsl(38 55% 10% / 0.9);
+  border: 1px solid hsl(38 75% 50% / 0.45);
+  color: hsl(38 90% 72%);
+}
+.mq-source-chip--nano {
+  background: hsl(185 55% 10% / 0.9);
+  border: 1px solid hsl(185 70% 45% / 0.45);
+  color: hsl(185 80% 70%);
+}
+.mq-source-chip--gaze {
+  background: hsl(195 45% 10% / 0.9);
+  border: 1px solid hsl(195 65% 50% / 0.4);
+  color: hsl(195 80% 72%);
+}
+.mq-source-chip--fallback {
+  background: hsl(200 35% 12% / 0.9);
+  border: 1px solid hsl(200 50% 45% / 0.4);
+  color: hsl(200 70% 68%);
+}
+
+/* ── Question progress pill (X / N) ── */
+.mq-progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 10px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: clamp(0.62rem, 1.2vw, 0.76rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono, monospace);
+  background: hsl(280 35% 12% / 0.9);
+  border: 1px solid hsl(280 55% 50% / 0.4);
+  color: hsl(280 75% 72%);
+  animation: mq-badge-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+
+/* ── Prompt-params info bar ── */
+.mq-params-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: clamp(6px, 1.2vh, 12px) clamp(12px, 4vw, 48px) clamp(4px, 0.8vh, 8px);
+  flex-shrink: 0;
+  animation: mq-q-in 0.4s ease 0.2s both;
+}
+
+.mq-param {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: clamp(0.58rem, 1.1vw, 0.70rem);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+.mq-param__icon {
+  font-size: 0.8em;
+  flex-shrink: 0;
+}
+
+/* Per-category tints */
+.mq-param--model {
+  background: hsl(260 45% 12% / 0.85);
+  border-color: hsl(260 60% 50% / 0.35);
+  color: hsl(265 75% 72%);
+}
+.mq-param--type {
+  background: hsl(215 45% 12% / 0.85);
+  border-color: hsl(215 60% 50% / 0.35);
+  color: hsl(215 75% 72%);
+}
+.mq-param--difficulty {
+  background: hsl(35 45% 12% / 0.85);
+  border-color: hsl(35 65% 50% / 0.35);
+  color: hsl(38 80% 70%);
+}
+.mq-param--level {
+  background: hsl(145 40% 10% / 0.85);
+  border-color: hsl(145 55% 42% / 0.35);
+  color: hsl(145 65% 62%);
+}
+.mq-param--subject {
+  background: hsl(190 45% 11% / 0.85);
+  border-color: hsl(190 60% 45% / 0.35);
+  color: hsl(190 70% 65%);
+}
+.mq-param--video {
+  background: hsl(320 35% 11% / 0.85);
+  border-color: hsl(320 55% 45% / 0.35);
+  color: hsl(320 65% 68%);
+  max-width: 28ch;
+  overflow: hidden;
+}
+
+/* ── Question Area ── */
+.mq-question-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  padding: clamp(6px, 1.5vh, 18px) clamp(16px, 5vw, 80px);
+  text-align: center;
+  overflow: hidden;
+  transition: flex-grow 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  /* No box by default */
+  border: 2px solid transparent;
+  border-radius: clamp(12px, 2vw, 20px);
+  gap: clamp(8px, 1.5vh, 14px);
+}
+
+/* When choices are also visible, cap question so choices claim remaining space */
+.mq-overlay:has(.mq-choices) .mq-question-area {
+  flex-grow: 0;
+  max-height: 35vh;
+}
+
+.mq-question-area--gate {
+  flex-grow: 1 !important;
+  max-height: none !important; /* always fill all space during gate */
+  /* Discreet bordered box — signals this zone progresses the gate */
+  border-color: hsl(280 60% 55% / 0.30);
+  background: hsl(280 30% 8% / 0.45);
+  box-shadow:
+    0 0 0 1px hsl(280 70% 60% / 0.10),
+    inset 0 0 32px hsl(280 60% 30% / 0.08);
+  animation: mq-gate-box-pulse 2.4s ease-in-out infinite;
+}
+@keyframes mq-gate-box-pulse {
+  0%, 100% { border-color: hsl(280 60% 55% / 0.28); box-shadow: 0 0 0 1px hsl(280 70% 60% / 0.08), inset 0 0 24px hsl(280 60% 30% / 0.06); }
+  50%       { border-color: hsl(280 70% 65% / 0.45); box-shadow: 0 0 0 2px hsl(280 70% 60% / 0.14), inset 0 0 40px hsl(280 60% 35% / 0.12); }
+}
+
+.mq-question {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+  font-weight: 900;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 24px hsl(280 80% 50% / 0.2);
+  animation: mq-q-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 90%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Underline the question while TTS is reading it */
+.mq-question--reading {
+  text-decoration: underline;
+  text-decoration-color: hsl(280 90% 70%);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+  animation: mq-q-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+             mq-reading-glow 1.8s ease-in-out infinite;
+}
+@keyframes mq-reading-glow {
+  0%, 100% { text-shadow: 0 2px 24px hsl(280 80% 50% / 0.2), 0 0 0 transparent; }
+  50%       { text-shadow: 0 2px 24px hsl(280 90% 65% / 0.5), 0 0 20px hsl(280 85% 65% / 0.25); }
+}
+@keyframes mq-q-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.mq-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--color-text-secondary);
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+}
+
+.mq-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: hsl(280 85% 70%);
+  border-radius: 50%;
+  animation: mt-spin 0.8s linear infinite;
+}
+
+/* ── Choices Grid — fills all remaining space ── */
+.mq-choices {
+  flex: 1;
+  display: grid;
+  gap: clamp(8px, 1.5vw, 16px);
+  padding: 0 clamp(10px, 2.5vw, 40px) clamp(10px, 2vh, 20px);
+  min-height: 0; /* required for flex child to shrink */
+  animation: mq-choices-in 0.4s ease 0.1s both;
+}
+@keyframes mq-choices-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mq-choices--cols-1 {
+  grid-template-columns: 1fr;
+}
+.mq-choices--cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── Individual Choice Button ── */
+.mq-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(12px, 2.5vh, 28px) clamp(16px, 2.5vw, 32px);
+  background: hsl(225 22% 11%);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: clamp(12px, 2vw, 20px);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.5vw, 1.8rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  overflow: hidden;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.mq-choice:hover:not(.mq-choice--locked),
+.mq-choice--gazed:not(.mq-choice--locked) {
+  background: hsl(280 40% 18%);
+  border-color: hsl(280 70% 60% / 0.6);
+  transform: scale(1.015);
+  box-shadow: 0 8px 32px hsl(280 60% 40% / 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.mq-choice--locked {
+  cursor: default;
+  /* Do NOT dim — both q-locked and a-locked choices should remain clearly visible */
+}
+
+/* During QUESTION gate: choices are fully visible (readable) but not selectable */
+.mq-choice--q-locked {
+  cursor: default;
+  /* Do NOT dim — user should clearly read the choices */
+  border-color: rgba(255,255,255,0.07);
+}
+.mq-choice--q-locked:hover {
+  transform: none;
+  box-shadow: none;
+  background: hsl(225 22% 11%);
+}
+
+/* During ANSWER gate: choices are fully visible and clear */
+.mq-choice--a-locked {
+  cursor: default;
+  /* No opacity dimming — choices should be clearly readable */
+}
+.mq-choice--correct {
+  background: hsl(145 55% 12%);
+  border-color: hsl(145 70% 50% / 0.8);
+  color: hsl(145 75% 72%);
+  animation: mq-correct-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 32px hsl(145 70% 45% / 0.3);
+}
+@keyframes mq-correct-pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+.mq-choice--wrong {
+  background: hsl(0 55% 12%);
+  border-color: hsl(0 65% 50% / 0.6);
+  color: hsl(0 65% 68%);
+  opacity: 0.55;
+  animation: mq-wrong-shake 0.35s ease;
+}
+@keyframes mq-wrong-shake {
+  0%  { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100%{ transform: translateX(0); }
+}
+
+/* Persistent wrong — stays visually marked with ✕ until puzzle resets */
+.mq-choice--persist-wrong {
+  background: hsl(0 45% 9%);
+  border-color: hsl(0 55% 40% / 0.5);
+  color: hsl(0 60% 50%);
+  opacity: 0.42;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Hint — golden glow on the correct answer after N wrong attempts */
+.mq-choice--hint {
+  background: hsl(42 70% 12%);
+  border-color: hsl(42 90% 55% / 0.8);
+  box-shadow: 0 0 28px hsl(42 90% 50% / 0.35), inset 0 0 0 1px hsl(42 90% 60% / 0.25);
+  animation: mq-hint-pulse 1.6s ease-in-out infinite;
+}
+@keyframes mq-hint-pulse {
+  0%, 100% { box-shadow: 0 0 20px hsl(42 90% 50% / 0.3), inset 0 0 0 1px hsl(42 90% 60% / 0.2); }
+  50%       { box-shadow: 0 0 40px hsl(42 90% 55% / 0.5), inset 0 0 0 1px hsl(42 90% 70% / 0.4); }
+}
+
+
+/* ── Choice text ── */
+.mq-choice__text {
+  position: relative;
+  z-index: 2;
+}
+
+/* Underline choice text while TTS is reading it */
+.mq-choice--reading .mq-choice__text {
+  text-decoration: underline;
+  text-decoration-color: hsl(185 90% 65%);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 5px;
+  animation: mq-choice-reading-glow 1.8s ease-in-out infinite;
+}
+@keyframes mq-choice-reading-glow {
+  0%, 100% { text-shadow: none; }
+  50%       { text-shadow: 0 0 16px hsl(185 85% 60% / 0.45); }
+}
+
+/* ── Persistent wrong mark (✕ badge, top-right) ── */
+.mq-choice__wrong-mark {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  color: hsl(0 75% 62%);
+  font-weight: 900;
+  z-index: 6;
+  line-height: 1;
+  text-shadow: 0 0 8px hsl(0 80% 55% / 0.6);
+  pointer-events: none;
+}
+
+/* ── Hint mark (💡 badge, top-right) ── */
+.mq-choice__hint-mark {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  z-index: 6;
+  line-height: 1;
+  animation: mq-hint-mark-pulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mq-hint-mark-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+
+
+/* ── Dwell progress bar (bottom edge of choice) ── */
+.mq-choice__dwell {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 5px;
+  background: hsl(280 85% 70%);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: width 0.05s linear;
+  z-index: 3;
+}
+
+/* ── Answer gate ring overlay (EduGaze-style circular progress) ── */
+.mq-choice__gate-ring {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* No dark veil — keep choices fully visible */
+  background: transparent;
+  backdrop-filter: none;
+  z-index: 4;
+  border-radius: inherit;
+}
+.mq-gate-ring-svg {
+  width: clamp(64px, 10vw, 110px);
+  height: clamp(64px, 10vw, 110px);
+}
+.mq-gate-ring-track {
+  stroke: rgba(255,255,255,0.12);
+}
+.mq-gate-ring-fill {
+  stroke: hsl(195 85% 60%);
+  filter: drop-shadow(0 0 6px hsl(195 80% 55%));
+  transition: stroke-dashoffset 0.05s linear;
+}
+
+/* ── Q-gate lock indicator — subtle border pulse, no overlay veil ── */
+.mq-choice__q-gate-lock {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Reading… veil during question gate (KEPT for backward compat but unused) ── */
+.mq-choice__reading-veil {
+  display: none;
+}
+
+/* ── Footer (skip + pause buttons) ── */
+.mq-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: clamp(6px, 1.5vh, 14px) var(--space-md);
+  flex-shrink: 0;
+}
+
+.mq-pause-btn {
+  font-size: 0.72rem;
+  color: hsl(38 80% 68%);
+  background: hsl(35 40% 10% / 0.7);
+  border: 1px solid hsl(38 60% 45% / 0.4);
+  border-radius: 999px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.7;
+}
+.mq-pause-btn:hover {
+  background: hsl(35 45% 14% / 0.9);
+  border-color: hsl(38 70% 55% / 0.6);
+  color: hsl(38 90% 78%);
+  opacity: 1;
+}
+
+/* Topbar variant — compact size to sit alongside the gear button */
+.mq-pause-btn--topbar {
+  font-size: 0.67rem;
+  padding: 4px 14px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.mq-skip {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+.mq-skip:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-primary);
+  opacity: 1;
+}
+
+/* Topbar variant — compact size to sit alongside the pause button */
+.mq-skip--topbar {
+  font-size: 0.67rem;
+  padding: 4px 14px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   WRONG CHOICE FLASH — full-box overlay on the selected wrong answer
+══════════════════════════════════════════════════════════════════════════════ */
+/* The button itself shakes + glows red */
+.mq-choice--wrong-flash {
+  animation: mq-wrong-box-shake 0.4s ease, mq-wrong-box-glow 1.2s ease forwards;
+  background: hsl(0 65% 14%) !important;
+  border-color: hsl(0 80% 55% / 0.9) !important;
+}
+@keyframes mq-wrong-box-shake {
+  0%   { transform: translateX(0) scale(1); }
+  15%  { transform: translateX(-8px) scale(1.02); }
+  30%  { transform: translateX(8px)  scale(1.02); }
+  45%  { transform: translateX(-5px) scale(1); }
+  60%  { transform: translateX(5px)  scale(1); }
+  75%  { transform: translateX(-2px) scale(1); }
+  100% { transform: translateX(0) scale(1); }
+}
+@keyframes mq-wrong-box-glow {
+  0%   { box-shadow: 0 0 0 0 hsl(0 80% 55% / 0); }
+  20%  { box-shadow: 0 0 0 6px hsl(0 80% 55% / 0.5), 0 0 40px hsl(0 80% 50% / 0.4); }
+  100% { box-shadow: 0 0 0 0 hsl(0 80% 55% / 0); }
+}
+
+/* Full-box red cross overlay */
+.mq-choice__wrong-flash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-weight: 900;
+  color: hsl(0 85% 62%);
+  text-shadow:
+    0 0 20px hsl(0 90% 55% / 0.9),
+    0 0 60px hsl(0 80% 50% / 0.6);
+  background: hsl(0 70% 10% / 0.6);
+  border-radius: inherit;
+  z-index: 10;
+  pointer-events: none;
+  animation: mq-wrong-flash-in 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  backdrop-filter: blur(2px);
+}
+@keyframes mq-wrong-flash-in {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  25%  { opacity: 1; transform: scale(1.15) rotate(5deg); }
+  45%  { opacity: 1; transform: scale(0.95) rotate(-2deg); }
+  60%  { opacity: 1; transform: scale(1)    rotate(0deg); }
+  80%  { opacity: 1; transform: scale(1)    rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.05) rotate(0deg); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CORRECT ANSWER CELEBRATION  (.movie-celebration)
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vh, 20px);
+  pointer-events: none;
+  /* Radial burst background */
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, hsl(145 60% 8% / 0.97), hsl(255 30% 4% / 0.98));
+  animation: celeb-fade 2.2s ease forwards;
+}
+@keyframes celeb-fade {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Emoji particle burst ring */
+.movie-celebration__burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.movie-celebration__particle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: clamp(1.6rem, 4vw, 3.2rem);
+  line-height: 1;
+  transform-origin: center;
+  animation-duration: 2.0s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 8 particles flying out in different directions */
+.movie-celebration__particle--0 { animation-name: celeb-particle-0; }
+.movie-celebration__particle--1 { animation-name: celeb-particle-1; }
+.movie-celebration__particle--2 { animation-name: celeb-particle-2; }
+.movie-celebration__particle--3 { animation-name: celeb-particle-3; }
+.movie-celebration__particle--4 { animation-name: celeb-particle-4; }
+.movie-celebration__particle--5 { animation-name: celeb-particle-5; }
+.movie-celebration__particle--6 { animation-name: celeb-particle-6; }
+.movie-celebration__particle--7 { animation-name: celeb-particle-7; }
+
+@keyframes celeb-particle-0 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% - 42vw), calc(-50% - 35vh)) scale(0.6) rotate(-360deg); }
+}
+@keyframes celeb-particle-1 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% + 38vw), calc(-50% - 38vh)) scale(0.7) rotate(400deg); }
+}
+@keyframes celeb-particle-2 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% + 45vw), calc(-50% + 30vh)) scale(0.5) rotate(270deg); }
+}
+@keyframes celeb-particle-3 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% - 40vw), calc(-50% + 38vh)) scale(0.65) rotate(-300deg); }
+}
+@keyframes celeb-particle-4 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% + 5vw), calc(-50% - 45vh)) scale(0.7) rotate(180deg); }
+}
+@keyframes celeb-particle-5 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% - 20vw), calc(-50% - 42vh)) scale(0.55) rotate(-450deg); }
+}
+@keyframes celeb-particle-6 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% + 30vw), calc(-50% - 10vh)) scale(0.6) rotate(500deg); }
+}
+@keyframes celeb-particle-7 {
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(0.2) rotate(0deg); }
+  15%  { opacity:1; }
+  100% { opacity:0; transform: translate(calc(-50% - 35vw), calc(-50% + 5vh)) scale(0.65) rotate(-220deg); }
+}
+
+/* Center text */
+.movie-celebration__text {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 10vw, 7.5rem);
+  font-weight: 900;
+  color: hsl(145 85% 68%);
+  text-shadow:
+    0 0 40px hsl(145 85% 60% / 0.9),
+    0 0 100px hsl(145 70% 50% / 0.5),
+    0 4px 24px rgba(0,0,0,0.6);
+  letter-spacing: -0.03em;
+  animation: celeb-text-pop 2.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 2;
+}
+@keyframes celeb-text-pop {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-8deg); }
+  18%  { opacity: 1; transform: scale(1.15) rotate(3deg); }
+  30%  { opacity: 1; transform: scale(0.97) rotate(-1deg); }
+  45%  { opacity: 1; transform: scale(1.04) rotate(0deg); }
+  70%  { opacity: 1; transform: scale(1)    rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.08) rotate(0deg); }
+}
+
+.movie-celebration__subtext {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: hsl(60 90% 75%);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px hsl(60 90% 65% / 0.7), 0 2px 8px rgba(0,0,0,0.5);
+  animation: celeb-sub-pop 2.2s ease forwards;
+  animation-delay: 0.12s;
+  opacity: 0;
+  z-index: 2;
+}
+@keyframes celeb-sub-pop {
+  0%   { opacity: 0; transform: translateY(16px); }
+  20%  { opacity: 1; transform: translateY(-4px); }
+  40%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FEEDBACK FLASH (pre-watch correct / wrong answer)
+══════════════════════════════════════════════════════════════════════════════ */
+.movie-feedback {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  pointer-events: none;
+  animation: feedback-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes feedback-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  40%  { transform: scale(1.1); opacity: 1; }
+  75%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0; }
+}
+.movie-feedback--correct { color: hsl(145 80% 65%); text-shadow: 0 0 40px hsl(145 80% 60% / 0.8); }
+.movie-feedback--wrong   { color: hsl(0 80% 65%);   text-shadow: 0 0 40px hsl(0 80% 60% / 0.8); }

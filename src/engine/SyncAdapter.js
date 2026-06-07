@@ -40,21 +40,24 @@ export class SyncAdapter {
   // ── Interface methods (override in subclasses) ─────────────────────────────
 
   /**
-   * Push the full settings object to the remote backend.
+   * Push the settings object to the remote backend.
    * @param {Record<string, unknown>} settings
+   * @param {string} [deviceId]
    * @returns {Promise<void>}
    */
   // eslint-disable-next-line no-unused-vars
-  async pushSettings(settings) {
+  async pushSettings(settings, deviceId) {
     // No-op stub — implement in a subclass
   }
 
   /**
    * Pull settings from the remote backend and merge with local store.
    * Return null if no remote record exists or sync is unavailable.
+   * @param {string} [deviceId]
    * @returns {Promise<Record<string, unknown>|null>}
    */
-  async pullSettings() {
+  // eslint-disable-next-line no-unused-vars
+  async pullSettings(deviceId) {
     return null
   }
 
@@ -75,5 +78,15 @@ export class SyncAdapter {
    */
   async pullSessionLog() {
     return null
+  }
+
+  /**
+   * Fetch all registered/synced devices from the remote backend.
+   * @param {string} [currentDeviceId]
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
+  // eslint-disable-next-line no-unused-vars
+  async getAvailableDevices(currentDeviceId) {
+    return []
   }
 }

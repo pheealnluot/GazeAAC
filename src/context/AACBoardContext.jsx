@@ -14,6 +14,7 @@ import {
   applyBoardEdits,
   makeEditKey
 } from '@engine/AACBoardLibrary'
+import { useGazeSettings } from './GazeSettingsContext'
 
 /**
  * AACBoardContext — Board library management with lazy on-demand loading.
@@ -64,6 +65,13 @@ export function AACBoardProvider({ children }) {
   const libraryRef = useRef([])
   libraryRef.current = library
 
+  let gazeSettings = null
+  try {
+    gazeSettings = useGazeSettings()
+  } catch (err) {
+    // Graceful fallback if not inside GazeSettingsProvider (e.g. tests)
+  }
+
   // Load manifest + pre-loaded boards on mount
   useEffect(() => {
     let cancelled = false
@@ -71,8 +79,9 @@ export function AACBoardProvider({ children }) {
     Promise.all([
       listAACBoards(),                                        // fast: file names only
       loadAACBoardLibrary(),                                  // only parses cached boards
-      window.gazeAPI?.boardEdits?.getAll?.() ?? Promise.resolve({})
-    ]).then(([manifest, parsedEntries, edits]) => {
+      window.gazeAPI?.boardEdits?.getAll?.() ?? Promise.resolve({}),
+      window.gazeAPI?.settings?.getAll?.() ?? Promise.resolve(null)
+    ]).then(async ([manifest, parsedEntries, edits, settingsObj]) => {
       if (cancelled) return
 
       // Build a map of parsed entries keyed by fileName
@@ -107,14 +116,52 @@ export function AACBoardProvider({ children }) {
 
       merged.sort((a, b) => a.name.localeCompare(b.name))
 
-      setLibrary(merged)
       setBoardEdits(edits ?? {})
 
-      // Auto-select first loaded entry (the pre-loaded default)
-      const firstLoaded = merged.find(e => e.loaded)
-      if (firstLoaded) setActiveLibraryId(firstLoaded.id)
+      // Determine targetId: lastUsedBoard from settings, defaulting to quick-core-24-obz
+      const targetId = settingsObj?.lastUsedBoard || 'quick-core-24-obz'
+      console.log(`[AACBoardContext] Target board to load: "${targetId}"`)
 
-      setIsLoading(false)
+      let targetEntry = merged.find(e => e.id === targetId)
+      // Fallback if targetId doesn't exist in the list (e.g. deleted file)
+      if (!targetEntry) {
+        console.warn(`[AACBoardContext] Target board "${targetId}" not found. Falling back.`)
+        targetEntry = merged.find(e => e.buttonCount > 0) || merged[0]
+      }
+
+      if (targetEntry) {
+        if (targetEntry.loaded) {
+          setLibrary(merged)
+          setActiveLibraryId(targetEntry.id)
+          setIsLoading(false)
+        } else {
+          // Need to load from disk on-demand
+          console.log(`[AACBoardContext] Startup loading target board "${targetEntry.fileName}"…`)
+          try {
+            const loaded = await loadSingleBoard(targetEntry.fileName)
+            if (cancelled) return
+            const updatedMerged = merged.map(e =>
+              e.id === targetEntry.id ? { ...loaded, loaded: true } : e
+            )
+            setLibrary(updatedMerged)
+            setActiveLibraryId(targetEntry.id)
+            console.log(`[AACBoardContext] Startup selected board: "${targetEntry.id}"`)
+          } catch (err) {
+            if (cancelled) return
+            console.error(`[AACBoardContext] Failed to load target board "${targetEntry.fileName}" at startup:`, err)
+            // Fallback: set the merged library anyway, select first loaded entry
+            setLibrary(merged)
+            const fallback = merged.find(e => e.loaded && e.buttonCount > 0)
+            if (fallback) setActiveLibraryId(fallback.id)
+          } finally {
+            if (!cancelled) setIsLoading(false)
+          }
+        }
+      } else {
+        setLibrary(merged)
+        setIsLoading(false)
+      }
+
       console.log(
         `[AACBoardContext] Library ready: ${merged.length} board(s) available, ` +
         `${merged.filter(e => e.loaded).length} loaded`
@@ -146,6 +193,11 @@ export function AACBoardProvider({ children }) {
     if (entry.loaded) {
       setActiveLibraryId(id)
       console.log(`[AACBoardContext] Selected board: "${id}"`)
+      if (gazeSettings) {
+        gazeSettings.updateSetting('lastUsedBoard', id)
+      } else {
+        window.gazeAPI?.settings?.set?.('lastUsedBoard', id).catch(() => {})
+      }
       return
     }
 
@@ -159,12 +211,17 @@ export function AACBoardProvider({ children }) {
       ))
       setActiveLibraryId(id)
       console.log(`[AACBoardContext] Selected board (loaded on demand): "${id}"`)
+      if (gazeSettings) {
+        gazeSettings.updateSetting('lastUsedBoard', id)
+      } else {
+        window.gazeAPI?.settings?.set?.('lastUsedBoard', id).catch(() => {})
+      }
     } catch (err) {
       console.error(`[AACBoardContext] Failed to load board "${entry.fileName}":`, err)
     } finally {
       setLoadingBoardId(null)
     }
-  }, [])
+  }, [gazeSettings])
 
   const saveButtonEdit = useCallback(async (fileName, boardId, btnId, patch) => {
     const editKey = makeEditKey(fileName, boardId, btnId)
