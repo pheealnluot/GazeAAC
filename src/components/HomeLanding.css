@@ -121,9 +121,10 @@
 /* ── Tile grid ── */
 .home-landing__tiles {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: clamp(12px, 2.5vw, 28px);
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 2vw, 24px);
   width: 100%;
+  max-width: 800px;
 }
 
 /* ── Individual mode tile ── */
@@ -134,7 +135,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
-  padding: clamp(24px, 4vh, 48px) clamp(20px, 3vw, 40px);
+  padding: clamp(16px, 3vh, 32px) clamp(16px, 2.5vw, 32px);
   border-radius: var(--radius-lg);
   border: 1.5px solid transparent;
   cursor: pointer;
@@ -147,7 +148,7 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   user-select: none;
-  min-height: clamp(200px, 30vh, 320px);
+  min-height: clamp(160px, 22vh, 250px);
 }
 
 /* Shimmer overlay */
@@ -215,6 +216,22 @@
     inset 0 1px 0 hsl(145 100% 80% / 0.06);
 }
 
+/* ── Q&A tile theming ── */
+.home-tile--qa {
+  --tile-bg: hsl(244 45% 8% / 0.9);
+  --tile-shimmer: linear-gradient(135deg, hsl(244 80% 60% / 0.1), transparent 55%);
+  border-color: hsl(244 70% 55% / 0.28);
+  box-shadow: 0 4px 24px hsl(244 70% 40% / 0.12), 0 0 0 1px hsl(244 70% 55% / 0.08);
+}
+.home-tile--qa:hover,
+.home-tile--qa.home-tile--gazed {
+  border-color: hsl(244 85% 68% / 0.55);
+  box-shadow:
+    0 16px 48px hsl(244 80% 55% / 0.22),
+    0 0 0 1px hsl(244 85% 68% / 0.18),
+    inset 0 1px 0 hsl(244 100% 85% / 0.06);
+}
+
 /* ── Tile icon ── */
 .home-tile__icon {
   font-size: clamp(2.5rem, 5.5vw, 5rem);
@@ -225,6 +242,7 @@
 .home-tile--aac   .home-tile__icon { --tile-icon-shadow: hsl(195 100% 55% / 0.5); }
 .home-tile--movie .home-tile__icon { --tile-icon-shadow: hsl(280 80% 65% / 0.5); }
 .home-tile--games .home-tile__icon { --tile-icon-shadow: hsl(145 80% 55% / 0.5); }
+.home-tile--qa    .home-tile__icon { --tile-icon-shadow: hsl(244 80% 65% / 0.5); }
 
 .home-tile:hover .home-tile__icon,
 .home-tile--gazed .home-tile__icon {
@@ -242,6 +260,7 @@
 .home-tile--aac   .home-tile__label { color: hsl(195 90% 80%); }
 .home-tile--movie .home-tile__label { color: hsl(280 85% 82%); }
 .home-tile--games .home-tile__label { color: hsl(145 85% 76%); }
+.home-tile--qa    .home-tile__label { color: hsl(244 85% 82%); }
 
 .home-tile__desc {
   font-size: clamp(0.75rem, 1.5vw, 0.9rem);
@@ -281,6 +300,7 @@
 .home-tile--aac   .home-tile__ring-arc { stroke: hsl(195 100% 60%); }
 .home-tile--movie .home-tile__ring-arc { stroke: hsl(280 85% 70%); }
 .home-tile--games .home-tile__ring-arc { stroke: hsl(145 85% 60%); }
+.home-tile--qa    .home-tile__ring-arc { stroke: hsl(244 85% 70%); }
 
 /* ── Dwell progress bar at bottom ── */
 .home-tile__progress-bar {
@@ -294,6 +314,7 @@
 .home-tile--aac   .home-tile__progress-bar { background: hsl(195 100% 60%); box-shadow: 0 0 8px hsl(195 100% 60% / 0.7); }
 .home-tile--movie .home-tile__progress-bar { background: hsl(280 85% 70%);  box-shadow: 0 0 8px hsl(280 85% 70% / 0.7); }
 .home-tile--games .home-tile__progress-bar { background: hsl(145 85% 60%);  box-shadow: 0 0 8px hsl(145 85% 60% / 0.7); }
+.home-tile--qa    .home-tile__progress-bar { background: hsl(244 85% 70%);  box-shadow: 0 0 8px hsl(244 85% 70% / 0.7); }
 
 /* ── Footer hint ── */
 .home-landing__footer {
@@ -340,16 +361,26 @@
   right: 0;
   z-index: 7000;
   min-width: 210px;
-  background: #1a1d28;
+  background: #1a1d28 !important;
+  opacity: 1 !important;
   border: 1px solid rgba(0,200,255,0.18);
   border-radius: 0.65rem;
   box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,255,0.06);
-  overflow: hidden;
+  overflow: visible;
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   animation: home-gear-popover-in 0.12s ease-out;
+}
+.home-landing__gear-popover::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: transparent;
 }
 @keyframes home-gear-popover-in {
   from { opacity: 0; transform: translateY(-4px) scale(0.97); }

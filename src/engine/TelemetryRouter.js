@@ -123,6 +123,22 @@ export class TelemetryRouter {
     this._retryAttempts      = 0      // consecutive restart attempts
     this._retryDelay         = INITIAL_RETRY_DELAY_MS  // current back-off delay
     this._retryTimeout       = null   // setTimeout handle for a pending restart
+
+    // Universal screen-wide dwell-to-click
+    this._screenDwellClickEnabled = false
+    this._onScreenDwellClick = null
+    this._screenDwellBox = null
+    this._screenDwellCooldownBox = null
+    this._screenDwellProgress = 0
+  }
+
+  setScreenDwellClickEnabled(enabled, onScreenDwellClick = null) {
+    this._screenDwellClickEnabled = enabled
+    this._onScreenDwellClick = onScreenDwellClick
+    this._screenDwellBox = null
+    this._screenDwellCooldownBox = null
+    this._screenDwellProgress = 0
+    console.log(`[TelemetryRouter] Screen-wide universal dwell-to-click enabled: ${enabled}`)
   }
 
   // ─── Internal dwell callback (wraps external onDwell with cooldown book-keeping) ─
@@ -469,6 +485,9 @@ export class TelemetryRouter {
     }
 
     if (!valid) {
+      this._screenDwellBox = null
+      this._screenDwellProgress = 0
+      this._screenDwellCooldownBox = null
       if (isMouse) {
         this._dwellTimer.reset()
         this._dropoutStartTime = null
@@ -606,6 +625,81 @@ export class TelemetryRouter {
       this._lastDwellProgress = 0
     }
 
+    // Universal screen-wide dwell-to-click
+    if (this._screenDwellClickEnabled && cellId === null && filtered) {
+      // If we have a cooldown box, check if gaze has exited it
+      if (this._screenDwellCooldownBox) {
+        const outside = (
+          filtered.x < this._screenDwellCooldownBox.x0 ||
+          filtered.x > this._screenDwellCooldownBox.x1 ||
+          filtered.y < this._screenDwellCooldownBox.y0 ||
+          filtered.y > this._screenDwellCooldownBox.y1
+        )
+        if (outside) {
+          this._screenDwellCooldownBox = null
+        }
+      }
+
+      if (!this._screenDwellCooldownBox) {
+        if (this._screenDwellBox === null) {
+          this._screenDwellBox = {
+            cx: filtered.x,
+            cy: filtered.y,
+            x0: filtered.x - 0.03,
+            x1: filtered.x + 0.03,
+            y0: filtered.y - 0.04,
+            y1: filtered.y + 0.04,
+            startTimestamp: timestamp
+          }
+          this._screenDwellProgress = 0
+        } else {
+          const inside = (
+            filtered.x >= this._screenDwellBox.x0 &&
+            filtered.x <= this._screenDwellBox.x1 &&
+            filtered.y >= this._screenDwellBox.y0 &&
+            filtered.y <= this._screenDwellBox.y1
+          )
+          if (inside) {
+            const elapsed = timestamp - this._screenDwellBox.startTimestamp
+            const totalMs = this._dwellTimer._dwellMs || 800
+            this._screenDwellProgress = Math.min(1.0, elapsed / totalMs)
+            if (this._screenDwellProgress >= 1.0) {
+              const targetX = this._screenDwellBox.cx
+              const targetY = this._screenDwellBox.cy
+              
+              this._screenDwellCooldownBox = {
+                x0: this._screenDwellBox.x0,
+                x1: this._screenDwellBox.x1,
+                y0: this._screenDwellBox.y0,
+                y1: this._screenDwellBox.y1
+              }
+              
+              this._screenDwellBox = null
+              this._screenDwellProgress = 0
+              
+              // Trigger OS level click
+              this._onScreenDwellClick?.(targetX, targetY)
+            }
+          } else {
+            this._screenDwellBox = {
+              cx: filtered.x,
+              cy: filtered.y,
+              x0: filtered.x - 0.03,
+              x1: filtered.x + 0.03,
+              y0: filtered.y - 0.04,
+              y1: filtered.y + 0.04,
+              startTimestamp: timestamp
+            }
+            this._screenDwellProgress = 0
+          }
+        }
+      }
+    } else {
+      this._screenDwellBox = null
+      this._screenDwellProgress = 0
+      this._screenDwellCooldownBox = null
+    }
+
     // Stage 4: Emit GazeEvent to listeners (e.g., cursor overlay)
     if (this._onGaze) {
       this._onGaze({
@@ -613,7 +707,7 @@ export class TelemetryRouter {
         filtered,
         cellId: rawCellId,   // always report raw hit for cursor/highlight rendering
         timestamp,
-        dwellProgress
+        dwellProgress: (this._screenDwellClickEnabled && cellId === null) ? this._screenDwellProgress : dwellProgress
       })
     }
   }
@@ -628,6 +722,9 @@ export class TelemetryRouter {
    */
   _handleDropout(timestamp) {
     this._offCellStartTime = null
+    this._screenDwellBox = null
+    this._screenDwellProgress = 0
+    this._screenDwellCooldownBox = null
 
     // First invalid frame — record onset
     if (this._dropoutStartTime === null) {

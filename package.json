@@ -1,6 +1,6 @@
 {
   "name": "gaze-aac",
-  "version": "0.2.3",
+  "version": "0.2.9",
   "description": "Intelligent, high-tolerance eye-gaze assisted communication platform for children with Cerebral Palsy",
   "author": "GazeAAC Contributors",
   "license": "MIT",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
-    "electron": "^31.3.1",
+    "electron": "github:castlabs/electron-releases#v31.7.7+wvcus",
     "electron-builder": "^25.1.7",
     "electron-vite": "^2.3.0",
     "eslint": "^9.9.0",
@@ -36,6 +36,9 @@
   },
   "build": {
     "appId": "com.gazeaac.app",
+    "electronDownload": {
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/"
+    },
     "productName": "GazeAAC",
     "directories": {
       "output": "release"

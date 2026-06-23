@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   signInCaregiver,
   signUpCaregiver,
@@ -7,6 +7,42 @@ import {
   linkEmailPasswordToGoogleAccount,
 } from '../engine/firebase'
 import './AuthScreen.css'
+
+// Synthesize a premium audio confirmation chord chime using Web Audio API
+function playSuccessChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc1 = ctx.createOscillator()
+    const osc2 = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    osc1.connect(gainNode)
+    osc2.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    osc1.type = 'sine'
+    // C5 (523.25 Hz) -> E5 (659.25 Hz) -> G5 (783.99 Hz)
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime)
+    osc1.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15)
+    osc1.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.3)
+
+    osc2.type = 'triangle'
+    osc2.frequency.setValueAtTime(261.63, ctx.currentTime) // C4
+    osc2.frequency.exponentialRampToValueAtTime(329.63, ctx.currentTime + 0.15) // E4
+    osc2.frequency.exponentialRampToValueAtTime(392.00, ctx.currentTime + 0.3) // G4
+
+    gainNode.gain.setValueAtTime(0.12, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+
+    osc1.start(ctx.currentTime)
+    osc2.start(ctx.currentTime)
+
+    osc1.stop(ctx.currentTime + 0.5)
+    osc2.stop(ctx.currentTime + 0.5)
+  } catch (e) {
+    console.error('Audio chime failed:', e)
+  }
+}
 
 /**
  * AuthScreen
@@ -20,8 +56,10 @@ import './AuthScreen.css'
  * Props:
  *   onAuthenticated  {() => void}  – Called when Firebase auth succeeds (email or Google)
  *   onGuest          {() => void}  – Called when user chooses Guest mode
+ *   gazeRef          {object}      - Ref to the current eye-gaze position
+ *   dwellMs          {number}      - Configured dwell duration in milliseconds
  */
-export function AuthScreen({ onAuthenticated, onGuest }) {
+export function AuthScreen({ onAuthenticated, onGuest, gazeRef, dwellMs }) {
   // ── Auth state ─────────────────────────────────────────────────────────────
   const [checking, setChecking]     = useState(true)   // true while Firebase resolves session
   const [existingUser, setExistingUser] = useState(null) // non-null = active session found
@@ -37,6 +75,100 @@ export function AuthScreen({ onAuthenticated, onGuest }) {
   const [successMsg, setSuccessMsg] = useState(null)
   // When the email belongs to a Google account, we offer to link email/password to it
   const [linkPending, setLinkPending] = useState(null) // { email, password } | null
+
+  // ── Dwell state & tracking for eye-gaze selection ──────────────────────────
+  const [buttonDwellProgress, setButtonDwellProgress] = useState(0)
+  const smoothedGazeRef = useRef(null)
+  const btnDwellStartRef = useRef(null)
+  const mousePosRef = useRef({ x: -999, y: -999 })
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mousePosRef.current = {
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight
+      }
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  useEffect(() => {
+    let frameId = null
+
+    // We only need to run the dwell loop if the "Continue" button is rendered.
+    // In AuthScreen, the Continue button is rendered when `existingUser && !showFresh` is true.
+    if (!existingUser || showFresh) {
+      setButtonDwellProgress(0)
+      btnDwellStartRef.current = null
+      return
+    }
+
+    function tick() {
+      const gazePos = gazeRef?.current || mousePosRef.current
+      const btnEl = document.getElementById('auth-btn-continue')
+
+      if (gazePos && gazePos.x != null && gazePos.x >= 0 && gazePos.y >= 0) {
+        // Apply exponential smoothing to filter eye jitter
+        if (!smoothedGazeRef.current) {
+          smoothedGazeRef.current = { x: gazePos.x, y: gazePos.y }
+        } else {
+          smoothedGazeRef.current.x = smoothedGazeRef.current.x * 0.85 + gazePos.x * 0.15
+          smoothedGazeRef.current.y = smoothedGazeRef.current.y * 0.85 + gazePos.y * 0.15
+        }
+
+        const gx = smoothedGazeRef.current.x * window.innerWidth
+        const gy = smoothedGazeRef.current.y * window.innerHeight
+
+        let isContinueHovered = false
+        if (btnEl) {
+          const rect = btnEl.getBoundingClientRect()
+          const padding = 40 // target expansion padding
+          isContinueHovered = (
+            gx >= rect.left - padding &&
+            gx <= rect.right + padding &&
+            gy >= rect.top - padding &&
+            gy <= rect.bottom + padding
+          )
+        }
+
+        if (isContinueHovered) {
+          if (btnDwellStartRef.current === null) {
+            btnDwellStartRef.current = Date.now()
+          }
+          const targetDwell = dwellMs || 1000
+          const dwellElapsed = Date.now() - btnDwellStartRef.current
+          const dwellProg = Math.min(dwellElapsed / targetDwell, 1)
+          setButtonDwellProgress(dwellProg)
+
+          if (dwellElapsed >= targetDwell) {
+            playSuccessChime()
+            setButtonDwellProgress(0)
+            btnDwellStartRef.current = null
+            onAuthenticated()
+            return
+          }
+        } else {
+          if (btnDwellStartRef.current !== null) {
+            btnDwellStartRef.current = null
+            setButtonDwellProgress(0)
+          }
+        }
+      } else {
+        if (btnDwellStartRef.current !== null) {
+          btnDwellStartRef.current = null
+          setButtonDwellProgress(0)
+        }
+      }
+
+      frameId = requestAnimationFrame(tick)
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(frameId)
+    }
+  }, [existingUser, showFresh, gazeRef, dwellMs, onAuthenticated])
 
   // ── On mount: check if Firebase already has a session ──────────────────────
   useEffect(() => {
@@ -212,8 +344,27 @@ export function AuthScreen({ onAuthenticated, onGuest }) {
               id="auth-btn-continue"
               className="auth-session-banner__continue-btn"
               onClick={onAuthenticated}
+              title="Look at the button or click to continue"
             >
-              Continue →
+              <div className="continue-btn__dwell-wrapper">
+                <svg viewBox="0 0 36 36" className="continue-btn__dwell-svg">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="5" />
+                  <circle 
+                    cx="18" cy="18" r="15" 
+                    fill="none" 
+                    stroke="#ffffff" 
+                    strokeWidth="5" 
+                    strokeDasharray={2 * Math.PI * 15}
+                    strokeDashoffset={2 * Math.PI * 15 * (1 - buttonDwellProgress)}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    className="continue-btn__dwell-path"
+                  />
+                </svg>
+              </div>
+              <span className="continue-btn__text">
+                {buttonDwellProgress > 0 ? "Dwelling to Continue..." : "Continue →"}
+              </span>
             </button>
 
             <button
@@ -443,7 +594,7 @@ function friendlyFirebaseError(code) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
-      return 'Incorrect email or password. Please try again.'
+      return 'Incorrect Username or Password'
     case 'auth/account-exists-with-different-credential':
       return 'This email is already registered with a different sign-in method (e.g. Google).'
     case 'auth/email-already-in-use':

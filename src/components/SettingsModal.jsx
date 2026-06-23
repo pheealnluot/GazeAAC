@@ -33,9 +33,10 @@ const PANEL_META = {
   contextual: { icon: '🧠',  title: 'Contextual Response',      theme: 'eye'   },
   camera:     { icon: '📷',  title: 'Camera & Vision Settings', theme: 'eye'   },
   movietime:  { icon: '🎬',  title: 'Movie Time Settings',      theme: 'aac'   },
+  qna:        { icon: '🧩',  title: 'Q&A Settings',             theme: 'aac'   },
 }
 
-export function SettingsModal({ open, onClose, initialPanel = 'eye', gazeRef = null, routerRef = null, appVersion = '0.2.3' }) {
+export function SettingsModal({ open, onClose, initialPanel = 'eye', gazeRef = null, routerRef = null, appVersion = '0.2.6' }) {
   const { settings, updateSetting, updateSettings, resetSettings } = useGazeSettings()
   const { setStage } = useVocabulary()
   // activePanel is set once when the modal opens; it does NOT change while open
@@ -110,6 +111,13 @@ export function SettingsModal({ open, onClose, initialPanel = 'eye', gazeRef = n
           )}
           {activePanel === 'movietime' && (
             <MovieTimePanel
+              settings={settings}
+              updateSetting={updateSetting}
+              updateSettings={updateSettings}
+            />
+          )}
+          {activePanel === 'qna' && (
+            <QNAPanel
               settings={settings}
               updateSetting={updateSetting}
               updateSettings={updateSettings}
@@ -411,6 +419,22 @@ function EyeTrackerPanel({ settings, updateSetting, updateSettings, gazeRef, rou
           </Row>
         </>
       )}
+      {/* Gaze Signal Loss Alerts */}
+      <SectionLabel>Gaze Signal Loss Alerts</SectionLabel>
+      <Row name="Loss Warning Sound" hint="Play warning chime when eye gaze is lost">
+        <Toggle
+          id="toggle-gaze-lost-sound"
+          checked={settings.gazeLostSoundEnabled ?? true}
+          onChange={e => updateSetting('gazeLostSoundEnabled', e.target.checked)}
+        />
+      </Row>
+      <Row name="Loss Visual Indicator" hint="Show warning banner when eye gaze is lost">
+        <Toggle
+          id="toggle-gaze-lost-visual"
+          checked={settings.gazeLostVisualEnabled ?? true}
+          onChange={e => updateSetting('gazeLostVisualEnabled', e.target.checked)}
+        />
+      </Row>
 
       {/* Advanced sub-accordion */}
       <div className="sm-adv">
@@ -2480,7 +2504,12 @@ function GranularSlider({
     let closest = 0
     let minDiff = Infinity
     for (let i = 0; i < valueArray.length; i++) {
-      const diff = Math.abs(valueArray[i] - value)
+      let diff
+      if (valueArray[i] === 'click' || value === 'click') {
+        diff = (valueArray[i] === value) ? 0 : Infinity
+      } else {
+        diff = Math.abs(valueArray[i] - Number(value))
+      }
       if (diff < minDiff) {
         minDiff = diff
         closest = i
@@ -2506,10 +2535,15 @@ function GranularSlider({
   const handleInputChange = (e) => {
     const valStr = e.target.value
     setTypedValue(valStr)
+    if (valStr.toLowerCase() === 'click') {
+      onChange('click')
+      return
+    }
     const num = parseFloat(valStr)
     if (!isNaN(num)) {
-      const minVal = valueArray ? Math.min(...valueArray) : min
-      const maxVal = valueArray ? Math.max(...valueArray) : max
+      const numericValues = valueArray ? valueArray.filter(v => typeof v === 'number') : []
+      const minVal = valueArray ? Math.min(...numericValues) : min
+      const maxVal = valueArray ? Math.max(...numericValues) : max
       const clamped = Math.max(minVal, Math.min(maxVal, num))
       onChange(clamped)
     }
@@ -2539,7 +2573,7 @@ function GranularSlider({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
         />
-        {unit && <span className="sm-granular-unit">{unit}</span>}
+        {unit && value !== 'click' && <span className="sm-granular-unit">{unit}</span>}
       </div>
       {presets && presets.length > 0 && (
         <div className="sm-granular-presets">
@@ -4133,6 +4167,7 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
         <button id="mt-tab-content"  style={tabStyle('content')}  onClick={() => setActiveTab('content')}>🎬 Content</button>
         <button id="mt-tab-puzzle"   style={tabStyle('puzzle')}   onClick={() => setActiveTab('puzzle')}>🧩 Puzzle</button>
         <button id="mt-tab-apikey"   style={tabStyle('apikey')}   onClick={() => setActiveTab('apikey')}>🔑 API Key</button>
+        <button id="mt-tab-providers" style={tabStyle('providers')} onClick={() => setActiveTab('providers')}>🌐 Providers</button>
       </div>
 
       {/* TAB 1 – PLAYBACK */}
@@ -4223,6 +4258,33 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
               { value: 720, label: 'Unlimited' },
             ]}
           />
+        </Row>
+
+        <SectionLabel style={{ marginTop: '20px' }}>Troubleshooting</SectionLabel>
+        <Row
+          name="Reset Movie Time Cache"
+          hint="If Netflix, Disney+, or YouTube videos fail to play (e.g. showing E100 or DRM errors), clearing the cache will reset local storage. This will require logging back into Netflix and Disney+."
+        >
+          <button
+            id="btn-clear-movietime-cache"
+            className="sm-btn sm-btn--danger sm-btn--xs"
+            onClick={async () => {
+              if (window.confirm("Are you sure you want to clear the Movie Time cache? You will be logged out of Netflix and Disney+.")) {
+                try {
+                  const res = await window.gazeAPI.clearMovieTimeCache()
+                  if (res && res.ok) {
+                    alert("Movie Time cache cleared successfully! Please restart GazeAAC for the changes to take full effect.")
+                  } else {
+                    alert(`Failed to clear cache: ${res?.error || 'Unknown error'}`)
+                  }
+                } catch (err) {
+                  alert(`Error: ${err.message}`)
+                }
+              }
+            }}
+          >
+            Clear Cache
+          </button>
         </Row>
 
       </>)}
@@ -4821,6 +4883,18 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
           )
         })()}
 
+        {/* Start Quiz Before Video Plays */}
+        <Row
+          name="Start Quiz Before Video Plays"
+          hint="When enabled, a quiz is required before the selected video begins playing."
+        >
+          <Toggle
+            id="toggle-mt-quiz-require-prewatch"
+            checked={settings.movieTimeQuizRequirePrewatch ?? true}
+            onChange={e => updateSetting('movieTimeQuizRequirePrewatch', e.target.checked)}
+          />
+        </Row>
+
         {/* Video Specific Questions */}
         <Row
           name="Quiz on Video Content"
@@ -4893,7 +4967,7 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
         </p>
         {(() => {
           const GATE_VALUES = [
-            0, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000,
+            'click', 0, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000,
             6000, 8000, 10000, 12000, 15000, 18000, 20000, 25000, 30000
           ]
           const cur = settings.movieTimeQuizQuestionGateMs ?? 2000
@@ -4907,6 +4981,7 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
                 valueArray={GATE_VALUES}
                 unit="ms"
                 presets={[
+                  { value: 'click', label: 'On Click' },
                   { value: 0, label: 'Instant' },
                   { value: 1000, label: '1 s' },
                   { value: 2000, label: '2 s' },
@@ -5092,6 +5167,219 @@ function MovieTimePanel({ settings, updateSetting, updateSettings }) {
 
       </>)}
 
+      {/* TAB 5 – STREAMING PROVIDERS */}
+      {activeTab === 'providers' && (<>
+        <SectionLabel>Streaming Providers</SectionLabel>
+        <p className="sm-hint-text">
+          Toggle which streaming services are available inside Movie Time. You can log in directly inside each service's official website within GazeAAC.
+        </p>
+
+        <Row
+          name="YouTube"
+          hint="Allow viewing videos from YouTube. Daily API keys are configured separately under the API Key tab."
+        >
+          <Toggle
+            id="toggle-mt-prov-youtube"
+            checked={settings.movieTimeProviderYoutube ?? true}
+            onChange={e => updateSetting('movieTimeProviderYoutube', e.target.checked)}
+          />
+        </Row>
+
+        <Row
+          name="Netflix"
+          hint="Allow viewing videos from Netflix. Caregivers can log in with their Netflix account directly inside GazeAAC."
+        >
+          <Toggle
+            id="toggle-mt-prov-netflix"
+            checked={settings.movieTimeProviderNetflix ?? true}
+            onChange={e => updateSetting('movieTimeProviderNetflix', e.target.checked)}
+          />
+        </Row>
+
+        <Row
+          name="Disney+"
+          hint="Allow viewing videos from Disney+. Caregivers can log in with their Disney+ account directly inside GazeAAC."
+        >
+          <Toggle
+            id="toggle-mt-prov-disney"
+            checked={settings.movieTimeProviderDisney ?? true}
+            onChange={e => updateSetting('movieTimeProviderDisney', e.target.checked)}
+          />
+        </Row>
+
+        <div className="sm-hint-text sm-hint-text--info" style={{ marginTop: '16px', borderLeft: '3px solid hsl(215 80% 55%)', paddingLeft: '8px' }}>
+          <strong>🔒 Security & Privacy Notice:</strong>
+          <br />
+          Your Netflix, Disney+, and YouTube credentials and session cookies are saved securely on this device by the local Electron framework. They are <strong>never</strong> transmitted to the cloud sync database or exposed over the internet.
+        </div>
+      </>)}
+
     </div>
   )
 }
+
+function QNAPanel({ settings, updateSetting, updateSettings }) {
+  return (
+    <div className="sm-panel__sections">
+      <SectionLabel>Q&A Timing & Hints</SectionLabel>
+      <p className="sm-hint-text">
+        Configure gaze gating timers, correct answer hint highlighting, and audio feedback for Q&A gameplay.
+      </p>
+
+      {/* Question Gate */}
+      <SectionLabel sub>Question Gate</SectionLabel>
+      <p className="sm-hint-text">
+        The question box is shown first; the progress bar only fills while the user's eye gaze is on the question. Answer choices appear once this timer completes. Set to 0 for instant display.
+      </p>
+      {(() => {
+        const GATE_VALUES = [
+          'click', 0, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000,
+          6000, 8000, 10000, 12000, 15000, 18000, 20000, 25000, 30000
+        ]
+        const cur = settings.qaQuizQuestionGateMs ?? 2000
+        return (
+          <Row name="Question Read Time">
+            <GranularSlider
+              id="slider-qa-question-gate"
+              className="sm-slider sm-slider--violet"
+              value={cur}
+              onChange={val => updateSetting('qaQuizQuestionGateMs', val)}
+              valueArray={GATE_VALUES}
+              unit="ms"
+              presets={[
+                { value: 'click', label: 'On Click' },
+                { value: 0, label: 'Instant' },
+                { value: 1000, label: '1 s' },
+                { value: 2000, label: '2 s' },
+                { value: 5000, label: '5 s' },
+                { value: 10000, label: '10 s' },
+              ]}
+            />
+          </Row>
+        )
+      })()}
+
+      {/* Answer Gate */}
+      <SectionLabel sub>Answer Gate</SectionLabel>
+      <p className="sm-hint-text">
+        After choices appear, the progress ring on each choice only fills while the user's eye gaze is on the answers. Gaze-selection is unlocked once this timer completes. Set to 0 for instant unlock.
+      </p>
+      {(() => {
+        const GATE_VALUES = [
+          0, 500, 1000, 1500, 2000, 2500, 3000, 4000, 5000,
+          6000, 8000, 10000, 12000, 15000, 18000, 20000, 25000, 30000
+        ]
+        const cur = settings.qaQuizAnswerGateMs ?? 1500
+        return (
+          <Row name="Answer Read Time">
+            <GranularSlider
+              id="slider-qa-answer-gate"
+              className="sm-slider sm-slider--violet"
+              value={cur}
+              onChange={val => updateSetting('qaQuizAnswerGateMs', val)}
+              valueArray={GATE_VALUES}
+              unit="ms"
+              presets={[
+                { value: 0, label: 'Instant' },
+                { value: 1000, label: '1 s' },
+                { value: 1500, label: '1.5 s (Std)' },
+                { value: 3000, label: '3 s' },
+                { value: 5000, label: '5 s' },
+              ]}
+            />
+          </Row>
+        )
+      })()}
+
+      {/* Wrong Answers Before Hint */}
+      <SectionLabel sub>Hints</SectionLabel>
+      <Row
+        name="Wrong Answers Before Hint"
+        hint="After this many wrong attempts, a visual hint glow appears on the correct answer. Set to 0 to disable hints. Emojis are disabled in Q&A."
+      >
+        <GranularSlider
+          id="slider-qa-hint-after-wrong"
+          className="sm-slider sm-slider--violet"
+          min={0}
+          max={9}
+          step={1}
+          value={settings.qaPuzzleHintAfterWrong ?? 3}
+          onChange={val => updateSetting('qaPuzzleHintAfterWrong', val)}
+          presets={[
+            { value: 0, label: 'Disabled' },
+            { value: 1, label: 'Immediate' },
+            { value: 3, label: '3 (Std)' },
+            { value: 5, label: '5' },
+          ]}
+        />
+      </Row>
+
+      {/* Sound Effects */}
+      <SectionLabel sub>Audio Feedback</SectionLabel>
+      <Row
+        name="Answer Sound Effects"
+        hint="Plays a rising arpeggio for correct answers and a descending tone for wrong ones"
+      >
+        <Toggle
+          id="toggle-qa-quiz-sounds"
+          checked={settings.qaQuizSoundEffects ?? true}
+          onChange={e => updateSetting('qaQuizSoundEffects', e.target.checked)}
+        />
+      </Row>
+
+      {/* Voice Over */}
+      <SectionLabel sub>Voice Over</SectionLabel>
+      <Row
+        name="Read Questions Aloud"
+        hint="Uses the system voice to read each quiz question when it appears"
+      >
+        <Toggle
+          id="toggle-qa-quiz-voiceover"
+          checked={settings.qaQuizVoiceOver ?? true}
+          onChange={e => updateSetting('qaQuizVoiceOver', e.target.checked)}
+        />
+      </Row>
+      {(settings.qaQuizVoiceOver ?? true) && (<>
+        <Row
+          name="Read Answer Choices Aloud"
+          hint="After reading the question, each answer choice is also spoken"
+        >
+          <Toggle
+            id="toggle-qa-quiz-voiceover-choices"
+            checked={settings.qaQuizVoiceOverChoices ?? true}
+            onChange={e => updateSetting('qaQuizVoiceOverChoices', e.target.checked)}
+          />
+        </Row>
+        <Row
+          name="Voice Over Pause"
+          hint="Delay between reading the question and answer choices, and between each choice"
+        >
+          {(() => {
+            const PAUSE_VALUES = [
+              0, 100, 200, 300, 400, 500, 600, 750, 1000, 1250, 1500, 2000, 2500, 3000, 4000, 5000
+            ]
+            const cur = settings.qaQuizVoiceOverPauseMs ?? 500
+            return (
+              <GranularSlider
+                id="slider-qa-voiceover-pause"
+                className="sm-slider sm-slider--violet"
+                value={cur}
+                onChange={val => updateSetting('qaQuizVoiceOverPauseMs', val)}
+                valueArray={PAUSE_VALUES}
+                unit="ms"
+                presets={[
+                  { value: 0, label: 'No Pause' },
+                  { value: 500, label: '0.5 s (Std)' },
+                  { value: 1000, label: '1 s' },
+                  { value: 2000, label: '2 s' },
+                  { value: 3000, label: '3 s' },
+                ]}
+              />
+            )
+          })()}
+        </Row>
+      </>)}
+    </div>
+  )
+}
+

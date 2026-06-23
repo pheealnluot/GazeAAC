@@ -19,8 +19,99 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=0.2.3">
-  
+  <link rel="stylesheet" href="styles.css?v=0.2.9">
+
+  <style>
+    /* Caregiver Login Button */
+    .btn-login {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.2));
+      border: 1.5px solid rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.35));
+      border-color: rgba(139, 92, 246, 0.7);
+      color: #e9d5ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+    }
+    /* Hero Portal CTA Card */
+    .hero-portal-cta {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+    .portal-cta-inner {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 14px;
+      padding: 0.9rem 1.4rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      max-width: 520px;
+      width: 100%;
+    }
+    .portal-cta-inner:hover {
+      background: rgba(139, 92, 246, 0.08);
+      border-color: rgba(139, 92, 246, 0.4);
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.12);
+    }
+    .portal-cta-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(139, 92, 246, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c4b5fd;
+      flex-shrink: 0;
+    }
+    .portal-cta-icon svg { width: 20px; height: 20px; }
+    .portal-cta-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      flex: 1;
+    }
+    .portal-cta-label { font-size: 0.9rem; font-weight: 700; color: #e9d5ff; }
+    .portal-cta-desc { font-size: 0.78rem; color: rgba(255, 255, 255, 0.45); }
+    .btn-portal {
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      border: none;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.82rem;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+    .btn-portal:hover {
+      background: linear-gradient(135deg, #6d28d9, #4f46e5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+      color: #fff;
+    }
+    @media (max-width: 480px) {
+      .portal-cta-inner { flex-direction: column; text-align: center; gap: 0.8rem; }
+      .portal-cta-icon { margin: 0 auto; }
+    }
+  </style>
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="https://gazeaac-app-sync.web.app/icons/icon.png" onerror="this.href='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👁️</text></svg>'">
 </head>
@@ -37,11 +128,22 @@
         <span class="logo-icon">👁️</span>
         <span class="logo-text">Gaze<span>AAC</span></span>
       </a>
-      <nav>
+      <button class="nav-toggle" id="btn-nav-toggle" aria-label="Toggle Navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="header-nav" id="header-nav">
         <a href="#features" id="nav-features">Features</a>
         <a href="#simulation" id="nav-simulation">Live Demo</a>
         <a href="#requirements" id="nav-requirements">Requirements</a>
         <a href="admin.html" id="nav-admin">Caregiver Portal</a>
+        <a href="admin.html" class="btn btn-login btn-sm" id="nav-login-btn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+          </svg>
+          Caregiver Login
+        </a>
         <a href="#downloads" class="btn btn-secondary btn-sm" id="nav-download-btn">Download</a>
       </nav>
     </div>
@@ -52,7 +154,7 @@
     <div class="container hero-container">
       <div class="hero-badge" id="hero-status-badge">
         <span class="badge-dot"></span>
-        <span>Version 0.2.3 Released</span>
+        <span>Version 0.2.9 Released (June 23, 2026 at 10:39 PM)</span>
       </div>
       
       <h1 class="hero-title" id="main-hero-title">
@@ -64,21 +166,21 @@
       </p>
 
       <div class="hero-download-actions" id="hero-download-actions">
-        <a href="/GazeAAC-Setup-0.2.3.zip" class="btn btn-primary btn-lg" id="btn-download-installer" download>
+        <a href="GazeAAC-Setup-0.2.9.zip" class="btn btn-primary btn-lg" id="btn-download-installer" download>
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
           Download Installer
-          <span class="btn-subtext">Windows Setup ZIP (376 MB)</span>
+          <span class="btn-subtext">Windows Setup ZIP (458 MB)</span>
         </a>
         
-        <a href="/GazeAAC-0.2.3.zip" class="btn btn-outline btn-lg" id="btn-download-portable" download>
+        <a href="GazeAAC-0.2.9.zip" class="btn btn-outline btn-lg" id="btn-download-portable" download>
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
             <path d="M12 18V6M6 12l6 6 6-6"/>
           </svg>
           Download Portable
-          <span class="btn-subtext">Standalone ZIP (376 MB)</span>
+          <span class="btn-subtext">Standalone ZIP (458 MB)</span>
         </a>
       </div>
 
@@ -86,6 +188,27 @@
         <span>✓ Windows 10 & 11 Optimized</span>
         <span>✓ Free & Open Source</span>
         <span>✓ Offline-First Architecture</span>
+      </div>
+
+      <!-- Caregiver Portal CTA -->
+      <div class="hero-portal-cta" id="hero-portal-cta">
+        <div class="portal-cta-inner">
+          <div class="portal-cta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="portal-cta-content">
+            <span class="portal-cta-label">Caregiver Access</span>
+            <span class="portal-cta-desc">Configure quizzes, settings &amp; profiles remotely</span>
+          </div>
+          <a href="admin.html" class="btn btn-portal btn-sm" id="btn-hero-portal-login">
+            Login to Portal
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -473,7 +596,7 @@
       <div class="req-block" id="block-guide">
         <h3>How to Get Started</h3>
         <ol class="guide-list">
-          <li>Download the installer package (`GazeAAC-Setup-0.2.3.zip`), extract the `.exe` inside, and double-click to install.</li>
+          <li>Download the installer package (`GazeAAC-Setup-0.2.9.zip`), extract the `.exe` inside, and double-click to install.</li>
           <li>Connect your Tobii Eye Tracker (if available) and run the Tobii Calibration utility.</li>
           <li>Launch **GazeAAC** from the desktop shortcut. The Python Eye Gaze bridge will start automatically in the background.</li>
           <li>If using a standard mouse, the app functions in **Dwell Click** mode—perfect for testing and screen-based navigation!</li>
@@ -490,20 +613,23 @@
         <p>Choose the installation format that fits your device. Our NSIS setup contains everything needed to initialize GazeAAC and the Tobii Eye Tracker bridge.</p>
         
         <div class="hero-actions downloads-actions">
-          <a href="/GazeAAC-Setup-0.2.3.zip" class="btn btn-primary btn-lg" id="btn-footer-download-installer" download>
+          <a href="GazeAAC-Setup-0.2.9.zip" class="btn btn-primary btn-lg" id="btn-footer-download-installer" download>
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Download Setup ZIP (376 MB)
+            Download Setup ZIP (458 MB)
           </a>
-          <a href="/GazeAAC-0.2.3.zip" class="btn btn-outline btn-lg" id="btn-footer-download-portable" download>
+          <a href="GazeAAC-0.2.9.zip" class="btn btn-outline btn-lg" id="btn-footer-download-portable" download>
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
               <path d="M12 18V6M6 12l6 6 6-6"/>
             </svg>
-            Download Standalone ZIP (376 MB)
+            Download Standalone ZIP (458 MB)
           </a>
         </div>
+        <p class="download-upload-time" style="margin-top: 1.5rem; opacity: 0.75; font-size: 0.85rem; font-family: 'Outfit', sans-serif;">
+          Latest release uploaded on: June 23, 2026 at 10:39 PM (GMT+8)
+        </p>
       </div>
     </div>
   </section>
@@ -885,6 +1011,35 @@
         }
       }
     }
+
+    // Mobile Navigation Drawer Toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const navToggleBtn = document.getElementById('btn-nav-toggle');
+      const headerNavEl = document.getElementById('header-nav');
+      if (navToggleBtn && headerNavEl) {
+        navToggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navToggleBtn.classList.toggle('active');
+          headerNavEl.classList.toggle('active');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+          if (headerNavEl.classList.contains('active') && !headerNavEl.contains(e.target) && !navToggleBtn.contains(e.target)) {
+            navToggleBtn.classList.remove('active');
+            headerNavEl.classList.remove('active');
+          }
+        });
+
+        // Close menu when clicking navigation links
+        headerNavEl.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navToggleBtn.classList.remove('active');
+            headerNavEl.classList.remove('active');
+          });
+        });
+      }
+    });
   </script>
 </body>
 </html>

@@ -180,16 +180,26 @@
   right: 0;
   z-index: 7000;
   min-width: 210px;
-  background: #1a1d28;
+  background: #1a1d28 !important;
+  opacity: 1 !important;
   border: 1px solid rgba(0,200,255,0.18);
   border-radius: 0.65rem;
   box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,200,255,0.06);
-  overflow: hidden;
+  overflow: visible;
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   animation: mt-popover-in 0.12s ease-out;
+}
+.movie-time__gear-popover::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: transparent;
 }
 @keyframes mt-popover-in {
   from { opacity: 0; transform: translateY(-4px) scale(0.97); }
@@ -596,6 +606,16 @@
   position: relative;
 }
 
+.movie-watching__player-wrap.movie-watching__player-wrap--fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9990 !important;
+  background: #000;
+}
+
 .movie-watching__player-wrap iframe {
   position: absolute;
   inset: 0;
@@ -704,6 +724,12 @@
 .movie-watching__ctrl-btn:hover {
   background: rgba(255,255,255,0.12);
   color: var(--color-text-primary);
+}
+.movie-watching__ctrl-btn--active {
+  background: hsl(280 60% 30% / 0.7) !important;
+  border-color: hsl(280 80% 70% / 0.6) !important;
+  color: hsl(280 95% 88%) !important;
+  box-shadow: 0 0 10px hsl(280 80% 60% / 0.4);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1606,3 +1632,170 @@
 }
 .movie-feedback--correct { color: hsl(145 80% 65%); text-shadow: 0 0 40px hsl(145 80% 60% / 0.8); }
 .movie-feedback--wrong   { color: hsl(0 80% 65%);   text-shadow: 0 0 40px hsl(0 80% 60% / 0.8); }
+
+/* ── Provider Selection Screen Centering & Card Styling ── */
+.movie-browse--providers {
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: var(--space-lg) var(--space-md);
+  box-sizing: border-box;
+}
+
+.movie-browse--providers .movie-browse__header {
+  margin-bottom: 2.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.movie-browse--providers .movie-browse__heading {
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  text-align: center;
+  color: var(--color-text-primary);
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.movie-providers__grid-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 550px;
+}
+
+.movie-providers__grid {
+  display: grid;
+  gap: 36px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.movie-provider-card {
+  position: relative;
+  height: 300px;
+  width: 100%;
+  max-width: 320px;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), 
+              border-color 0.25s ease, 
+              background 0.25s ease,
+              box-shadow 0.25s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+/* Base style for hovered/focused state */
+.movie-provider-card--gazed {
+  transform: scale(1.08);
+}
+
+/* Provider-specific styles for active/gazed state */
+.movie-provider-card--youtube.movie-provider-card--gazed {
+  background: linear-gradient(135deg, hsl(0 75% 15%) 0%, hsl(0 85% 25%) 100%);
+  border-color: hsl(0 100% 60%);
+  box-shadow: 0 20px 45px rgba(255, 0, 0, 0.4);
+}
+
+.movie-provider-card--netflix.movie-provider-card--gazed {
+  background: linear-gradient(135deg, hsl(357 75% 12%) 0%, hsl(357 85% 20%) 100%);
+  border-color: hsl(357 90% 55%);
+  box-shadow: 0 20px 45px rgba(229, 9, 20, 0.4);
+}
+
+.movie-provider-card--disney.movie-provider-card--gazed {
+  background: linear-gradient(135deg, hsl(224 85% 15%) 0%, hsl(240 80% 25%) 100%);
+  border-color: hsl(210 100% 65%);
+  box-shadow: 0 20px 45px rgba(17, 60, 207, 0.45);
+}
+
+.movie-provider-card__emoji {
+  font-size: 5.5rem;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.movie-provider-card--gazed .movie-provider-card__emoji {
+  transform: scale(1.15);
+}
+
+.movie-provider-card__label {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.movie-provider-card__dwell-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 12px;
+  transition: width 0.08s linear;
+}
+
+/* Dwell bar colors match brand highlight colors */
+.movie-provider-card--youtube .movie-provider-card__dwell-bar {
+  background: hsl(0 100% 65%);
+}
+
+.movie-provider-card--netflix .movie-provider-card__dwell-bar {
+  background: hsl(357 90% 65%);
+}
+
+.movie-provider-card--disney .movie-provider-card__dwell-bar {
+  background: hsl(195 100% 65%);
+}
+
+.movie-provider-card--suggested.movie-provider-card--gazed {
+  background: linear-gradient(135deg, hsl(280 75% 15%) 0%, hsl(280 85% 25%) 100%);
+  border-color: hsl(280 90% 65%);
+  box-shadow: 0 20px 45px rgba(168, 85, 247, 0.4);
+}
+
+.movie-provider-card--suggested .movie-provider-card__dwell-bar {
+  background: hsl(280 90% 65%);
+}
+
+.movie-time.movie-time--transparent {
+  background: transparent !important;
+}
+
+.movie-time.movie-time--transparent .movie-time__bg {
+  opacity: 0 !important;
+}
+
+.movie-watching.movie-watching--transparent {
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.movie-watching__controls {
+  pointer-events: auto !important;
+}
+
+/* Hide bottom controls bar when not hovered during overlay mode */
+.movie-watching--transparent .movie-watching__controls {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.movie-watching--transparent .movie-watching__controls:hover {
+  opacity: 1;
+}
+
+
+

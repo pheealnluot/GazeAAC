@@ -453,7 +453,12 @@
 }
 
 .auth-session-banner__continue-btn {
-  padding: 0.75rem 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 220px;
+  padding: 0.75rem 2rem;
   border: none;
   border-radius: 11px;
   background: linear-gradient(135deg, hsl(265, 75%, 55%), hsl(240, 85%, 60%));
@@ -465,11 +470,40 @@
   transition: transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 4px 20px rgba(120, 80, 255, 0.45);
   margin-top: 0.5rem;
+  outline: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .auth-session-banner__continue-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 28px rgba(120, 80, 255, 0.6);
+}
+
+.continue-btn__dwell-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.continue-btn__dwell-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.continue-btn__dwell-path {
+  transition: stroke-dashoffset 0.05s linear;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+}
+
+.continue-btn__text {
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
 }
 
 .auth-session-banner__switch-btn {

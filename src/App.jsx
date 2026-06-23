@@ -20,6 +20,7 @@ import { MovieTime } from '@components/MovieTime'
 import { GamesHub } from '@components/GamesHub'
 import { PeppaBusGame } from '@components/PeppaBusGame'
 import { BalloonPopGame } from '@components/BalloonPopGame'
+import QAGame from '@components/QAGame'
 import { GridRenderer } from '@components/GridRenderer'
 import { GazeFeedbackOverlay } from '@components/GazeFeedbackOverlay'
 import { SettingsModal } from '@components/SettingsModal'
@@ -232,6 +233,11 @@ export function App() {
   // 'aac'         = Main AAC board
   const [mode, setMode] = useState('auth') // starts at auth screen
   const [gameId, setGameId] = useState(null) // 'peppa' | 'balloon'
+  const [isOverlayActive, setIsOverlayActive] = useState(false) // transparent overlay mode active
+  const [isQuizActive, setIsQuizActive] = useState(false) // whether a quiz is currently active
+  const [isHoveringTitlebar, setIsHoveringTitlebar] = useState(false) // whether mouse is over titlebar
+  const [appTitlebarQuizInfo, setAppTitlebarQuizInfo] = useState(null) // titlebar quiz/countdown state
+  const [isAppFocused, setIsAppFocused] = useState(document.hasFocus()) // whether the window has focus
   // Active tracker mode: 'tobii' | 'mouse'
   const [trackerMode, setTrackerMode] = useState(window.gazeAPI?.trackerMode ?? 'mouse')
   // Dwell/hit-test state — only cellId and dwellProgress trigger re-renders
@@ -251,6 +257,7 @@ export function App() {
   const homeDwellRef       = useRef(null)     // HomeLanding writes its dwell handler here
   const gamesDwellRef      = useRef(null)     // GamesHub writes its dwell handler here
   const movieDwellRef      = useRef(null)     // MovieTime writes its dwell handler here
+  const qaDwellRef         = useRef(null)     // QAGame writes its dwell handler here
   const movieRawGazeRef    = useRef(null)     // receives raw {x,y,valid} for gaze-away detection
   const movieCursorStyleRef = useRef(null)    // MovieTime controls cursor visibility per phase
 
@@ -267,6 +274,20 @@ export function App() {
   // M5: caregiver panel + gear popover
   const [showCaregiverPanel, setShowCaregiverPanel] = useState(false)
   const [showGearPopover, setShowGearPopover]   = useState(false)
+  const gearContainerRef = useRef(null)
+
+  useEffect(() => {
+    if (!showGearPopover) return
+    const handleOutsideClick = (e) => {
+      if (gearContainerRef.current && !gearContainerRef.current.contains(e.target)) {
+        setShowGearPopover(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+    }
+  }, [showGearPopover])
 
   // Contextual Response board state
   const [contextualResponses, setContextualResponses]   = useState([])
@@ -295,7 +316,7 @@ export function App() {
 
   const [inputFocused, setInputFocused] = useState(false)
 
-  const [appVersion, setAppVersion] = useState('0.2.3')
+  const [appVersion, setAppVersion] = useState('0.2.6')
 
   // ── In-App Calibration Correction ──────────────────────────────────────────
   const calibrationEngineRef = useRef(null)
@@ -352,12 +373,13 @@ export function App() {
   useEffect(() => {
     if (mode === 'auth' || mode === 'calibration') return
     if (settings.mouseHoverMode) return
+    if (settings.gazeLostSoundEnabled === false) return
     
     if (!isGazePresent) {
       playWarningChime()
       console.log('[App] Signal loss warning chime played.')
     }
-  }, [isGazePresent, mode, settings.mouseHoverMode])
+  }, [isGazePresent, mode, settings.mouseHoverMode, settings.gazeLostSoundEnabled])
 
 
   // Listen for dynamic eye-tracker connect/disconnect events
@@ -476,6 +498,7 @@ export function App() {
         const el = gazeCursorRef.current
         if (el) el.style.display = 'none'
         setIsGazePresent(false)
+        gazeFilteredRef.current = null
         return
       }
 
@@ -901,8 +924,22 @@ export function App() {
   // gaze dwell to silently stop working until a click re-triggered grid
   // measurement in GridRenderer.
 
+  const setScreenDwellClickEnabled = useCallback((active, onScreenDwellClick) => {
+    routerRef.current?.setScreenDwellClickEnabled(active, onScreenDwellClick)
+  }, [])
+
   // Keep modeRef in sync so callbacks always read fresh mode
-  useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => {
+    modeRef.current = mode
+    if (mode === 'calibration' && gazeCursorRef.current) {
+      gazeCursorRef.current.style.display = 'none'
+    }
+    if (mode !== 'movie') {
+      setIsOverlayActive(false)
+      window.gazeAPI?.exitOverlayMode?.()
+      window.gazeAPI?.closeChrome?.()
+    }
+  }, [mode])
 
   useEffect(() => {
     // Only skip for auth/calibration — those use raw cursor tracking
@@ -981,6 +1018,8 @@ export function App() {
           movieDwellRef.current?.(cellId)
         } else if (m === 'games') {
           gamesDwellRef.current?.(cellId)
+        } else if (m === 'qa') {
+          qaDwellRef.current?.(cellId)
         }
       },
 
@@ -1289,8 +1328,22 @@ export function App() {
   useEffect(() => {
     if (mode === 'auth' || mode === 'calibration') return
 
+    if (!isOverlayActive && !document.hasFocus()) {
+      if (routerRef.current && !routerRef.current._paused) {
+        routerRef.current.pause()
+        setStatusMsg('Gaze paused (app not focused)')
+        console.log('[App] Overlay inactive & not focused — pausing gaze on setup')
+      }
+    }
+
     const handleWindowBlur = () => {
+      setIsAppFocused(false)
       if (!routerRef.current) return
+      // If overlay is active, do not pause the router on blur (Chrome is focused, but user is choosing questions)
+      if (isOverlayActive) {
+        console.log('[App] Window lost OS focus but overlay is active — keeping gaze active')
+        return
+      }
       // Don't double-pause if already paused by the overlay effect
       if (routerRef.current._paused) return
       routerRef.current.pause()
@@ -1299,6 +1352,7 @@ export function App() {
     }
 
     const handleWindowFocus = () => {
+      setIsAppFocused(true)
       if (!routerRef.current) return
       // Only resume if no in-app overlay is covering the board
       const boardBlocked = showSettings || showCaregiverPanel
@@ -1325,7 +1379,38 @@ export function App() {
       window.removeEventListener('focus', handleWindowFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [mode, showSettings, showCaregiverPanel, trackerMode])
+  }, [mode, showSettings, showCaregiverPanel, trackerMode, isOverlayActive])
+
+  // ── Dynamic mouse-ignore toggle for transparent overlay mode ──────────────
+  useEffect(() => {
+    if (!window.gazeAPI?.setIgnoreMouseEvents) return
+
+    const shouldIgnore = isOverlayActive &&
+      !isQuizActive &&
+      !isHoveringTitlebar &&
+      !showSettings &&
+      !showCaregiverPanel &&
+      !showGearPopover &&
+      !showBoardSelector &&
+      !boardEditorId &&
+      !showGazeHUD
+
+    if (shouldIgnore) {
+      window.gazeAPI.setIgnoreMouseEvents(true, { forward: true })
+    } else {
+      window.gazeAPI.setIgnoreMouseEvents(false)
+    }
+  }, [
+    isOverlayActive,
+    isQuizActive,
+    isHoveringTitlebar,
+    showSettings,
+    showCaregiverPanel,
+    showGearPopover,
+    showBoardSelector,
+    boardEditorId,
+    showGazeHUD
+  ])
 
   // ── Status bar: reflect Mouse Hover Mode ──────────────────────────────────
   useEffect(() => {
@@ -1353,9 +1438,17 @@ export function App() {
 
 
   return (
-    <div className="app">
+    <div className={`app${isOverlayActive ? ' app--transparent' : ''}${isOverlayActive && !isAppFocused ? ' app--transparent-blurred' : ''}`}>
       {/* ── Frameless title bar ────────────────────────────────────────── */}
-      <header className="app__titlebar" data-electron-drag>
+      <header
+        className="app__titlebar"
+        data-electron-drag
+        onMouseDown={() => {
+          window.gazeAPI?.windowControl?.('focus')
+        }}
+        onMouseEnter={() => setIsHoveringTitlebar(true)}
+        onMouseLeave={() => setIsHoveringTitlebar(false)}
+      >
         <div
           className="app__titlebar-brand"
           onDoubleClick={() => {
@@ -1666,9 +1759,23 @@ export function App() {
             </button>
           )}
 
+          {/* Quiz Countdown button (Movie mode only) */}
+          {mode === 'movie' && appTitlebarQuizInfo && (
+            <button
+              className={`titlebar-btn titlebar-btn--quiz-countdown${appTitlebarQuizInfo.nextPuzzleConfirm ? ' titlebar-btn--quiz-countdown--primed' : ''}`}
+              onClick={appTitlebarQuizInfo.onQuizButtonClick}
+              title={appTitlebarQuizInfo.nextPuzzleConfirm ? 'Click again to start the puzzle now' : 'Click to start the next puzzle early'}
+            >
+              {appTitlebarQuizInfo.nextPuzzleConfirm ? '▶ Start puzzle' : appTitlebarQuizInfo.puzzleTimerText}
+            </button>
+          )}
+
           {/* Gear opens a mini popover — 3 settings + caregiver panel */}
-          {mode === 'aac' && (
-            <div style={{ position: 'relative' }}>
+          {(mode === 'aac' || mode === 'movie') && (
+            <div 
+              ref={gearContainerRef}
+              style={{ position: 'relative' }}
+            >
               <button
                 id="btn-open-settings"
                 className="titlebar-btn titlebar-btn--settings"
@@ -1681,7 +1788,7 @@ export function App() {
                 <div
                   className="app__gear-popover"
                   role="menu"
-                  onMouseLeave={() => setShowGearPopover(false)}
+                  style={{ background: '#1a1d28', opacity: 1 }}
                 >
                   <button
                     className="app__gear-popover-item"
@@ -1782,24 +1889,18 @@ export function App() {
           <button
             className="titlebar-btn titlebar-btn--close"
             aria-label="Close"
-            onClick={() => window.gazeAPI?.windowControl('close')}
+            onClick={() => {
+              window.gazeAPI?.windowControl?.('close')
+            }}
           >✕</button>
         </div>
       </header>
 
       {/* ── Eyes Lost slide-down banner ────────────────────────────────── */}
-      {mode !== 'auth' && mode !== 'calibration' && !isGazePresent && !settings.mouseHoverMode && (
+      {mode !== 'auth' && mode !== 'calibration' && !isGazePresent && !settings.mouseHoverMode && settings.gazeLostVisualEnabled !== false && (
         <div className="app__eyes-lost-banner">
           <span className="app__eyes-lost-icon">👀</span>
           <span className="app__eyes-lost-text">Eyes Lost — Adjust Position</span>
-        </div>
-      )}
-
-      {/* ── Poor Gaze Accuracy warning badge ────────────────────────────── */}
-      {mode !== 'auth' && mode !== 'calibration' && isGazePresent && !settings.mouseHoverMode && gazeQualityLevel === 'poor' && (
-        <div className="app__poor-accuracy-badge" onClick={() => setShowGazeHUD(true)}>
-          <span className="app__poor-accuracy-icon">⚠️</span>
-          <span className="app__poor-accuracy-text">Gaze Accuracy Poor — Click to Troubleshoot</span>
         </div>
       )}
 
@@ -1829,6 +1930,8 @@ export function App() {
           <AuthScreen
             onAuthenticated={() => setMode('calibration')}
             onGuest={() => setMode('calibration')}
+            gazeRef={gazeFilteredRef}
+            dwellMs={settings.dwellMs}
           />
         )}
 
@@ -1856,7 +1959,9 @@ export function App() {
             onSelectAAC={() => setMode('aac')}
             onSelectMovie={() => setMode('movie')}
             onSelectGames={() => setMode('games')}
+            onSelectQA={() => setMode('qa')}
             onOpenSettings={openSettings}
+            onOpenCaregiver={() => setShowCaregiverPanel(true)}
             gazeCursorRef={gazeCursorRef}
             registerHitTargets={(cells) => routerRef.current?.registerGrid(cells)}
             gazeState={gazeState}
@@ -1875,6 +1980,10 @@ export function App() {
             onDwellRef={movieDwellRef}
             rawGazeRef={movieRawGazeRef}
             cursorStyleRef={movieCursorStyleRef}
+            onSetOverlayActive={setIsOverlayActive}
+            onSetQuizActive={setIsQuizActive}
+            setScreenDwellClickEnabled={setScreenDwellClickEnabled}
+            setAppTitlebarQuizInfo={setAppTitlebarQuizInfo}
           />
         )}
 
@@ -1886,6 +1995,16 @@ export function App() {
             registerHitTargets={(cells) => routerRef.current?.registerGrid(cells)}
             gazeState={gazeState}
             onDwellRef={gamesDwellRef}
+          />
+        )}
+
+        {mode === 'qa' && (
+          <QAGame
+            onBack={() => setMode('home')}
+            registerHitTargets={(cells) => routerRef.current?.registerGrid(cells)}
+            gazeState={gazeState}
+            onDwellRef={qaDwellRef}
+            onOpenSettings={openSettings}
           />
         )}
 

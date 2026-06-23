@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, writeBatch } from 'firebase/firestore'
+import { doc, setDoc, getDoc, collection, getDocs, writeBatch, deleteDoc, onSnapshot, query } from 'firebase/firestore'
 import { db, auth } from './firebase'
 import { SyncAdapter } from './SyncAdapter'
 
@@ -48,6 +48,10 @@ const SHARED_SETTINGS_KEYS = [
   // Movie Time — shared settings
   'movieTimeYoutubeKey',
   'movieTimeYoutubeKeys',
+  'movieTimeProviderYoutube',
+  'movieTimeProviderNetflix',
+  'movieTimeProviderDisney',
+  'movieTimeActiveProvider',
   'movieTimeSelectionCount',
   'movieTimeDuration',
   'movieTimeVideoQuality',
@@ -85,6 +89,24 @@ const SHARED_SETTINGS_KEYS = [
   'movieTimePauseOnGazeLost',      // Auto-pause when gaze is lost
   'movieTimeSelectionGateMs',      // Gate before video can be dwell-selected
   'movieTimeGazeAwayMs',           // Gaze-away threshold before auto-pause
+  // Contextual Response AI & shortcuts
+  'contextualMicMode',
+  'contextualSpeakMode',
+  'contextualWvtTimeout',
+  'speakShortcutCtrl',
+  'speakShortcutShift',
+  'speakShortcutAlt',
+  'speakShortcutChar',
+  // Movie Time additions
+  'movieTimeMinViews',
+  // Q&A Quizzes Settings
+  'qaQuizQuestionGateMs',
+  'qaQuizAnswerGateMs',
+  'qaPuzzleHintAfterWrong',
+  'qaQuizSoundEffects',
+  'qaQuizVoiceOver',
+  'qaQuizVoiceOverChoices',
+  'qaQuizVoiceOverPauseMs',
 ]
 
 export class FirebaseSyncAdapter extends SyncAdapter {
@@ -94,11 +116,121 @@ export class FirebaseSyncAdapter extends SyncAdapter {
   }
 
   /**
-   * Helper to retrieve the current user's UID
+   * Helper to retrieve the current user's email (normalized) or UID fallback
    * @returns {string|null}
    */
   get userId() {
-    return auth.currentUser?.uid ?? null
+    const user = auth.currentUser
+    if (user && user.email) {
+      return user.email.trim().toLowerCase()
+    }
+    return user?.uid ?? null
+  }
+
+  /**
+   * Migrate legacy data stored under UID to the new email-based path if needed
+   * @param {import('firebase/auth').User} user
+   * @returns {Promise<void>}
+   */
+  async migrateUidToEmailIfNeeded(user) {
+    if (!user || !user.email) return
+    const emailKey = user.email.trim().toLowerCase()
+    const uidKey = user.uid
+
+    if (emailKey === uidKey) return
+
+    try {
+      // 1. Check if email-based shared settings exist (signifying migration has already run)
+      const emailSharedRef = doc(db, 'users', emailKey, 'settings', 'shared')
+      const emailSharedSnap = await getDoc(emailSharedRef)
+      if (emailSharedSnap.exists()) {
+        console.log('[FirebaseSyncAdapter] Email-based settings already exist, skipping migration')
+        return
+      }
+
+      // 2. Check if there is legacy data under the UID-based path
+      const uidSharedRef = doc(db, 'users', uidKey, 'settings', 'shared')
+      const uidSharedSnap = await getDoc(uidSharedRef)
+      
+      // If there is no legacy shared settings, check if there's any legacy quiz
+      const uidQuizzesCol = collection(db, 'users', uidKey, 'quizzes')
+      const quizzesSnap = await getDocs(uidQuizzesCol)
+
+      if (!uidSharedSnap.exists() && quizzesSnap.empty) {
+        console.log('[FirebaseSyncAdapter] No legacy data found under UID path, skipping migration')
+        return
+      }
+
+      console.log(`[FirebaseSyncAdapter] Legacy data found. Migrating from UID (${uidKey}) to email (${emailKey})...`)
+
+      // 3. Migrate shared settings
+      if (uidSharedSnap.exists()) {
+        await setDoc(emailSharedRef, uidSharedSnap.data())
+        console.log('[FirebaseSyncAdapter] Migrated shared settings')
+      }
+
+      // 4. Migrate device-specific settings
+      const uidSettingsCol = collection(db, 'users', uidKey, 'settings')
+      const settingsSnap = await getDocs(uidSettingsCol)
+      for (const sDoc of settingsSnap.docs) {
+        if (sDoc.id !== 'shared' && sDoc.id !== 'default') {
+          await setDoc(doc(db, 'users', emailKey, 'settings', sDoc.id), sDoc.data())
+        }
+      }
+      console.log('[FirebaseSyncAdapter] Migrated device-specific settings')
+
+      // 5. Migrate user profile
+      const uidProfileRef = doc(db, 'users', uidKey, 'profile', 'default')
+      const uidProfileSnap = await getDoc(uidProfileRef)
+      if (uidProfileSnap.exists()) {
+        await setDoc(doc(db, 'users', emailKey, 'profile', 'default'), uidProfileSnap.data())
+        console.log('[FirebaseSyncAdapter] Migrated user profile')
+      }
+
+      // 6. Migrate board edits
+      const uidEditsRef = doc(db, 'users', uidKey, 'boardEdits', 'default')
+      const uidEditsSnap = await getDoc(uidEditsRef)
+      if (uidEditsSnap.exists()) {
+        await setDoc(doc(db, 'users', emailKey, 'boardEdits', 'default'), uidEditsSnap.data())
+        console.log('[FirebaseSyncAdapter] Migrated board edits')
+      }
+
+      // 7. Migrate AI history
+      const uidHistoryRef = doc(db, 'users', uidKey, 'aiHistory', 'default')
+      const uidHistorySnap = await getDoc(uidHistoryRef)
+      if (uidHistorySnap.exists()) {
+        await setDoc(doc(db, 'users', emailKey, 'aiHistory', 'default'), uidHistorySnap.data())
+        console.log('[FirebaseSyncAdapter] Migrated AI history')
+      }
+
+      // 8. Migrate session logs
+      const uidSessionsCol = collection(db, 'users', uidKey, 'sessions')
+      const sessionsSnap = await getDocs(uidSessionsCol)
+      if (!sessionsSnap.empty) {
+        const sessionBatch = writeBatch(db)
+        sessionsSnap.docs.forEach(sDoc => {
+          const ref = doc(db, 'users', emailKey, 'sessions', sDoc.id)
+          sessionBatch.set(ref, sDoc.data())
+        })
+        await sessionBatch.commit()
+        console.log(`[FirebaseSyncAdapter] Migrated ${sessionsSnap.size} sessions`)
+      }
+
+      // 9. Migrate quizzes
+      if (!quizzesSnap.empty) {
+        const quizBatch = writeBatch(db)
+        quizzesSnap.docs.forEach(qDoc => {
+          const ref = doc(db, 'users', emailKey, 'quizzes', qDoc.id)
+          quizBatch.set(ref, qDoc.data())
+        })
+        await quizBatch.commit()
+        console.log(`[FirebaseSyncAdapter] Migrated ${quizzesSnap.size} quizzes`)
+      }
+
+      console.log('[FirebaseSyncAdapter] Migration to email-based path complete!')
+    } catch (err) {
+      console.error('[FirebaseSyncAdapter] Error during UID-to-email migration:', err)
+    }
   }
 
   // ─── Settings sync ─────────────────────────────────────────────────────────
@@ -422,6 +554,92 @@ export class FirebaseSyncAdapter extends SyncAdapter {
     } catch (err) {
       console.error('[FirebaseSyncAdapter] Failed to fetch available devices:', err.message)
       return []
+    }
+  }
+
+  /**
+   * Push custom caregiver quizzes to Firestore.
+   * @param {object[]} quizzes
+   */
+  async pushQuizzes(quizzes) {
+    const uid = this.userId
+    if (!uid || !quizzes) return
+    try {
+      const batch = writeBatch(db)
+      quizzes.forEach(quiz => {
+        if (quiz && quiz.id) {
+          const ref = doc(db, 'users', uid, 'quizzes', quiz.id)
+          batch.set(ref, quiz, { merge: true })
+        }
+      })
+      await batch.commit()
+      console.log('[FirebaseSyncAdapter] Quizzes pushed successfully')
+    } catch (err) {
+      console.error('[FirebaseSyncAdapter] Failed to push quizzes:', err.message)
+    }
+  }
+
+  /**
+   * Pull all quizzes from Firestore.
+   * @returns {Promise<object[]|null>}
+   */
+  async pullQuizzes() {
+    const uid = this.userId
+    if (!uid) return null
+    try {
+      const colRef = collection(db, 'users', uid, 'quizzes')
+      const snap = await getDocs(colRef)
+      const list = []
+      snap.forEach(docSnap => {
+        list.push(docSnap.data())
+      })
+      console.log(`[FirebaseSyncAdapter] Pulled ${list.length} quizzes`)
+      return list
+    } catch (err) {
+      console.error('[FirebaseSyncAdapter] Failed to pull quizzes:', err.message)
+    }
+    return null
+  }
+
+  /**
+   * Delete a quiz from Firestore.
+   * @param {string} quizId
+   */
+  async deleteQuiz(quizId) {
+    const uid = this.userId
+    if (!uid || !quizId) return
+    try {
+      await deleteDoc(doc(db, 'users', uid, 'quizzes', quizId))
+      console.log('[FirebaseSyncAdapter] Quiz deleted from Firestore:', quizId)
+    } catch (err) {
+      console.error('[FirebaseSyncAdapter] Failed to delete quiz:', err.message)
+    }
+  }
+
+  /**
+   * Subscribe to real-time quiz changes from Firestore.
+   * Fires callback(quizzes[]) immediately with current data,
+   * then again on every create / update / delete from any device or the web console.
+   * @param {function(object[]):void} callback
+   * @returns {function} unsubscribe — call to stop listening
+   */
+  subscribeToQuizzes(callback) {
+    const uid = this.userId
+    if (!uid) return () => {}
+    try {
+      const colRef = query(collection(db, 'users', uid, 'quizzes'))
+      const unsub = onSnapshot(colRef, (snap) => {
+        const list = []
+        snap.forEach(docSnap => list.push(docSnap.data()))
+        console.log(`[FirebaseSyncAdapter] Quiz snapshot received: ${list.length} quizzes`)
+        callback(list)
+      }, (err) => {
+        console.error('[FirebaseSyncAdapter] Quiz snapshot error:', err.message)
+      })
+      return unsub
+    } catch (err) {
+      console.error('[FirebaseSyncAdapter] Failed to subscribe to quizzes:', err.message)
+      return () => {}
     }
   }
 }

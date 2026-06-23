@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useGazeSettings, mergeUniqueListsById, mergeDeletedLists, mergeSettingsLists } from '@context/GazeSettingsContext'
 import { useGazeHeatmap } from '@context/GazeHeatmapContext'
@@ -76,6 +76,7 @@ export function CaregiverPanel({ open, onClose, onShowLogin }) {
         <div className="cp__body">
           {activeTab === 'history' && <HistoryTab />}
           {activeTab === 'heatmap' && <HeatmapTab onClose={onClose} />}
+          {activeTab === 'quizzes' && <QuizzesTab />}
           {activeTab === 'pin'     && <PinTab onClose={onClose} />}
           {activeTab === 'sync'    && <SyncTab onShowLogin={onShowLogin} />}
         </div>
@@ -92,6 +93,7 @@ export function CaregiverPanel({ open, onClose, onShowLogin }) {
 const TABS = [
   { id: 'history', icon: '📊',  label: 'Session History' },
   { id: 'heatmap', icon: '🔥',  label: 'Gaze Heatmap' },
+  { id: 'quizzes', icon: '🧩',  label: 'Q&A Quizzes' },
   { id: 'pin',     icon: '🔑',  label: 'Access PIN' },
   { id: 'sync',    icon: '☁️',  label: 'Cloud Sync' }
 ]
@@ -1322,4 +1324,504 @@ function HeatmapTab({ onClose }) {
     </div>
   )
 }
+
+
+// ─── Tab 3: Q&A Quizzes Tab ──────────────────────────────────────────────────
+
+function QuizzesTab() {
+  const { quizzes, saveQuizzes, deleteQuizLocally } = useGazeSettings()
+  const [activeQuizId, setActiveQuizId] = useState('')
+  const [activeQuizData, setActiveQuizData] = useState(null)
+  const [draggingIdx, setDraggingIdx] = useState(null)
+
+  const handleDragStart = (e, idx) => {
+    setDraggingIdx(idx)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault()
+    if (draggingIdx === null || draggingIdx === targetIdx) return
+
+    const reordered = [...quizzes]
+    const [draggedQuiz] = reordered.splice(draggingIdx, 1)
+    reordered.splice(targetIdx, 0, draggedQuiz)
+
+    reordered.forEach((q, i) => {
+      q.order = i
+      q.updatedAt = Date.now()
+    })
+
+    saveQuizzes(reordered)
+    setDraggingIdx(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggingIdx(null)
+  }
+
+  const quizzesRef = useRef(quizzes)
+  useEffect(() => {
+    quizzesRef.current = quizzes
+  }, [quizzes])
+
+  const autosaveTimeoutRef = useRef(null)
+  const localUpdateRef = useRef(false)
+
+  const triggerAutosave = (updatedQuiz) => {
+    localUpdateRef.current = true
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current)
+    autosaveTimeoutRef.current = setTimeout(() => {
+      const currentList = quizzesRef.current || []
+      const updated = currentList.map(q => {
+        if (q.id === updatedQuiz.id) {
+          return {
+            ...updatedQuiz,
+            order: q.order !== undefined ? q.order : updatedQuiz.order,
+            updatedAt: Date.now()
+          }
+        }
+        return q
+      })
+      saveQuizzes(updated)
+    }, 1000)
+  }
+
+  // Auto-select the first quiz if there are quizzes and none is selected
+  useEffect(() => {
+    if (quizzes && quizzes.length > 0 && !activeQuizId) {
+      setActiveQuizId(quizzes[0].id)
+    }
+  }, [quizzes, activeQuizId])
+
+  // Hydrate local draft activeQuizData from quizzes list when activeQuizId changes
+  useEffect(() => {
+    const quiz = quizzes?.find(q => q.id === activeQuizId)
+    if (quiz) {
+      if (localUpdateRef.current) {
+        localUpdateRef.current = false
+      } else {
+        setActiveQuizData(JSON.parse(JSON.stringify(quiz)))
+      }
+    } else {
+      setActiveQuizData(null)
+    }
+  }, [activeQuizId, quizzes])
+
+  const moveQuizUp = (e, idx) => {
+    e.stopPropagation()
+    if (idx <= 0) return
+    const reordered = [...quizzes]
+    const temp = reordered[idx]
+    reordered[idx] = reordered[idx - 1]
+    reordered[idx - 1] = temp
+
+    reordered.forEach((q, i) => {
+      q.order = i
+      q.updatedAt = Date.now()
+    })
+
+    saveQuizzes(reordered)
+  }
+
+  const moveQuizDown = (e, idx) => {
+    e.stopPropagation()
+    if (idx >= quizzes.length - 1) return
+    const reordered = [...quizzes]
+    const temp = reordered[idx]
+    reordered[idx] = reordered[idx + 1]
+    reordered[idx + 1] = temp
+
+    reordered.forEach((q, i) => {
+      q.order = i
+      q.updatedAt = Date.now()
+    })
+
+    saveQuizzes(reordered)
+  }
+
+  const handleCreateNewQuiz = () => {
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current)
+    const newId = 'quiz_' + Date.now()
+    const newQuiz = {
+      id: newId,
+      name: 'New Quiz ' + ((quizzes?.length || 0) + 1),
+      dwellTimeMs: 2000,
+      questions: [
+        {
+          question: 'What is the color of the sky?',
+          answers: [
+            { id: 'a', text: 'Blue' },
+            { id: 'b', text: 'Green' },
+            { id: 'c', text: 'Red' },
+            { id: 'd', text: 'Yellow' }
+          ],
+          correctId: 'a'
+        }
+      ],
+      order: quizzes?.length || 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    }
+    const updated = quizzes ? [...quizzes, newQuiz] : [newQuiz]
+    saveQuizzes(updated)
+    setActiveQuizId(newId)
+  }
+
+  const handleRenameQuiz = (newName) => {
+    if (!activeQuizData) return
+    const updated = {
+      ...activeQuizData,
+      name: newName
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleDeleteQuiz = () => {
+    if (!activeQuizId) return
+    if (window.confirm('Warning: Deletion is permanent! Are you sure you want to delete this quiz?')) {
+      if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current)
+      deleteQuizLocally(activeQuizId)
+      setActiveQuizId('')
+    }
+  }
+
+  const handleSaveQuiz = () => {
+    if (!activeQuizData) return
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current)
+    const updated = quizzes.map(q => {
+      if (q.id === activeQuizData.id) {
+        return {
+          ...activeQuizData,
+          order: q.order !== undefined ? q.order : activeQuizData.order,
+          updatedAt: Date.now()
+        }
+      }
+      return q
+    })
+    saveQuizzes(updated)
+    alert('Quiz configuration saved successfully!')
+  }
+
+  const handleAddQuestion = () => {
+    if (!activeQuizData) return
+    const newQuestion = {
+      question: 'New Question',
+      answers: [
+        { id: 'a', text: 'Option A' },
+        { id: 'b', text: 'Option B' }
+      ],
+      correctId: 'a'
+    }
+    const updated = {
+      ...activeQuizData,
+      questions: [...(activeQuizData.questions || []), newQuestion]
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleRemoveQuestion = (qIdx) => {
+    if (!activeQuizData) return
+    const updatedQuestions = activeQuizData.questions.filter((_, idx) => idx !== qIdx)
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleUpdateQuestionText = (qIdx, text) => {
+    if (!activeQuizData) return
+    const updatedQuestions = activeQuizData.questions.map((q, idx) => {
+      if (idx === qIdx) {
+        return { ...q, question: text }
+      }
+      return q
+    })
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleAddChoice = (qIdx) => {
+    if (!activeQuizData) return
+    const q = activeQuizData.questions[qIdx]
+    const usedIds = q.answers.map(a => a.id)
+    const nextChar = ['a', 'b', 'c', 'd', 'e', 'f'].find(char => !usedIds.includes(char)) || 'x'
+    const newChoice = { id: nextChar, text: `Option ${nextChar.toUpperCase()}` }
+    
+    const updatedQuestions = activeQuizData.questions.map((qItem, idx) => {
+      if (idx === qIdx) {
+        return {
+          ...qItem,
+          answers: [...qItem.answers, newChoice]
+        }
+      }
+      return qItem
+    })
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleRemoveChoice = (qIdx, choiceId) => {
+    if (!activeQuizData) return
+    const q = activeQuizData.questions[qIdx]
+    if (q.answers.length <= 2) {
+      alert('A question must have at least 2 choices.')
+      return
+    }
+    const updatedQuestions = activeQuizData.questions.map((qItem, idx) => {
+      if (idx === qIdx) {
+        const filteredAnswers = qItem.answers.filter(a => a.id !== choiceId)
+        let newCorrectId = qItem.correctId
+        if (qItem.correctId === choiceId) {
+          newCorrectId = filteredAnswers[0].id
+        }
+        return {
+          ...qItem,
+          answers: filteredAnswers,
+          correctId: newCorrectId
+        }
+      }
+      return qItem
+    })
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleRemoveChoiceLocally = (qIdx, choiceId) => {
+    handleRemoveChoice(qIdx, choiceId)
+  }
+
+  const handleUpdateChoiceText = (qIdx, choiceId, text) => {
+    if (!activeQuizData) return
+    const updatedQuestions = activeQuizData.questions.map((qItem, idx) => {
+      if (idx === qIdx) {
+        const updatedAnswers = qItem.answers.map(a => {
+          if (a.id === choiceId) {
+            return { ...a, text }
+          }
+          return a
+        })
+        return {
+          ...qItem,
+          answers: updatedAnswers
+        }
+      }
+      return qItem
+    })
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  const handleSetCorrectChoice = (qIdx, choiceId) => {
+    if (!activeQuizData) return
+    const updatedQuestions = activeQuizData.questions.map((qItem, idx) => {
+      if (idx === qIdx) {
+        return {
+          ...qItem,
+          correctId: choiceId
+        }
+      }
+      return qItem
+    })
+    const updated = {
+      ...activeQuizData,
+      questions: updatedQuestions
+    }
+    setActiveQuizData(updated)
+    triggerAutosave(updated)
+  }
+
+  return (
+    <div className="cp-quizzes">
+      {/* Left Column: Sidebar */}
+      <div className="cp-quizzes__sidebar">
+        <div className="cp-quizzes__sec-title">Quizzes</div>
+        <div className="cp-quizzes__list">
+          {quizzes && quizzes.map((quiz, idx) => (
+            <div
+              key={quiz.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, idx)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragEnd={handleDragEnd}
+              className={`cp-quizzes__item ${quiz.id === activeQuizId ? 'cp-quizzes__item--active' : ''} ${draggingIdx === idx ? 'cp-quizzes__item--dragging' : ''}`}
+              onClick={() => setActiveQuizId(quiz.id)}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="cp-quizzes__item-name">{idx + 1}. {quiz.name}</div>
+                <div className="cp-quizzes__item-count">{(quiz.questions || []).length} questions</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginLeft: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={(e) => moveQuizUp(e, idx)}
+                  disabled={idx === 0}
+                  className="cp-quizzes__order-btn"
+                  title="Move Up"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => moveQuizDown(e, idx)}
+                  disabled={idx === quizzes.length - 1}
+                  className="cp-quizzes__order-btn"
+                  title="Move Down"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
+          ))}
+          {(!quizzes || quizzes.length === 0) && (
+            <div style={{ opacity: 0.5, textAlign: 'center', padding: '1.5rem 0', fontSize: '0.85rem' }}>
+              No quizzes created.
+            </div>
+          )}
+        </div>
+        <button className="cp-quizzes__add-btn" onClick={handleCreateNewQuiz}>
+          + New Quiz
+        </button>
+      </div>
+
+      {/* Right Column: Workspace / Editor */}
+      <div className="cp-quizzes__workspace">
+        {activeQuizData ? (
+          <div className="cp-quizzes__editor">
+            {/* Header */}
+            <div className="cp-quizzes__edit-header">
+              <div className="cp-quizzes__title-row">
+                <input
+                  type="text"
+                  className="cp-quizzes__name-input"
+                  value={activeQuizData.name || ''}
+                  onChange={(e) => handleRenameQuiz(e.target.value)}
+                  placeholder="Quiz Name"
+                />
+                <div className="cp-quizzes__header-actions">
+                  <button className="cp-quizzes__del-btn" onClick={handleDeleteQuiz}>
+                    Delete Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Questions Section */}
+            <div className="cp-quizzes__questions-sec">
+              <div className="cp-quizzes__sec-header">
+                <h4>Questions</h4>
+                <button className="cp-quizzes__add-q-btn" onClick={handleAddQuestion}>
+                  + Add Question
+                </button>
+              </div>
+
+              <div className="cp-quizzes__questions-list">
+                {activeQuizData.questions?.map((q, qIdx) => (
+                  <div key={qIdx} className="cp-quizzes__q-card">
+                    <div className="cp-quizzes__q-header">
+                      <span className="cp-quizzes__q-num">Question {qIdx + 1}</span>
+                      <div className="cp-quizzes__q-actions">
+                        <button className="cp-quizzes__remove-q-btn" onClick={() => handleRemoveQuestion(qIdx)}>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Question Prompt */}
+                    <div className="cp-quizzes__field">
+                      <label>Question Prompt</label>
+                      <textarea
+                        className="cp-quizzes__textarea"
+                        value={q.question || ''}
+                        onChange={(e) => handleUpdateQuestionText(qIdx, e.target.value)}
+                        placeholder="Enter the question text..."
+                      />
+                    </div>
+
+                    {/* Choices / Answers */}
+                    <div className="cp-quizzes__field">
+                      <label>Answer Options (Check the correct one)</label>
+                      <div className="cp-quizzes__choices-list">
+                        {(q.answers || []).map((ans) => (
+                          <div key={ans.id} className="cp-quizzes__choice-row">
+                            <input
+                              type="radio"
+                              name={`correct_${qIdx}`}
+                              className="cp-quizzes__checkbox"
+                              checked={q.correctId === ans.id}
+                              onChange={() => handleSetCorrectChoice(qIdx, ans.id)}
+                            />
+                            <input
+                              type="text"
+                              className="cp-quizzes__choice-input"
+                              value={ans.text || ''}
+                              onChange={(e) => handleUpdateChoiceText(qIdx, ans.id, e.target.value)}
+                              placeholder={`Choice ${ans.id.toUpperCase()}`}
+                            />
+                            <button
+                              className="cp-quizzes__remove-choice-btn"
+                              disabled={(q.answers || []).length <= 2}
+                              onClick={() => handleRemoveChoice(qIdx, ans.id)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                        {(q.answers || []).length < 6 && (
+                          <button className="cp-quizzes__add-choice-btn" onClick={() => handleAddChoice(qIdx)}>
+                            + Add Option
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="cp-quizzes__footer">
+              <button className="cp-quizzes__save-btn" onClick={handleSaveQuiz}>
+                Save Quiz Config
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="cp-quizzes__empty">
+            <span className="cp-quizzes__empty-icon">🧩</span>
+            <p>Select a quiz or create a new one to start editing.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 

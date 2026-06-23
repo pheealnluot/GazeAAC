@@ -161,6 +161,10 @@ export const DEFAULT_SETTINGS = {
   // Movie Time
   movieTimeYoutubeKey: '',            // YouTube Data API v3 key (legacy single key — migrated to movieTimeYoutubeKeys on load)
   movieTimeYoutubeKeys: [],           // Array of { key, label } objects — tried in order, rotates on quota exceeded
+  movieTimeProviderYoutube: true,     // Enable YouTube streaming provider option
+  movieTimeProviderNetflix: true,     // Enable Netflix streaming provider option
+  movieTimeProviderDisney: true,      // Enable Disney+ streaming provider option
+  movieTimeActiveProvider: 'youtube', // Default active streaming provider
   movieTimePuzzleIntervalSec: 600,    // Seconds between periodic puzzles (1s–3600s, 0=Unlimited)
   movieTimePuzzleIntervalMin: 10,     // Legacy: minutes between puzzles — kept for migration only
   movieTimeGazeAwayMs: 3000,          // Gaze-away threshold before auto-pause (ms)
@@ -184,6 +188,7 @@ export const DEFAULT_SETTINGS = {
   movieTimeQuizSubject: 'General',         // Predefined subject for AI question generation
   movieTimeQuizSubjectCustom: '',          // Free-text override; if set, used instead of movieTimeQuizSubject
   movieTimeQuizAboutVideo: false,          // Quiz questions directly related to video content/transcript
+  movieTimeQuizRequirePrewatch: true,      // Require a quiz to start before video playback (default: true)
   movieTimeQuizSoundEffects: true,         // Play Web Audio tones on correct / wrong answer
   movieTimeQuizQuestionGateMs: 2000,       // ms to show question before answers appear (0 = instant)
   movieTimeQuizAnswerGateMs: 1500,         // ms after answers appear before dwell selection is enabled (0 = instant)
@@ -196,10 +201,20 @@ export const DEFAULT_SETTINGS = {
   movieTimeSelectedYoutubeVideoIds: null,  // Array of string IDs of selected curated YouTube videos; null = all selected by default
   movieTimeMinViews: 0,                    // Minimum view count filter applied client-side after stats fetch (0 = no minimum)
   movieTimeLanguage: '',                   // BCP-47 language tag for relevanceLanguage YouTube API param ('' = any, 'en' = English, etc.)
+  // Q&A Quizzes Settings
+  qaQuizQuestionGateMs: 2000,              // ms to show question before answers appear (0 = instant)
+  qaQuizAnswerGateMs: 1500,                // ms after answers appear before dwell selection is enabled (0 = instant)
+  qaPuzzleHintAfterWrong: 3,               // Show hint on correct answer after this many wrong attempts (0 = disabled)
+  qaQuizSoundEffects: true,                // Play Web Audio tones on correct / wrong answer
+  qaQuizVoiceOver: true,                   // TTS reads question aloud when overlay appears
+  qaQuizVoiceOverChoices: true,            // TTS also reads each answer choice after the question
+  qaQuizVoiceOverPauseMs: 500,             // Delay between voice-over readings (ms)
   // In-App Calibration Correction
   explicitCalibrationEnabled: true,       // Show 5-point calibration exercise at startup
   implicitCalibrationEnabled: true,       // Silently learn from dwell activations to improve accuracy
   gazeCorrection: null,                   // Persisted { offsetX, offsetY, scaleX, scaleY, quality, sampleCount, quadrantData, recentErrors, updatedAt } or null
+  gazeLostSoundEnabled: true,             // Play alert chime when eye gaze signal is lost
+  gazeLostVisualEnabled: true,            // Show floating warning banner when eye gaze signal is lost
 }
 
 const GazeSettingsContext = createContext(null)
@@ -321,17 +336,136 @@ export function mergeSettingsLists(localList, remoteList, deletedList, deletedPh
   })
 }
 
+const sortQuizzes = (list) => {
+  if (!Array.isArray(list)) return []
+  return [...list].sort((a, b) => {
+    const orderA = a && a.order !== undefined ? a.order : (a?.createdAt || 0);
+    const orderB = b && b.order !== undefined ? b.order : (b?.createdAt || 0);
+    if (orderA !== orderB) return orderA - orderB;
+    const timeA = a?.createdAt || 0;
+    const timeB = b?.createdAt || 0;
+    if (timeA !== timeB) return timeA - timeB;
+    return (a?.id || '').localeCompare(b?.id || '');
+  });
+};
 
 export function GazeSettingsProvider({ children }) {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS)
   const [storeReady, setStoreReady] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [isInitialSyncCompleted, setIsInitialSyncCompleted] = useState(false)
+  const [quizzes, setQuizzes] = useState([])
 
   const settingsRef = useRef(settings)
   useEffect(() => {
     settingsRef.current = settings
   }, [settings])
+
+  // ── Hydrate quizzes from localStorage on mount ────────────────────────────
+  useEffect(() => {
+    const raw = localStorage.getItem('gazeaac_quizzes')
+    if (raw) {
+      try {
+        setQuizzes(sortQuizzes(JSON.parse(raw)))
+      } catch (_) {
+        setQuizzes([])
+      }
+    } else {
+      const defaults = [
+        {
+          id: 'default-animals',
+          name: 'Animals Quiz',
+          dwellTimeMs: 2000,
+          questions: [
+            {
+              question: 'Which animal is known as the King of the Jungle?',
+              answers: [
+                { id: 'a', text: 'Elephant' },
+                { id: 'b', text: 'Tiger' },
+                { id: 'c', text: 'Lion' },
+                { id: 'd', text: 'Giraffe' }
+              ],
+              correctId: 'c'
+            },
+            {
+              question: 'Which of these animals can fly?',
+              answers: [
+                { id: 'a', text: 'Penguin' },
+                { id: 'b', text: 'Bat' },
+                { id: 'c', text: 'Kangaroo' },
+                { id: 'd', text: 'Ostrich' }
+              ],
+              correctId: 'b'
+            },
+            {
+              question: 'What is a baby dog called?',
+              answers: [
+                { id: 'a', text: 'Kitten' },
+                { id: 'b', text: 'Puppy' },
+                { id: 'c', text: 'Cub' },
+                { id: 'd', text: 'Calf' }
+              ],
+              correctId: 'b'
+            }
+          ]
+        },
+        {
+          id: 'default-math',
+          name: 'Shapes & Colors',
+          dwellTimeMs: 2000,
+          questions: [
+            {
+              question: 'How many sides does a triangle have?',
+              answers: [
+                { id: 'a', text: '2 sides' },
+                { id: 'b', text: '3 sides' },
+                { id: 'c', text: '4 sides' },
+                { id: 'd', text: '5 sides' }
+              ],
+              correctId: 'b'
+            },
+            {
+              question: 'What shape is a standard soccer ball?',
+              answers: [
+                { id: 'a', text: 'Circle' },
+                { id: 'b', text: 'Sphere' },
+                { id: 'c', text: 'Square' },
+                { id: 'd', text: 'Cube' }
+              ],
+              correctId: 'b'
+            }
+          ]
+        }
+      ]
+      localStorage.setItem('gazeaac_quizzes', JSON.stringify(defaults))
+      setQuizzes(defaults)
+    }
+  }, [])
+
+  const saveQuizzes = useCallback((updatedQuizzes) => {
+    setQuizzes(updatedQuizzes)
+    localStorage.setItem('gazeaac_quizzes', JSON.stringify(updatedQuizzes))
+    // Persist to electron-store so quizzes survive app restarts
+    window.gazeAPI?.settings?.set('quizzes', updatedQuizzes).catch(() => {})
+    const uid = currentUser?.uid
+    if (uid) {
+      const adapter = SyncAdapter.getInstance()
+      adapter.pushQuizzes(updatedQuizzes)
+    }
+  }, [currentUser])
+
+  const deleteQuizLocally = useCallback((quizId) => {
+    setQuizzes(prev => {
+      const filtered = prev.filter(q => q.id !== quizId)
+      localStorage.setItem('gazeaac_quizzes', JSON.stringify(filtered))
+      const uid = currentUser?.uid
+      if (uid) {
+        const adapter = SyncAdapter.getInstance()
+        adapter.deleteQuiz(quizId)
+      }
+      return filtered
+    })
+  }, [currentUser])
 
   // ── Hydrate from electron-store on mount ──────────────────────────────────
   useEffect(() => {
@@ -525,6 +659,15 @@ export function GazeSettingsProvider({ children }) {
       if (user) {
         console.log('[GazeSettingsContext] Caregiver connected:', user.email)
         const adapter = SyncAdapter.getInstance()
+
+        if (typeof adapter.migrateUidToEmailIfNeeded === 'function') {
+          try {
+            await adapter.migrateUidToEmailIfNeeded(user)
+          } catch (mErr) {
+            console.warn('[GazeSettingsContext] Migration failed or skipped:', mErr)
+          }
+        }
+
         const currentSettings = settingsRef.current
 
         // 1. Sync & Hydrate Settings
@@ -661,6 +804,38 @@ export function GazeSettingsProvider({ children }) {
         } catch (err) {
           console.warn('[GazeSettingsContext] Error syncing session history:', err)
         }
+
+        // 6. Initial Quiz Sync (one-shot pull to seed local state before real-time listener starts)
+        try {
+          const remoteQuizzes = await adapter.pullQuizzes()
+          const localQuizzesRaw = localStorage.getItem('gazeaac_quizzes')
+          let localQuizzes = []
+          try { if (localQuizzesRaw) localQuizzes = JSON.parse(localQuizzesRaw) } catch (_) {}
+
+          if (remoteQuizzes && remoteQuizzes.length > 0) {
+            // Merge: prefer the version with the higher updatedAt timestamp
+            const mergedMap = new Map()
+            localQuizzes.forEach(q => { if (q && q.id) mergedMap.set(q.id, q) })
+            remoteQuizzes.forEach(q => {
+              if (q && q.id) {
+                const existing = mergedMap.get(q.id)
+                if (!existing || (q.updatedAt || 0) >= (existing.updatedAt || 0)) {
+                  mergedMap.set(q.id, q)
+                }
+              }
+            })
+            const sortedQuizzes = sortQuizzes(Array.from(mergedMap.values()))
+
+            localStorage.setItem('gazeaac_quizzes', JSON.stringify(sortedQuizzes))
+            window.gazeAPI?.settings?.set('quizzes', sortedQuizzes).catch(() => {})
+            setQuizzes(sortedQuizzes)
+            console.log('[GazeSettingsContext] Remote quizzes synced & merged')
+          } else if (localQuizzes.length > 0) {
+            await adapter.pushQuizzes(localQuizzes)
+          }
+        } catch (err) {
+          console.warn('[GazeSettingsContext] Error syncing quizzes:', err)
+        }
       } else {
         console.log('[GazeSettingsContext] Caregiver disconnected')
         setIsInitialSyncCompleted(false)
@@ -670,9 +845,186 @@ export function GazeSettingsProvider({ children }) {
     return unsubscribe
   }, [storeReady])
 
+  // ── Real-time Quiz Listener ─────────────────────────────────────────────────
+  // Subscribes to Firestore onSnapshot so any quiz change from the web console
+  // or another device is reflected in the app instantly without a restart.
+  useEffect(() => {
+    if (!currentUser?.email && !currentUser?.uid) return
+    const adapter = SyncAdapter.getInstance()
+    if (typeof adapter.subscribeToQuizzes !== 'function') return
+
+    const unsub = adapter.subscribeToQuizzes((remoteQuizzes) => {
+      if (!remoteQuizzes || remoteQuizzes.length === 0) return
+      // Merge snapshot with current local state, preferring newer updatedAt
+      setQuizzes(prev => {
+        const mergedMap = new Map()
+        prev.forEach(q => { if (q && q.id) mergedMap.set(q.id, q) })
+        remoteQuizzes.forEach(q => {
+          if (q && q.id) {
+            const existing = mergedMap.get(q.id)
+            if (!existing || (q.updatedAt || 0) >= (existing.updatedAt || 0)) {
+              mergedMap.set(q.id, q)
+            }
+          }
+        })
+        const sorted = sortQuizzes(Array.from(mergedMap.values()))
+        localStorage.setItem('gazeaac_quizzes', JSON.stringify(sorted))
+        window.gazeAPI?.settings?.set('quizzes', sorted).catch(() => {})
+        return sorted
+      })
+    })
+
+    return () => {
+      if (typeof unsub === 'function') unsub()
+    }
+  }, [currentUser?.email, currentUser?.uid])
+
+  // ── Automatic Background Sync on Reconnection ───────────────────────────────
+  useEffect(() => {
+    const handleOnline = async () => {
+      const uid = currentUser?.uid
+      if (!uid || !storeReady || !isInitialSyncCompleted) return
+
+      console.log('[GazeSettingsContext] Network back online. Triggering automatic cloud sync...')
+      const adapter = SyncAdapter.getInstance()
+      const currentSettings = settingsRef.current
+
+      try {
+        // 1. Settings pull, merge, and seed-back
+        const remoteSettings = await adapter.pullSettings(currentSettings.deviceId)
+        if (remoteSettings) {
+          const merged = { ...currentSettings, ...remoteSettings }
+          
+          merged.deletedFaceIds = mergeDeletedLists(currentSettings.deletedFaceIds, remoteSettings.deletedFaceIds)
+          merged.deletedPhotoIds = mergeDeletedLists(currentSettings.deletedPhotoIds, remoteSettings.deletedPhotoIds)
+          merged.deletedObjectIds = mergeDeletedLists(currentSettings.deletedObjectIds, remoteSettings.deletedObjectIds)
+
+          merged.registeredFaces = mergeSettingsLists(
+            currentSettings.registeredFaces, 
+            remoteSettings.registeredFaces, 
+            merged.deletedFaceIds, 
+            merged.deletedPhotoIds
+          )
+          merged.registeredObjects = mergeSettingsLists(
+            currentSettings.registeredObjects, 
+            remoteSettings.registeredObjects, 
+            merged.deletedObjectIds, 
+            []
+          )
+
+          // Write-through to electron-store
+          Object.entries(merged).forEach(([k, v]) => {
+            if (remoteSettings[k] !== undefined || 
+                k === 'registeredFaces' || 
+                k === 'registeredObjects' ||
+                k === 'deletedFaceIds' ||
+                k === 'deletedPhotoIds' ||
+                k === 'deletedObjectIds') {
+              window.gazeAPI?.settings?.set(k, v).catch(() => {})
+            }
+          })
+          
+          // Force camera features off at startup/sync to prevent unwanted activation
+          merged.cameraAugmentationEnabled = false
+          merged.cameraStreamingEnabled = false
+
+          setSettings(merged)
+          await adapter.pushSettings(merged, currentSettings.deviceId)
+          console.log('[GazeSettingsContext] Settings synced successfully after reconnect')
+        }
+
+        // 2. Sync User Profile
+        const remoteProfile = await adapter.pullUserProfile()
+        const localProfile = await window.gazeAPI?.userProfile?.get()
+        if (remoteProfile) {
+          const mergedProfile = { ...localProfile, ...remoteProfile }
+          await window.gazeAPI?.userProfile?.set(mergedProfile)
+          await adapter.pushUserProfile(mergedProfile)
+        } else if (localProfile) {
+          await adapter.pushUserProfile(localProfile)
+        }
+
+        // 3. Sync Board Edits
+        const remoteEdits = await adapter.pullBoardEdits()
+        const localEdits = await window.gazeAPI?.boardEdits?.getAll()
+        if (remoteEdits) {
+          const mergedEdits = { ...localEdits, ...remoteEdits }
+          await window.gazeAPI?.settings?.set('boardEdits', mergedEdits)
+          await adapter.pushBoardEdits(mergedEdits)
+        } else if (localEdits && Object.keys(localEdits).length > 0) {
+          await adapter.pushBoardEdits(localEdits)
+        }
+
+        // 4. Sync AI History
+        const remoteHistory = await adapter.pullAIHistory()
+        const localHistory = await window.gazeAPI?.aiHistory?.getAll() ?? []
+        if (remoteHistory && remoteHistory.length > 0) {
+          const mergedMap = new Map()
+          localHistory.forEach(h => mergedMap.set(h.savedAt, h))
+          remoteHistory.forEach(h => mergedMap.set(h.savedAt, h))
+          const mergedHistory = Array.from(mergedMap.values()).sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0))
+
+          await window.gazeAPI?.settings?.set('aiHistory', mergedHistory)
+          await adapter.pushAIHistory(mergedHistory)
+        } else if (localHistory.length > 0) {
+          await adapter.pushAIHistory(localHistory)
+        }
+
+        // 5. Sync Session History
+        const remoteSessions = await adapter.pullSessionLog()
+        const localSessions = await window.gazeAPI?.sessions?.getAll() ?? []
+        if (remoteSessions && remoteSessions.length > 0) {
+          const mergedMap = new Map()
+          localSessions.forEach(s => mergedMap.set(s.savedAt || s.date, s))
+          remoteSessions.forEach(s => mergedMap.set(s.savedAt || s.date, s))
+          const mergedArray = Array.from(mergedMap.values()).sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0))
+
+          await window.gazeAPI?.settings?.set('sessionLog', mergedArray.slice(-90))
+          await adapter.pushSessionLog(mergedArray)
+        } else if (localSessions.length > 0) {
+          await adapter.pushSessionLog(localSessions)
+        }
+
+        // 6. Sync Quizzes (background reconnect — real-time listener handles live updates)
+        const remoteQuizzes = await adapter.pullQuizzes()
+        const localQuizzesRaw = localStorage.getItem('gazeaac_quizzes')
+        let localQuizzes = []
+        try { if (localQuizzesRaw) localQuizzes = JSON.parse(localQuizzesRaw) } catch (_) {}
+        if (remoteQuizzes && remoteQuizzes.length > 0) {
+          // Merge: prefer the version with the higher updatedAt timestamp
+          const mergedMap = new Map()
+          localQuizzes.forEach(q => { if (q && q.id) mergedMap.set(q.id, q) })
+          remoteQuizzes.forEach(q => {
+            if (q && q.id) {
+              const existing = mergedMap.get(q.id)
+              if (!existing || (q.updatedAt || 0) >= (existing.updatedAt || 0)) {
+                mergedMap.set(q.id, q)
+              }
+            }
+          })
+          const sortedQuizzes = sortQuizzes(Array.from(mergedMap.values()))
+
+          localStorage.setItem('gazeaac_quizzes', JSON.stringify(sortedQuizzes))
+          window.gazeAPI?.settings?.set('quizzes', sortedQuizzes).catch(() => {})
+          setQuizzes(sortedQuizzes)
+          await adapter.pushQuizzes(sortedQuizzes)
+        } else if (localQuizzes.length > 0) {
+          await adapter.pushQuizzes(localQuizzes)
+        }
+
+        console.log('[GazeSettingsContext] Background catch-up sync completed successfully')
+      } catch (err) {
+        console.warn('[GazeSettingsContext] Error during background catch-up sync:', err)
+      }
+    }
+
+    window.addEventListener('online', handleOnline)
+    return () => window.removeEventListener('online', handleOnline)
+  }, [currentUser, storeReady, isInitialSyncCompleted])
+
   return (
     <GazeSettingsContext.Provider
-      value={{ settings, updateSetting, updateSettings, resetSettings, storeReady, currentUser }}
+      value={{ settings, updateSetting, updateSettings, resetSettings, storeReady, currentUser, quizzes, saveQuizzes, deleteQuizLocally }}
     >
       {children}
     </GazeSettingsContext.Provider>

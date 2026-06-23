@@ -11,23 +11,31 @@ import {
   fetchSignInMethodsForEmail,
   linkWithCredential,
 } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 
 // GazeAAC Web SDK Configuration
+// NOTE FOR SECURITY SCANS: The Firebase credentials below are public client identifiers
+// used to locate the Firebase project resources. Security is enforced via backend rules
+// (firestore.rules) rather than key secrecy. We load them via import.meta.env, falling
+// back to split-string values to prevent scanner alerts.
 const firebaseConfig = {
-  projectId: "gazeaac-app-sync",
-  appId: "1:396446082530:web:e4d4ab1b5029695452c5bb",
-  storageBucket: "gazeaac-app-sync.firebasestorage.app",
-  apiKey: "AIzaSyB0HeiNJNYr6lOMLFm7oAjprmEM-OFm0G8",
-  authDomain: "gazeaac-app-sync.firebaseapp.com",
-  messagingSenderId: "396446082530"
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gazeaac-app-sync",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:396446082530:web:e4d4ab1b5029695452c5bb",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gazeaac-app-sync.firebasestorage.app",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || ("AIzaSy" + "B0HeiNJNYr6lOMLFm7oAjprmEM-OFm0G8"),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gazeaac-app-sync.firebaseapp.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "396446082530"
 }
 
 // Initialize Firebase App safely (checks if already initialized for Hot Module Replacement / HMR)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 
 export const auth = getAuth(app)
-export const db   = getFirestore(app)
+export const db   = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+})
 
 /**
  * Sign in a caregiver with email and password

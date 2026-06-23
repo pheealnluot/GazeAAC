@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, forwardRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, forwardRef, memo } from 'react'
 import { useGazeSettings } from '@context/GazeSettingsContext'
 import './MovieTime.css'
 
@@ -41,7 +41,36 @@ function pruneTo10Sessions(questions, currentSessionId) {
   return questions;
 }
 
-export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked = false, registerHitTargets, gazeState: parentGazeState, onDwellRef, rawGazeRef, cursorStyleRef }) {
+function isWebviewVideoUrl(url, provider) {
+  if (!url) return false
+  const lowerUrl = url.toLowerCase()
+  if (provider === 'youtube') {
+    return lowerUrl.includes('/watch') || lowerUrl.includes('/shorts') || lowerUrl.includes('/embed')
+  }
+  if (provider === 'netflix') {
+    return lowerUrl.includes('/watch')
+  }
+  if (provider === 'disney') {
+    return lowerUrl.includes('/video') || lowerUrl.includes('/play') || lowerUrl.includes('/watch')
+  }
+  return false
+}
+
+export function MovieTime({
+  onBack,
+  onOpenSettings,
+  gazeCursorRef,
+  gazeBlocked = false,
+  registerHitTargets,
+  gazeState: parentGazeState,
+  onDwellRef,
+  rawGazeRef,
+  cursorStyleRef,
+  onSetOverlayActive,
+  onSetQuizActive,
+  setScreenDwellClickEnabled,
+  setAppTitlebarQuizInfo
+}) {
   const { settings, updateSetting } = useGazeSettings()
   const [phase, setPhase]           = useState('browse')  // 'browse' | 'prewatch' | 'watching' | 'puzzle'
   const [videos, setVideos]         = useState([])
@@ -51,6 +80,12 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
   const [cacheTimestamp, setCacheTimestamp]   = useState(null)   // Date when cache was saved
   const [activeKeyIndex, setActiveKeyIndex]   = useState(0)      // index into movieTimeYoutubeKeys currently used
   const [selectedVideo, setSelectedVideo] = useState(null)
+  const isOverlayActive = selectedVideo && (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube') && phase === 'watching'
+  const lastPrewatchUrlRef = useRef('')
+
+  useEffect(() => {
+    onSetQuizActive?.(phase === 'puzzle' || phase === 'prewatch')
+  }, [phase, onSetQuizActive])
 
   // ── Cache key: encodes search params (not the API key, so all keys share one cache) ──
   const _ytCacheKey = () => {
@@ -103,6 +138,7 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
 
   const [puzzleQuestionGate, setPuzzleQuestionGate] = useState(true)
   const [puzzleAnswerGate, setPuzzleAnswerGate]     = useState(false)
+  const [gateTriggerKey, setGateTriggerKey] = useState(0)
   const [puzzleGateProgress, setPuzzleGateProgress] = useState(0)
   const [puzzleAnswerGateProgress, setPuzzleAnswerGateProgress] = useState(0)
   const [puzzleWrongCount, setPuzzleWrongCount]     = useState(0)   // wrong attempts this puzzle
@@ -185,6 +221,394 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
   const startAnswerGateRef     = useRef(null)
   const onDoneRef              = useRef(null)
   const updateQDOMRef          = useRef(null)
+
+  const [selectedProvider, setSelectedProvider] = useState(null)
+  const [webviewPreloadPath, setWebviewPreloadPath] = useState('')
+  const [webviewDuration, setWebviewDuration] = useState(0)
+  const webviewRef = useRef(null)
+  const isVideoPlayingRef = useRef(false)
+  const webviewDurationRef = useRef(0)
+  const documentTitleRef = useRef('')
+  const hasScheduledWebviewQuizzesRef = useRef(false)
+  const [isWebviewFullscreen, setIsWebviewFullscreen] = useState(false)
+
+  // Fetch resolved preload script path on mount
+  useEffect(() => {
+    window.gazeAPI?.getWebviewPreloadPath?.().then(p => {
+      setWebviewPreloadPath(p)
+    })
+  }, [])
+
+  // Sync refs to make them readable inside stable callbacks
+  useEffect(() => { webviewDurationRef.current = webviewDuration }, [webviewDuration])
+  useEffect(() => { isVideoPlayingRef.current = isVideoPlaying }, [isVideoPlaying])
+
+  // ── executeJavaScript / chrome polling — primary mechanism for video state ────
+  // Polls the webview's or external Chrome's video element every 500 ms.
+  useEffect(() => {
+    const isWebviewProvider = selectedVideo?.provider === 'netflix' ||
+                              selectedVideo?.provider === 'disney'  ||
+                              selectedVideo?.provider === 'youtube'
+    if (!isWebviewProvider || phase === 'browse') return
+
+    const poll = setInterval(async () => {
+      try {
+        let s = null
+        if (webviewRef.current) {
+          s = await webviewRef.current.executeJavaScript(`(function(){
+            const v = document.querySelector('video');
+            if (!v) return { p: false, t: 0, d: 0, e: false, u: location.href, n: document.title };
+            return { p: !v.paused && !v.ended, t: v.currentTime, d: v.duration || 0, e: v.ended, u: location.href, n: document.title };
+          })()`)
+        } else if (window.gazeAPI?.chromeVideoStatus) {
+          const status = await window.gazeAPI.chromeVideoStatus()
+          if (status) {
+            s = {
+              p: status.isPlaying,
+              t: status.currentTime,
+              d: status.duration,
+              e: status.ended,
+              u: status.url,
+              n: status.documentTitle
+            }
+          }
+        }
+
+        if (!s) return
+        const isPlaying = !!s.p
+
+        // Force pause if the video is playing during a quiz phase
+        if ((phase === 'prewatch' || phase === 'puzzle') && isPlaying) {
+          console.log(`[MovieTime] Video is playing during quiz phase (${phase}) — pausing immediately.`)
+          try {
+            if (webviewRef.current) {
+              webviewRef.current.send('control-video', 'pause')
+            } else {
+              window.gazeAPI?.chromeControlVideo?.('pause')
+            }
+          } catch (_) {}
+          setIsVideoPlaying(false)
+          isVideoPlayingRef.current = false
+          return
+        }
+
+        setIsVideoPlaying(isPlaying)
+        isVideoPlayingRef.current = isPlaying
+        if (s.t > 0) savedTimeRef.current = s.t
+        if (s.n) documentTitleRef.current = s.n
+        if (s.d > 0 && Math.abs(s.d - webviewDurationRef.current) > 5) setWebviewDuration(s.d)
+        if (s.e) onVideoEndedRef.current?.()
+
+        // Check if we should trigger pre-watch quiz for webview / chrome video
+        if (
+          phase === 'watching' &&
+          s.u &&
+          s.u !== lastPrewatchUrlRef.current &&
+          isWebviewVideoUrl(s.u, selectedVideo?.provider)
+        ) {
+          if (settings.movieTimeQuizRequirePrewatch ?? true) {
+            triggerWebviewPrewatch(s.u, s.d)
+          } else {
+            lastPrewatchUrlRef.current = s.u
+          }
+        }
+      } catch (_) {
+        // Webview or Chrome might be navigating or not ready — silently skip
+      }
+    }, 500)
+
+    return () => clearInterval(poll)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVideo?.provider, selectedVideo?.id, phase, settings.movieTimeQuizRequirePrewatch])
+
+  const enabledProviders = useMemo(() => {
+    const list = []
+    if (settings.movieTimeProviderYoutube !== false) {
+      list.push('suggested')
+      list.push('youtube')
+    }
+    if (settings.movieTimeProviderNetflix ?? true) list.push('netflix')
+    if (settings.movieTimeProviderDisney ?? true) list.push('disney')
+    return list
+  }, [settings.movieTimeProviderYoutube, settings.movieTimeProviderNetflix, settings.movieTimeProviderDisney])
+
+  useEffect(() => {
+    if (!selectedProvider) {
+      if (enabledProviders.length === 1) {
+        setSelectedProvider(enabledProviders[0])
+      } else if (enabledProviders.length === 0) {
+        setSelectedProvider('youtube')
+      }
+    }
+  }, [enabledProviders, selectedProvider])
+
+  // Sync selectedProvider to mock selectedVideo for Netflix/Disney+/YouTube webview
+  useEffect(() => {
+    setIsWebviewFullscreen(false)
+    if (selectedProvider === 'netflix' || selectedProvider === 'disney' || selectedProvider === 'youtube') {
+      const video = {
+        id: selectedProvider,
+        title: selectedProvider === 'netflix' ? 'Netflix' : (selectedProvider === 'disney' ? 'Disney+' : 'YouTube'),
+        provider: selectedProvider
+      }
+      setSelectedVideo(video)
+      hasScheduledWebviewQuizzesRef.current = false
+      setWebviewDuration(0)
+      setPhase('watching')
+      lastPrewatchUrlRef.current = ''
+    } else if (selectedProvider === 'suggested') {
+      setSelectedVideo(null)
+      setPhase('browse')
+    } else if (!selectedProvider) {
+      setSelectedVideo(null)
+      setPhase('browse')
+    }
+  }, [selectedProvider])
+
+  // Spawn external Chrome and configure transparency overlay mode on selectedProvider changes
+  useEffect(() => {
+    if (selectedProvider === 'netflix' || selectedProvider === 'disney' || selectedProvider === 'youtube') {
+      const url = selectedProvider === 'netflix'
+        ? 'https://www.netflix.com'
+        : selectedProvider === 'disney'
+        ? 'https://www.disneyplus.com'
+        : 'https://www.youtube.com'
+      
+      console.log(`[MovieTime] Launching Chrome for provider ${selectedProvider}...`)
+
+      window.gazeAPI?.launchChrome?.(url).then(({ ok, error }) => {
+        if (!ok) {
+          alert(`Failed to launch browser: ${error || 'Unknown error'}`)
+          setSelectedProvider(null)
+          return
+        }
+        window.gazeAPI?.enterOverlayMode?.()
+        onSetOverlayActive?.(true)
+      })
+    } else {
+      window.gazeAPI?.closeChrome?.()
+      window.gazeAPI?.exitOverlayMode?.()
+      onSetOverlayActive?.(false)
+    }
+
+    return () => {
+      window.gazeAPI?.closeChrome?.()
+      window.gazeAPI?.exitOverlayMode?.()
+      onSetOverlayActive?.(false)
+    }
+  }, [selectedProvider])
+
+  // Safety exit if browser is closed externally by user/caregiver
+  useEffect(() => {
+    if (!window.gazeAPI) return
+    const clean = window.gazeAPI.onChromeExited(() => {
+      console.log('[MovieTime] Chrome exited externally. Cleaning up overlay.')
+      setSelectedProvider(null)
+      setIsVideoPlaying(false)
+      onSetOverlayActive?.(false)
+      window.gazeAPI.exitOverlayMode()
+    })
+    return clean
+  }, [onSetOverlayActive])
+
+  // Manage screen-wide dwell click state dynamically based on video playback
+  useEffect(() => {
+    // Screen-wide dwell click is disabled entirely for YouTube, Netflix, and Disney provider modes
+    const shouldEnable = false
+    
+    if (shouldEnable) {
+      console.log('[MovieTime] Overlay active and not playing video — enabling screen-wide dwell click')
+      setScreenDwellClickEnabled?.(true, (x, y) => {
+        window.gazeAPI?.simulateClick?.(x, y)
+      })
+    } else {
+      console.log('[MovieTime] Disabling screen-wide dwell click')
+      setScreenDwellClickEnabled?.(false)
+    }
+    
+    return () => {
+      setScreenDwellClickEnabled?.(false)
+    }
+  }, [selectedProvider, phase, isVideoPlaying, setScreenDwellClickEnabled])
+
+  // Manage window click-through state dynamically based on streaming phase
+  useEffect(() => {
+    const isWebviewVideo = selectedVideo && (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube')
+    if (phase === 'watching' && isWebviewVideo) {
+      window.gazeAPI?.setIgnoreMouseEvents?.(true, { forward: true })
+    } else {
+      window.gazeAPI?.setIgnoreMouseEvents?.(false)
+    }
+    return () => {
+      window.gazeAPI?.setIgnoreMouseEvents?.(false)
+    }
+  }, [phase, selectedVideo])
+
+  // Setup playerRef.current mock for Netflix/Disney+/YouTube webview / external Chrome
+  useEffect(() => {
+    if (selectedVideo && (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube')) {
+      playerRef.current = {
+        pauseVideo: () => {
+          try {
+            if (webviewRef.current) {
+              webviewRef.current.send('control-video', 'pause')
+            } else {
+              window.gazeAPI?.chromeControlVideo?.('pause')
+            }
+          } catch (_) {}
+        },
+        playVideo: () => {
+          try {
+            if (webviewRef.current) {
+              webviewRef.current.send('control-video', 'play')
+            } else {
+              window.gazeAPI?.chromeControlVideo?.('play')
+            }
+          } catch (_) {}
+        },
+        getPlayerState: () => {
+          return isVideoPlayingRef.current ? 1 : 2; // 1 = playing, 2 = paused
+        },
+        getCurrentTime: () => {
+          return savedTimeRef.current || 0;
+        },
+        getDuration: () => {
+          return webviewDurationRef.current || 0;
+        },
+        seekTo: (seconds) => {
+          savedTimeRef.current = seconds;
+        },
+        destroy: () => {
+          // No-op
+        }
+      };
+      playerReadyRef.current = true;
+    }
+  }, [selectedVideo]);
+
+  // Setup Webview IPC message listener callback ref
+  const handleIpcRef = useRef(null)
+  handleIpcRef.current = (e) => {
+    if (e.channel === 'video-status') {
+      const { isPlaying, currentTime, duration, ended, documentTitle, url } = e.args[0]
+      setIsVideoPlaying(isPlaying)
+      isVideoPlayingRef.current = isPlaying
+      savedTimeRef.current = currentTime
+      documentTitleRef.current = documentTitle || ''
+
+      if (duration > 0 && Math.abs(duration - webviewDurationRef.current) > 10) {
+        setWebviewDuration(duration)
+      }
+
+      if (ended) {
+        onVideoEndedRef.current?.()
+      }
+
+      // Check if we should trigger pre-watch quiz for webview video
+      if (
+        phase === 'watching' &&
+        url &&
+        url !== lastPrewatchUrlRef.current &&
+        isWebviewVideoUrl(url, selectedVideo?.provider)
+      ) {
+        if (settings.movieTimeQuizRequirePrewatch ?? true) {
+          triggerWebviewPrewatch(url, duration)
+        } else {
+          lastPrewatchUrlRef.current = url
+        }
+      }
+    }
+  }
+
+  const handleConsoleRef = useRef(null)
+  handleConsoleRef.current = (e) => {
+    console.log(`[Webview Console] ▶`, e.message)
+  }
+
+  const handleEnterFullscreenRef = useRef(null)
+  handleEnterFullscreenRef.current = () => {
+    console.log('[MovieTime] Webview entered html-full-screen')
+    setIsWebviewFullscreen(true)
+  }
+
+  const handleLeaveFullscreenRef = useRef(null)
+  handleLeaveFullscreenRef.current = () => {
+    console.log('[MovieTime] Webview left html-full-screen')
+    setIsWebviewFullscreen(false)
+  }
+
+  // Navigate event: fires when webview navigates (main frame or SPA pushState).
+  // Used to detect when user selects a video and trigger the pre-watch quiz.
+  const handleNavigateRef = useRef(null)
+  handleNavigateRef.current = (e) => {
+    const url = e.url
+    // did-navigate-in-page has isMainFrame; did-navigate is always main frame
+    if (!url || e.isMainFrame === false) return
+    if (
+      phase === 'watching' &&
+      url !== lastPrewatchUrlRef.current &&
+      isWebviewVideoUrl(url, selectedVideo?.provider)
+    ) {
+      if (settings.movieTimeQuizRequirePrewatch ?? true) {
+        console.log('[MovieTime] Navigation to video URL detected, triggering pre-watch:', url)
+        triggerWebviewPrewatch(url, 0)
+      } else {
+        lastPrewatchUrlRef.current = url
+      }
+    }
+  }
+
+  // ── Stable wrappers ────────────────────────────────────────────────────────
+  // Event listeners must be attached with a STABLE function reference so that
+  // removeEventListener can find and remove the exact same function object.
+  // But each handler closes over React state; attaching the raw ref.current
+  // would capture a stale closure from mount time.
+  // Solution: create one stable wrapper per handler (using useRef so it's only
+  // created once), and have it delegate to the LATEST handler via the ref.
+  // This means addEventListener/removeEventListener see the same object while
+  // the actual logic always runs with the current render's closures.
+  const _stableIpcWrap      = useRef((e) => handleIpcRef.current?.(e))
+  const _stableConsoleWrap  = useRef((e) => handleConsoleRef.current?.(e))
+  const _stableEnterFsWrap  = useRef(() => handleEnterFullscreenRef.current?.())
+  const _stableLeaveFsWrap  = useRef(() => handleLeaveFullscreenRef.current?.())
+  const _stableNavWrap      = useRef((e) => handleNavigateRef.current?.(e))
+
+  const setWebviewRef = useCallback((node) => {
+    if (webviewRef.current) {
+      try {
+        webviewRef.current.removeEventListener('ipc-message',             _stableIpcWrap.current)
+        webviewRef.current.removeEventListener('console-message',         _stableConsoleWrap.current)
+        webviewRef.current.removeEventListener('enter-html-full-screen',  _stableEnterFsWrap.current)
+        webviewRef.current.removeEventListener('leave-html-full-screen',  _stableLeaveFsWrap.current)
+        webviewRef.current.removeEventListener('did-navigate',            _stableNavWrap.current)
+        webviewRef.current.removeEventListener('did-navigate-in-page',    _stableNavWrap.current)
+      } catch (_) {}
+    }
+    webviewRef.current = node
+    if (node) {
+      node.addEventListener('ipc-message',            _stableIpcWrap.current)
+      node.addEventListener('console-message',        _stableConsoleWrap.current)
+      node.addEventListener('enter-html-full-screen', _stableEnterFsWrap.current)
+      node.addEventListener('leave-html-full-screen', _stableLeaveFsWrap.current)
+      node.addEventListener('did-navigate',           _stableNavWrap.current)
+      node.addEventListener('did-navigate-in-page',   _stableNavWrap.current)
+    }
+  }, [])
+
+  const handleBack = useCallback(() => {
+    const enabledCount = enabledProviders.length;
+    if (selectedProvider && enabledCount > 1) {
+      setSelectedProvider(null);
+      try { playerRef.current?.destroy() } catch (_) {}
+      playerRef.current = null;
+      playerReadyRef.current = false;
+      setIsVideoPlaying(false);
+      setSelectedVideo(null);
+      setPhase('browse');
+    } else {
+      onBack();
+    }
+  }, [selectedProvider, enabledProviders, onBack]);
   const updateADOMRef          = useRef(null)
 
   // ── Video Selection Gate (browse phase) ─────────────────────────────────
@@ -387,6 +811,20 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
 
   // Gear / settings popover
   const [showGearPopover, setShowGearPopover] = useState(false)
+  const gearContainerRef = useRef(null)
+
+  useEffect(() => {
+    if (!showGearPopover) return
+    const handleOutsideClick = (e) => {
+      if (gearContainerRef.current && !gearContainerRef.current.contains(e.target)) {
+        setShowGearPopover(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+    }
+  }, [showGearPopover])
 
   // Tracks whether the gaze cursor should be suppressed
 
@@ -395,7 +833,27 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
   const backBtnRef        = useRef(null)
   const settingsBtnRef    = useRef(null)
   const refreshBtnRef     = useRef(null)
-  const topbarRef         = useRef(null)   // ref for topbar height measurement
+  const topbarObserverRef = useRef(null)
+  const topbarRef = useCallback((node) => {
+    if (topbarObserverRef.current) {
+      topbarObserverRef.current.disconnect()
+      topbarObserverRef.current = null
+    }
+    if (node) {
+      const root = node.closest('.movie-time')
+      if (root) {
+        const sync = () => {
+          const h = node.offsetHeight
+          root.style.setProperty('--mq-topbar-offset', `${h}px`)
+          setTopbarHeight(h)
+        }
+        sync()
+        const ro = new ResizeObserver(sync)
+        ro.observe(node)
+        topbarObserverRef.current = ro
+      }
+    }
+  }, [])
   const videoCardRefs     = useRef({})
   const puzzleChoiceRefs  = useRef({})
   const puzzleQuestionRef = useRef(null)   // ref for the question text box (gaze-gate target)
@@ -673,7 +1131,6 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
     })
 
     const startAnswerGate = () => {
-      startAnswerGateRef.current = startAnswerGate
       onAnswerGateStart?.()   // fire answer TTS now that answer gate begins
       if (answerGateMs <= 0) {
         setAGate(false)
@@ -709,6 +1166,15 @@ export function MovieTime({ onBack, onOpenSettings, gazeCursorRef, gazeBlocked =
         }
       }
       answerGateAnimFrameRef.current = requestAnimationFrame(aTick)
+    }
+
+    startAnswerGateRef.current = startAnswerGate
+
+    if (questionGateMs === 'click') {
+      setQGate(true)
+      setQProgress(0)
+      updateQDOM(0)
+      return
     }
 
     if (questionGateMs <= 0) {
@@ -1254,19 +1720,34 @@ Example output: ["Bluey full episode season 4", "National Geographic Kids sharks
     const subjectCustom = settings.movieTimeQuizSubjectCustom?.trim()
     const subjectsArr   = settings.movieTimeQuizSubjects ?? []
     const isPrewatch    = quizPhase === 'prewatch'
+    const videoId       = typeof videoOrTitle === 'object' ? videoOrTitle?.id : null
+    const provider      = typeof videoOrTitle === 'object' ? videoOrTitle?.provider : null
+    const isOverlayMode = provider === 'netflix' || provider === 'disney' || provider === 'youtube' || videoId === 'netflix' || videoId === 'disney' || videoId === 'youtube'
+    const usePureEducationalPrompt = isPrewatch || isOverlayMode
 
     // Combine selected chips + custom into a single subject string
     let allSubjects   = [...subjectsArr, ...(subjectCustom ? [subjectCustom] : [])]
-    if (isPrewatch) {
+    if (usePureEducationalPrompt) {
       allSubjects = allSubjects.filter(s => s !== 'Video Content')
     }
+    // If overlay mode and no subjects are selected, fallback to settings.movieTimeTopics
+    if (isOverlayMode && allSubjects.length === 0) {
+      allSubjects = settings.movieTimeTopics ?? []
+    }
+
     const subject       = allSubjects.length > 0 ? allSubjects.join(' + ') : (settings.movieTimeQuizSubject ?? 'General')
-    const finalSubject  = (isPrewatch && subject === 'Video Content') ? 'General' : subject
+    const finalSubject  = (usePureEducationalPrompt && subject === 'Video Content') ? 'General' : subject
 
-    const videoTitle = typeof videoOrTitle === 'string' ? videoOrTitle : (videoOrTitle?.title ?? '')
-    const videoId = typeof videoOrTitle === 'object' ? videoOrTitle?.id : null
+    let videoTitle = typeof videoOrTitle === 'string' ? videoOrTitle : (videoOrTitle?.title ?? '')
 
-    const basePrompt = isPrewatch
+    if ((videoId === 'netflix' || videoId === 'disney') && documentTitleRef.current) {
+      videoTitle = documentTitleRef.current
+        .replace(/\s*-\s*Netflix/gi, '')
+        .replace(/\s*\|\s*Disney\+/gi, '')
+        .trim();
+    }
+
+    const basePrompt = usePureEducationalPrompt
       ? `Generate a batch of high-quality educational questions.`
       : (videoTitle
           ? `The user is about to watch a YouTube video titled "${videoTitle}".`
@@ -1288,8 +1769,9 @@ ${settings.movieTimeQuizAboutVideo ? `
 
 
     let videoContentSection = ''
-    const isAboutVideo = !isPrewatch && (settings.movieTimeQuizAboutVideo || finalSubject === 'Video Content')
-    if (isAboutVideo && videoId) {
+    const isAboutVideo = !isPrewatch && !isOverlayMode && (settings.movieTimeQuizAboutVideo || finalSubject === 'Video Content')
+    const isYoutube = videoId && videoId !== 'netflix' && videoId !== 'disney' && videoId !== 'youtube'
+    if (isAboutVideo && isYoutube) {
       try {
         const transcriptData = await fetchYoutubeTranscriptAndMetadata(videoId)
         if (transcriptData) {
@@ -1372,10 +1854,10 @@ IMPORTANT: Since the video transcript could not be loaded, please create engagin
         }
     const typeHint = typeHints[qType] ?? typeHints['Quiz']
 
-    const subjectLine = isPrewatch
+    const subjectLine = usePureEducationalPrompt
       ? (finalSubject !== 'General'
-          ? `Subject focus: ${finalSubject}. Generate high-quality educational questions solely about the subject of ${finalSubject}. Do NOT mention or refer to any videos, YouTube, or watching content.`
-          : `General knowledge focus: Generate high-quality educational general knowledge questions. Do NOT mention or refer to any videos, YouTube, or watching content.`)
+          ? `Subject focus: ${finalSubject}. Generate high-quality educational questions solely about the subject of ${finalSubject}. Do NOT mention or refer to any videos, YouTube, Netflix, Disney+, or watching content.`
+          : `General knowledge focus: Generate high-quality educational general knowledge questions. Do NOT mention or refer to any videos, YouTube, Netflix, Disney+, or watching content.`)
       : (isAboutVideo
           ? (finalSubject !== 'General' && finalSubject !== 'Video Content'
               ? `Subject focus: ${finalSubject}. You must creatively weave the subject of ${finalSubject} together with the actual events, actions, facts, or specific details described in the provided video transcript. The question must focus on what happens in the video (e.g. if the transcript mentions a speed, distance, or number of objects at a specific point in the video, ask a math word problem based directly on those occurrences). It must NOT be a general knowledge question about the subject. Be highly creative, engaging, and educational!`
@@ -1744,7 +2226,8 @@ Keep each question engaging, concise, and under 180 characters. Keep choice answ
 
     // Fetch transcript once for the whole schedule
     let transcriptData = null
-    if (videoId && (settings.movieTimeQuizAboutVideo || subject === 'Video Content')) {
+    const isYoutube = videoId && videoId !== 'netflix' && videoId !== 'disney' && videoId !== 'youtube'
+    if (isYoutube && (settings.movieTimeQuizAboutVideo || subject === 'Video Content')) {
       try {
         transcriptData = await fetchYoutubeTranscriptAndMetadata(videoId)
       } catch (_) {}
@@ -2110,7 +2593,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   const selectVideo = useCallback(async (video) => {
     setSelectedVideo(video)
     setPuzzle(null)
-    setPuzzleLoading(true)
+    setPuzzleLoading(false)
     setPuzzleQuestionGate(true)
     setPuzzleAnswerGate(false)
     setPuzzleGateProgress(0)
@@ -2125,11 +2608,71 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     quizScheduleRef.current = []
     currentQuizIndexRef.current = 0
 
+    if (settings.movieTimeQuizRequirePrewatch ?? true) {
+      const totalQs = settings.movieTimePuzzleQuestionsPerQuiz ?? 3
+      setPuzzleTotalQuestions(totalQs)
+      setPhase('prewatch')
+      setPuzzleLoading(true)
+      try {
+        const questions = await generateQuestionsBatch(video, 'prewatch', 0, totalQs)
+        setPuzzleQuestions(questions)
+        setPuzzle(questions[0])
+      } catch (err) {
+        console.error('[MovieTime] Failed to pre-load questions:', err)
+      } finally {
+        setPuzzleLoading(false)
+      }
+    } else {
+      setPhase('watching')
+    }
+  }, [generateQuestionsBatch, settings.movieTimePuzzleQuestionsPerQuiz, settings.movieTimeQuizRequirePrewatch])
+
+  const triggerWebviewPrewatch = useCallback(async (url, duration) => {
+    lastPrewatchUrlRef.current = url
+    try {
+      if (webviewRef.current) {
+        webviewRef.current.send('control-video', 'pause')
+      } else {
+        window.gazeAPI?.chromeControlVideo?.('pause')
+      }
+      setIsVideoPlaying(false)
+      isVideoPlayingRef.current = false
+    } catch (_) {}
+
+    let videoTitle = documentTitleRef.current
+      .replace(/\s*-\s*Netflix/gi, '')
+      .replace(/\s*\|\s*Disney\+/gi, '')
+      .replace(/\s*-\s*YouTube/gi, '')
+      .trim()
+
+    const tempVideo = {
+      id: selectedVideo.id,
+      title: videoTitle || selectedVideo.title,
+      provider: selectedVideo.provider
+    }
+
+    setPuzzle(null)
+    setPuzzleLoading(true)
+    setPuzzleQuestionGate(true)
+    setPuzzleAnswerGate(false)
+    setPuzzleGateProgress(0)
+    setPuzzleAnswerGateProgress(0)
+    setPuzzleWrongCount(0)
+    setPersistentWrong({})
+    setPuzzleQuestionIndex(1)
+    setPuzzleQuestions([])
+
+    quizScheduleAbortRef.current = true
+    setQuizSchedule([])
+    quizScheduleRef.current = []
+    currentQuizIndexRef.current = 0
+
     const totalQs = settings.movieTimePuzzleQuestionsPerQuiz ?? 3
     setPuzzleTotalQuestions(totalQs)
     setPhase('prewatch')
+
     try {
-      const questions = await generateQuestionsBatch(video, 'prewatch', 0, totalQs)
+      const questions = await generateQuestionsBatch(tempVideo, 'prewatch', 0, totalQs)
       setPuzzleQuestions(questions)
       setPuzzle(questions[0])
     } catch (err) {
@@ -2137,7 +2680,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     } finally {
       setPuzzleLoading(false)
     }
-  }, [generateQuestionsBatch, settings.movieTimePuzzleQuestionsPerQuiz])
+  }, [selectedVideo, generateQuestionsBatch, settings.movieTimePuzzleQuestionsPerQuiz])
 
   // ��� YouTube IFrame Player API ��������������������������������������������
   // IMPORTANT: dependency array is [selectedVideo] only � NOT [phase].
@@ -2147,6 +2690,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   // the video to 0:00.
   useEffect(() => {
     if (!selectedVideo) return
+    if (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube') return
 
     let mounted = true
     savedTimeRef.current = 0  // fresh video � reset saved position
@@ -2261,6 +2805,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   // DOM yet when selectedVideo was first set (during prewatch).
   useEffect(() => {
     if (phase !== 'watching' || !selectedVideo || playerRef.current) return
+    if (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube') return
     if (!iframeRef.current || !window.YT?.Player) return
     try {
       playerRef.current = new window.YT.Player(iframeRef.current, {
@@ -2310,6 +2855,19 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   // pauseVideo() call made milliseconds after a state change.
   useEffect(() => {
     if (phase !== 'puzzle' && phase !== 'prewatch') return
+
+    // Bring focus to the app window when the quiz starts
+    window.gazeAPI?.windowControl?.('focus')
+
+    // Force pause the video immediately on state entry
+    try {
+      if (playerRef.current) {
+        playerRef.current.pauseVideo()
+      } else if (window.gazeAPI?.chromeControlVideo) {
+        window.gazeAPI.chromeControlVideo('pause')
+      }
+    } catch (_) {}
+
     if (!playerRef.current) return
 
     // Immediate call
@@ -2457,6 +3015,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   // returning to 'watching' after a quiz does NOT wipe and regenerate the schedule.
   const scheduleGenerationKeyRef  = useRef(0)   // increments to detect stale calls
   const scheduleVideoIdRef        = useRef(null) // video id of last schedule generation
+  const scheduleVideoUrlRef       = useRef(null) // URL of last schedule generation
   const scheduleIntervalKeyRef    = useRef(null) // interval of last schedule generation
   const generateFullQuizScheduleRef = useRef(null)
   useEffect(() => { generateFullQuizScheduleRef.current = generateFullQuizSchedule }, [generateFullQuizSchedule])
@@ -2467,14 +3026,23 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     if (!intervalSec || intervalSec <= 0) return
 
     const videoId = selectedVideo?.id ?? selectedVideo?.title ?? String(selectedVideo)
+    const isWebview = selectedVideo?.provider === 'netflix' || selectedVideo?.provider === 'disney' || selectedVideo?.provider === 'youtube'
+    const webviewUrl = lastPrewatchUrlRef.current
 
-    // If we already generated a schedule for this exact video+interval, preserve it —
-    // this happens when phase returns to 'watching' after a quiz ends.
-    if (
-      scheduleVideoIdRef.current === videoId &&
-      scheduleIntervalKeyRef.current === intervalSec &&
-      quizScheduleRef.current.length > 0
-    ) return
+    if (isWebview) {
+      if (!webviewUrl || (
+        scheduleVideoIdRef.current === videoId &&
+        scheduleVideoUrlRef.current === webviewUrl &&
+        scheduleIntervalKeyRef.current === intervalSec &&
+        quizScheduleRef.current.length > 0
+      )) return
+    } else {
+      if (
+        scheduleVideoIdRef.current === videoId &&
+        scheduleIntervalKeyRef.current === intervalSec &&
+        quizScheduleRef.current.length > 0
+      ) return
+    }
 
     // New video or new interval — cancel any in-flight generation and start fresh
     quizScheduleAbortRef.current = true
@@ -2482,6 +3050,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     quizScheduleAbortRef.current = false
 
     scheduleVideoIdRef.current   = videoId
+    scheduleVideoUrlRef.current  = isWebview ? webviewUrl : null
     scheduleIntervalKeyRef.current = intervalSec
 
     // Reset schedule state so the new interval's slots are used
@@ -2493,10 +3062,14 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     const timer = setTimeout(async () => {
       if (scheduleGenerationKeyRef.current !== myKey) return  // stale call
       let videoDurationSec = 0
-      try {
-        const dur = playerRef.current?.getDuration?.()
-        if (dur && dur > 0) videoDurationSec = dur
-      } catch (_) {}
+      if (isWebview) {
+        videoDurationSec = webviewDurationRef.current || 0
+      } else {
+        try {
+          const dur = playerRef.current?.getDuration?.()
+          if (dur && dur > 0) videoDurationSec = dur
+        } catch (_) {}
+      }
 
       const startFrom = savedTimeRef.current ?? 0
       await generateFullQuizScheduleRef.current?.(selectedVideo, intervalSec, videoDurationSec, startFrom)
@@ -2504,7 +3077,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
 
     return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, selectedVideo, settings.movieTimePuzzleIntervalSec])
+  }, [phase, selectedVideo, settings.movieTimePuzzleIntervalSec, webviewDuration])
 
   // Start gates once puzzle / prewatch loads
   useEffect(() => {
@@ -2532,7 +3105,72 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
       }
     )
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, puzzleLoading, puzzle])
+  }, [phase, puzzleLoading, puzzle, gateTriggerKey])
+
+  // ── Quiz Countdown Titlebar Sync & Callback ──────────────────────────────
+  const handleQuizButtonClick = useCallback(() => {
+    if (nextPuzzleConfirm) {
+      // Second click — fire puzzle immediately
+      clearTimeout(nextPuzzleConfirmTimerRef.current)
+      setNextPuzzleConfirm(false)
+      clearInterval(puzzleTimerRef.current)
+      setPuzzleCountdown(null)
+      try {
+        const t = playerRef.current?.getCurrentTime?.()
+        if (t != null) savedTimeRef.current = t
+      } catch (_) {}
+      const totalQs = settings.movieTimePuzzleQuestionsPerQuiz ?? 3
+      try { playerRef.current?.pauseVideo() } catch (_) {}
+      setPuzzleQuestionGate(true)
+      setPuzzleAnswerGate(false)
+      setPuzzleGateProgress(0)
+      setPuzzleAnswerGateProgress(0)
+      setPuzzleWrongCount(0)
+      setPersistentWrong({})
+      setPuzzleQuestionIndex(1)
+      setPuzzleTotalQuestions(totalQs)
+      const scheduleSlot = quizScheduleRef.current[currentQuizIndexRef.current]
+      const scheduleQs   = scheduleSlot?.questions ?? []
+      if (scheduleQs.length > 0) {
+        setPuzzleLoading(false)
+        setPuzzleQuestions(scheduleQs)
+        puzzleQuestionsRef.current = scheduleQs
+        setPuzzle(scheduleQs[0])
+        setPhase('puzzle')
+      } else {
+        setPuzzleLoading(true)
+        setPhase('puzzle')
+        generateQuestion(selectedVideo, null, 'watching', savedTimeRef.current).then(q => {
+          setPuzzle(q)
+          setPuzzleLoading(false)
+        })
+      }
+      currentQuizIndexRef.current += 1
+    } else {
+      // First click — prime the button
+      setNextPuzzleConfirm(true)
+      clearTimeout(nextPuzzleConfirmTimerRef.current)
+      nextPuzzleConfirmTimerRef.current = setTimeout(() => {
+        setNextPuzzleConfirm(false)
+      }, 5000)
+    }
+  }, [nextPuzzleConfirm, generateQuestion, selectedVideo, settings.movieTimePuzzleQuestionsPerQuiz])
+
+  useEffect(() => {
+    if (!setAppTitlebarQuizInfo) return
+    if (phase === 'watching' && puzzleTimer != null) {
+      setAppTitlebarQuizInfo({
+        puzzleTimerText: formatTimer(puzzleTimer),
+        nextPuzzleConfirm,
+        onQuizButtonClick: handleQuizButtonClick
+      })
+    } else {
+      setAppTitlebarQuizInfo(null)
+    }
+    return () => {
+      setAppTitlebarQuizInfo(null)
+    }
+  }, [phase, puzzleTimer, nextPuzzleConfirm, handleQuizButtonClick, setAppTitlebarQuizInfo])
 
   // ── Puzzle answer handling ────────────────────────────────────────────────
   const handlePuzzleAnswer = useCallback((choiceIdx) => {
@@ -2579,6 +3217,8 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
           setPersistentWrong({})
           setPuzzleQuestionIndex(1)
           setPhase('watching')
+          // Bring Chrome/Edge back to front (it may have lost z-order during quiz interaction)
+          window.gazeAPI?.chromeBringToFront?.()
           setTimeout(() => {
             try {
               // Resume from the exact video timestamp saved just before the quiz fired
@@ -2587,6 +3227,8 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
               }
               playerRef.current?.playVideo()
             } catch (_) {}
+            // Belt-and-suspenders: also send play via the Chrome CDP channel directly
+            window.gazeAPI?.chromeControlVideo?.('play')
           }, 300)
           // No need to pre-fetch — quiz schedule already generated all future slots
         }
@@ -2610,6 +3252,21 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
 
       measure('back', backBtnRef.current)
       measure('settings', settingsBtnRef.current)
+      
+      if (!selectedProvider) {
+        measure('prov-suggested', document.getElementById('prov-btn-suggested'))
+        measure('prov-youtube', document.getElementById('prov-btn-youtube'))
+        measure('prov-netflix', document.getElementById('prov-btn-netflix'))
+        measure('prov-disney', document.getElementById('prov-btn-disney'))
+      }
+
+      if (selectedVideo && (selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube') && phase === 'watching') {
+        measure('wv-back', document.getElementById('wv-btn-back'))
+        measure('wv-reload', document.getElementById('wv-btn-reload'))
+        measure('wv-navback', document.getElementById('wv-btn-navback'))
+        measure('wv-navforward', document.getElementById('wv-btn-navforward'))
+      }
+
       if (phase === 'browse') {
         measure('refresh', refreshBtnRef.current)
         videos.forEach(vid => {
@@ -2759,7 +3416,34 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     onDwellRef.current = (cellId) => {
       if (gazeBlocked) return
       playSoundEffect('click')
-      if (cellId === 'back')     { onBack(); return }
+      
+      if (cellId === 'prov-suggested') { setSelectedProvider('suggested'); return }
+      if (cellId === 'prov-youtube') { setSelectedProvider('youtube'); return }
+      if (cellId === 'prov-netflix') { setSelectedProvider('netflix'); return }
+      if (cellId === 'prov-disney')  { setSelectedProvider('disney'); return }
+
+      if (cellId === 'wv-back' || cellId === 'wv-exit') {
+        setSelectedProvider(null);
+        setIsVideoPlaying(false);
+        return;
+      }
+      if (cellId === 'wv-reload') {
+        window.gazeAPI?.chromeReload?.();
+        try { webviewRef.current?.reload() } catch (_) {}
+        return;
+      }
+      if (cellId === 'wv-navback') {
+        window.gazeAPI?.chromeGoBack?.();
+        try { if (webviewRef.current?.canGoBack()) webviewRef.current?.goBack() } catch (_) {}
+        return;
+      }
+      if (cellId === 'wv-navforward') {
+        window.gazeAPI?.chromeGoForward?.();
+        try { if (webviewRef.current?.canGoForward()) webviewRef.current?.goForward() } catch (_) {}
+        return;
+      }
+
+      if (cellId === 'back')     { handleBack(); return }
       if (cellId === 'settings') { setShowGearPopover(v => !v); return }
       if (cellId === 'refresh')  { fetchVideos(); return }
       if (cellId?.startsWith('video-')) {
@@ -2955,28 +3639,50 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   }, [])
 
   // ── Sync topbar height as CSS variable so .mq-overlay starts right below it ─
-  useEffect(() => {
-    const topbar = topbarRef.current
-    if (!topbar) return
-    const root = topbar.closest('.movie-time')
-    if (!root) return
-    const sync = () => {
-      const h = topbar.offsetHeight
-      root.style.setProperty('--mq-topbar-offset', `${h}px`)
-      // Update state so the hit-target registration effect re-runs with
-      // correct overlay bounds after the topbar changes size.
-      setTopbarHeight(h)
-    }
-    sync()
-    const ro = new ResizeObserver(sync)
-    ro.observe(topbar)
-    return () => ro.disconnect()
-  }, [])
+  // Handled dynamically via topbarRef useCallback callback ref above
+
+  const resetToQuestionGate = useCallback(() => {
+    clearTtsTimers()
+    if (window.speechSynthesis) window.speechSynthesis.cancel()
+    setGateTriggerKey(prev => prev + 1)
+  }, [clearTtsTimers])
 
   // ── Manual Gate Progression by Mouse Click, Spacebar, or Forward Keys ──
   useEffect(() => {
     const handleTrigger = (e) => {
-      // 1. Identify triggering keys (Spacebar or Forward Keys like Right Arrow, Page Down, Down Arrow, Enter)
+      // 1. Identify back keys first
+      if (e.type === 'keydown') {
+        const isBackKey = e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp' || e.key === 'Backspace';
+        if (isBackKey) {
+          e.preventDefault();
+          // "A keyboard backkey would bring one action back."
+          if (phase === 'puzzle' && puzzle) {
+            if (!puzzleQuestionGate) {
+              // We are in Answer Gate or choices visible -> Go back to Question Gate
+              resetToQuestionGate();
+              playSoundEffect('click');
+            } else {
+              // We are already in Question Gate -> Go back to the previous question
+              if (puzzleQuestionIndex > 1) {
+                const prevIndex = puzzleQuestionIndex - 1;
+                setPuzzleQuestionIndex(prevIndex);
+                setPuzzleWrongCount(0);
+                setPersistentWrong({});
+                setPuzzle(null);
+                playSoundEffect('click');
+                const prevQ = puzzleQuestionsRef.current[prevIndex - 1];
+                if (prevQ) {
+                  setPuzzle(prevQ);
+                  setPuzzleLoading(false);
+                }
+              }
+            }
+          }
+          return;
+        }
+      }
+
+      // 2. Identify triggering keys (Spacebar or Forward Keys like Right Arrow, Page Down, Down Arrow, Enter)
       if (e.type === 'keydown') {
         const isSpace = e.key === ' ' || e.key === 'Spacebar';
         const isForwardKey = e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown' || e.key === 'Enter';
@@ -2986,7 +3692,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
         e.preventDefault();
       }
 
-      // 2. Determine active gate and progress it
+      // 3. Determine active gate and progress it
       if (phase === 'browse') {
         const gateMs = settings.movieTimeSelectionGateMs ?? 0;
         if (!selectionGatePassed && gateMs > 0) {
@@ -3050,7 +3756,9 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     puzzleAnswerGate,
     puzzleLoading,
     puzzle,
-    playSoundEffect
+    puzzleQuestionIndex,
+    playSoundEffect,
+    resetToQuestionGate
   ]);
 
   // ── Dynamic question font sizing ──────────────────────────────────────────
@@ -3269,17 +3977,18 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
   }
 
   return (
-    <div className="movie-time" role="main" aria-label="Movie Time">
+    <div className={`movie-time${isOverlayActive ? ' movie-time--transparent' : ''}`} role="main" aria-label="Movie Time">
       <div className="movie-time__bg" aria-hidden="true" />
 
-      {/* Top bar (always visible) */}
-      <div className="movie-time__topbar" ref={topbarRef}>
+      {/* Top bar (visible only when not in transparent overlay mode) */}
+      {!isOverlayActive && (
+        <div className="movie-time__topbar" ref={topbarRef}>
         <button
           ref={backBtnRef}
           id="movie-back-btn"
           className="movie-time__back-btn"
           style={{ position: 'relative', overflow: 'hidden' }}
-          onClick={onBack}
+          onClick={handleBack}
           aria-label="Go back to home"
         >
           ← Back
@@ -3456,6 +4165,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
               setPuzzleWrongCount(0)
               setPersistentWrong({})
               setPhase('watching')
+              window.gazeAPI?.chromeBringToFront?.()
               setTimeout(() => {
                 try {
                   if (savedTimeRef.current > 0) {
@@ -3463,6 +4173,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
                   }
                   playerRef.current?.playVideo()
                 } catch (_) {}
+                window.gazeAPI?.chromeControlVideo?.('play')
               }, 300)
             }}
             title="Skip this question (caregiver use)"
@@ -3472,7 +4183,10 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
         )}
 
         {onOpenSettings && (
-          <div style={{ position: 'relative' }}>
+          <div 
+            ref={gearContainerRef}
+            style={{ position: 'relative' }}
+          >
             <button
               ref={settingsBtnRef}
               id="movie-settings-btn"
@@ -3486,7 +4200,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
               <div
                 className="movie-time__gear-popover"
                 role="menu"
-                onMouseLeave={() => setShowGearPopover(false)}
+                style={{ background: '#1a1d28', opacity: 1 }}
               >
                 <button
                   className="movie-time__gear-popover-item"
@@ -3522,9 +4236,93 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
           </div>
         )}
       </div>
+      )}
+
+
+
+      {/* ── Provider Selection ── */}
+      {!selectedProvider && (
+        <div className="movie-browse movie-browse--providers">
+          <div className="movie-browse__header">
+            <h2 className="movie-browse__heading">🎥 Select a Provider</h2>
+          </div>
+          
+          <div className="movie-providers__grid-wrapper">
+            <div className="movie-providers__grid" style={{ gridTemplateColumns: `repeat(${enabledProviders.length}, 1fr)` }}>
+              {enabledProviders.includes('suggested') && (
+                <button
+                  id="prov-btn-suggested"
+                  className={`movie-provider-card movie-provider-card--suggested ${gazeState.target === 'prov-suggested' ? 'movie-provider-card--gazed' : ''}`}
+                  onClick={() => setSelectedProvider('suggested')}
+                >
+                  <span className="movie-provider-card__emoji">🍿</span>
+                  <span className="movie-provider-card__label">Suggested Videos</span>
+                  <div
+                    className="movie-provider-card__dwell-bar"
+                    style={{
+                      width: `${gazeState.target === 'prov-suggested' ? gazeState.progress * 100 : 0}%`
+                    }}
+                  />
+                </button>
+              )}
+
+              {enabledProviders.includes('youtube') && (
+                <button
+                  id="prov-btn-youtube"
+                  className={`movie-provider-card movie-provider-card--youtube ${gazeState.target === 'prov-youtube' ? 'movie-provider-card--gazed' : ''}`}
+                  onClick={() => setSelectedProvider('youtube')}
+                >
+                  <span className="movie-provider-card__emoji">📺</span>
+                  <span className="movie-provider-card__label">YouTube</span>
+                  <div
+                    className="movie-provider-card__dwell-bar"
+                    style={{
+                      width: `${gazeState.target === 'prov-youtube' ? gazeState.progress * 100 : 0}%`
+                    }}
+                  />
+                </button>
+              )}
+
+              {enabledProviders.includes('netflix') && (
+                <button
+                  id="prov-btn-netflix"
+                  className={`movie-provider-card movie-provider-card--netflix ${gazeState.target === 'prov-netflix' ? 'movie-provider-card--gazed' : ''}`}
+                  onClick={() => setSelectedProvider('netflix')}
+                >
+                  <span className="movie-provider-card__emoji">🎬</span>
+                  <span className="movie-provider-card__label">Netflix</span>
+                  <div
+                    className="movie-provider-card__dwell-bar"
+                    style={{
+                      width: `${gazeState.target === 'prov-netflix' ? gazeState.progress * 100 : 0}%`
+                    }}
+                  />
+                </button>
+              )}
+
+              {enabledProviders.includes('disney') && (
+                <button
+                  id="prov-btn-disney"
+                  className={`movie-provider-card movie-provider-card--disney ${gazeState.target === 'prov-disney' ? 'movie-provider-card--gazed' : ''}`}
+                  onClick={() => setSelectedProvider('disney')}
+                >
+                  <span className="movie-provider-card__emoji">✨</span>
+                  <span className="movie-provider-card__label">Disney+</span>
+                  <div
+                    className="movie-provider-card__dwell-bar"
+                    style={{
+                      width: `${gazeState.target === 'prov-disney' ? gazeState.progress * 100 : 0}%`
+                    }}
+                  />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Browse ── */}
-      {phase === 'browse' && (
+      {selectedProvider === 'suggested' && phase === 'browse' && (
         <div className="movie-browse">
           <div className="movie-browse__header">
             <h2 className="movie-browse__heading">
@@ -3673,10 +4471,14 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
       })}
 
       {/* ── Watching (also kept in DOM during puzzle so the YT player instance survives) ── */}
-      {(phase === 'watching' || phase === 'puzzle') && selectedVideo && (
-        <div className="movie-watching" style={phase === 'puzzle' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
-          <div className="movie-watching__player-wrap" ref={playerWrapRef}>
-            <div ref={iframeRef} id="yt-player" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+      {(phase === 'watching' || phase === 'puzzle' || phase === 'prewatch') && selectedVideo && (
+        <div className={`movie-watching${(selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube') ? ' movie-watching--transparent' : ''}`} style={(phase === 'puzzle' || phase === 'prewatch') ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
+          <div className={`movie-watching__player-wrap${isWebviewFullscreen ? ' movie-watching__player-wrap--fullscreen' : ''}`} ref={playerWrapRef}>
+            {selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube' ? (
+              <div style={{ position: 'absolute', inset: 0, background: 'transparent', pointerEvents: 'none' }} />
+            ) : (
+              <div ref={iframeRef} id="yt-player" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+            )}
 
             {gazedAway && phase === 'watching' && (
               <div className="movie-watching__gaze-overlay" role="alert">
@@ -3701,15 +4503,19 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
               </div>
             )}
           </div>
-          <div className="movie-watching__controls">
-            <button className="movie-watching__ctrl-btn" onClick={() => {
-              try { playerRef.current?.seekTo(0) } catch (_) {}
-            }}>↺ Restart</button>
-            <button className="movie-watching__ctrl-btn" onClick={() => {
-              setPhase('browse')
-              try { playerRef.current?.pauseVideo() } catch (_) {}
-            }}>⏏ Change Show</button>
-          </div>
+          {selectedVideo.provider === 'netflix' || selectedVideo.provider === 'disney' || selectedVideo.provider === 'youtube' ? (
+            null
+          ) : (
+            <div className="movie-watching__controls">
+              <button className="movie-watching__ctrl-btn" onClick={() => {
+                try { playerRef.current?.seekTo(0) } catch (_) {}
+              }}>↺ Restart</button>
+              <button className="movie-watching__ctrl-btn" onClick={() => {
+                setPhase('browse')
+                try { playerRef.current?.pauseVideo() } catch (_) {}
+              }}>⏏ Change Show</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -3742,6 +4548,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
           setPuzzleWrongCount(0)
           setPersistentWrong({})
           setPhase('watching')
+          window.gazeAPI?.chromeBringToFront?.()
           setTimeout(() => {
             try {
               if (savedTimeRef.current > 0) {
@@ -3749,6 +4556,7 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
               }
               playerRef.current?.playVideo()
             } catch (_) {}
+            window.gazeAPI?.chromeControlVideo?.('play')
           }, 300)
         },
       })}
@@ -3770,6 +4578,33 @@ No markdown, no extra text. Exactly ${batch.length} slots.`
     </div>
   )
 }
+
+// ─── WebviewWrapper ───────────────────────────────────────────────────────────
+
+const WebviewWrapper = memo(function WebviewWrapper({ provider, preloadPath, setWebviewRef }) {
+  return (
+    <webview
+      ref={setWebviewRef}
+      src={
+        provider === 'netflix'
+          ? 'https://www.netflix.com'
+          : provider === 'disney'
+          ? 'https://www.disneyplus.com'
+          : 'https://www.youtube.com'
+      }
+      partition="persist:movietime"
+      useragent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+      webpreferences="plugins=yes"
+      preload={preloadPath ? `file:///${preloadPath.replace(/\\/g, '/')}` : undefined}
+      allowpopups="true"
+      plugins="true"
+      allowfullscreen="true"
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', background: '#000' }}
+    />
+  )
+}, (prevProps, nextProps) => {
+  return prevProps.provider === nextProps.provider && prevProps.preloadPath === nextProps.preloadPath
+})
 
 // ─── VideoCard ────────────────────────────────────────────────────────────────
 

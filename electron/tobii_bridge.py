@@ -114,7 +114,8 @@ DLL_CANDIDATES = [
 
 WS_HOST = "127.0.0.1"
 WS_PORT = 7070
-IDLE_TIMEOUT_S = 8   # exit if no client for this many seconds after first connect
+IDLE_TIMEOUT_S = 60   # exit if no client for this many seconds after first connect
+                      # 60 s gives plenty of headroom for dev hot-reloads
 
 # ─── ctypes structures for Tobii Stream Engine ────────────────────────────────
 # Reference: Tobii Stream Engine SDK tobii.h / tobii_streams.h
@@ -602,20 +603,51 @@ async def _main():
         except (NotImplementedError, RuntimeError):
             pass  # Windows may not support add_signal_handler
 
+    # ── Bind the WebSocket server with SO_REUSEADDR + startup retry ───────────
+    # On Windows, a port can linger in TIME_WAIT for up to 60 s after the
+    # previous bridge session closes.  SO_REUSEADDR (set via reuse_port /
+    # create_connection kwargs) lets us reclaim it instantly.
+    # As a belt-and-suspenders fallback we also retry up to 10 times with a
+    # 1-second pause between attempts.
+    import socket
+
+    def _make_server_socket():
+        """Return a TCP socket with SO_REUSEADDR set before binding."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((WS_HOST, WS_PORT))
+        sock.listen(5)
+        return sock
+
+    _server_sock = None
+    for _attempt in range(10):
+        try:
+            _server_sock = _make_server_socket()
+            break
+        except OSError as _e:
+            if _e.errno in (10048, 98):  # WSAEADDRINUSE / EADDRINUSE
+                print(
+                    f"[tobii_bridge] Port {WS_PORT} still in use (attempt {_attempt+1}/10) — retrying in 1 s…",
+                    file=sys.stderr, flush=True
+                )
+                await asyncio.sleep(1.0)
+            else:
+                raise
+    if _server_sock is None:
+        print(f"[tobii_bridge] ERROR: Could not bind port {WS_PORT} after 10 attempts.", file=sys.stderr, flush=True)
+        sys.exit(1)
+
     try:
-        async with websockets.serve(_ws_handler, WS_HOST, WS_PORT):
+        async with websockets.serve(_ws_handler, sock=_server_sock):
             print(f"[tobii_bridge] Ready. Waiting for Electron client...", flush=True)
-            
+
             # Start background device detector scan loop
             asyncio.create_task(_connection_finder_task(dll, api_ptr))
-            
+
             await _broadcaster(stop_event)
     except OSError as e:
-        if e.errno == 10048:
-            print(f"[tobii_bridge] ERROR: Port {WS_PORT} is already in use by another process.", file=sys.stderr, flush=True)
-            sys.exit(1)
-        else:
-            raise
+        print(f"[tobii_bridge] ERROR: WebSocket server error: {e}", file=sys.stderr, flush=True)
+        sys.exit(1)
 
     # ── 4. Cleanup ────────────────────────────────────────────────────────────
     print("[tobii_bridge] Shutting down…", flush=True)

@@ -89,4 +89,26 @@ export class SyncAdapter {
   async getAvailableDevices(currentDeviceId) {
     return []
   }
+
+  /**
+   * Push stubs for quizzes.
+   * @param {object[]} quizzes
+   */
+  // eslint-disable-next-line no-unused-vars
+  async pushQuizzes(quizzes) {}
+
+  /**
+   * Pull stubs for quizzes.
+   * @returns {Promise<object[]|null>}
+   */
+  async pullQuizzes() {
+    return null
+  }
+
+  /**
+   * Delete stubs for quizzes.
+   * @param {string} quizId
+   */
+  // eslint-disable-next-line no-unused-vars
+  async deleteQuiz(quizId) {}
 }

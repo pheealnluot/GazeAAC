@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { GazeCalibrationEngine } from '../engine/GazeCalibrationEngine'
+import { useGazeSettings } from '@context/GazeSettingsContext'
 import './CalibrationScreen.css'
 
 /**
@@ -80,6 +81,7 @@ function speakText(text) {
 }
 
 export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null, dwellMs, enabled = true }) {
+  const { updateSetting } = useGazeSettings()
   const [captured, setCaptured] = useState(new Set())
   const [hoveredDotId, setHoveredDotId] = useState(null)
   const [progress, setProgress] = useState(0)    // 0→1 for current point
@@ -89,6 +91,8 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
   const [phase, setPhase] = useState('calibrating') // 'calibrating' | 'results'
   const [buttonDwellProgress, setButtonDwellProgress] = useState(0)
   const [buttonRetryDwellProgress, setButtonRetryDwellProgress] = useState(0)
+  const [buttonResetDwellProgress, setButtonResetDwellProgress] = useState(0)
+  const [buttonSkipDwellProgress, setButtonSkipDwellProgress] = useState(0)
   const [caregiverTrigger, setCaregiverTrigger] = useState(false)
   const caregiverTriggerRef = useRef(caregiverTrigger)
 
@@ -102,10 +106,13 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
   const frameRef = useRef(null)
   const btnDwellStartRef = useRef(null)
   const btnRetryDwellStartRef = useRef(null)
+  const btnResetDwellStartRef = useRef(null)
+  const btnSkipDwellStartRef = useRef(null)
   const resultOverlayRef = useRef(null)
   const cursorRef = useRef(null)
   const mousePosRef = useRef(null)
   const localGazeRef = useRef(null)
+  const smoothedGazeRef = useRef(null)
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -165,8 +172,13 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
     setResultOverlay(null)
     setButtonDwellProgress(0)
     setButtonRetryDwellProgress(0)
+    setButtonResetDwellProgress(0)
+    setButtonSkipDwellProgress(0)
     btnDwellStartRef.current = null
     btnRetryDwellStartRef.current = null
+    btnResetDwellStartRef.current = null
+    btnSkipDwellStartRef.current = null
+    smoothedGazeRef.current = null
     
     // Clear in-app correction from gazeAPI (so next calibration is also uncorrected raw)
     if (window.gazeAPI?.gazeCorrection) {
@@ -176,6 +188,23 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
     isCompletedRef.current = false
     setPhase('calibrating')
     console.log('[CalibrationScreen] Recalibration triggered.')
+  }
+
+  const handleResetAppCalibration = () => {
+    // 1. Reset the active correction in Tobii bridge/API (the offset layer)
+    if (window.gazeAPI?.gazeCorrection) {
+      window.gazeAPI.gazeCorrection.reset()
+    }
+    // 2. Clear stored app settings calibration
+    updateSetting('gazeCorrection', null)
+    // 3. Clear original correction backup so it doesn't restore on unmount
+    originalCorrectionRef.current = null
+    // 4. Reset screen calibration state
+    triggerRecalibration()
+
+    playSuccessChime()
+    speakText('App calibration has been reset.')
+    console.log('[CalibrationScreen] App calibration reset completed.')
   }
 
   const captureDot = (dotId, observedX, observedY, isSimulated = false) => {
@@ -377,6 +406,7 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
       const cursorEl = cursorRef.current
 
       if (!gazePos) {
+        smoothedGazeRef.current = null // Reset smoothed coordinates on gaze loss
         if (cursorEl) {
           cursorEl.style.display = 'none'
         }
@@ -386,6 +416,14 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
           entryTimeRef.current = null
           setProgress(0)
           currentSamplesRef.current = []
+        }
+        if (btnResetDwellStartRef.current !== null) {
+          btnResetDwellStartRef.current = null
+          setButtonResetDwellProgress(0)
+        }
+        if (btnSkipDwellStartRef.current !== null) {
+          btnSkipDwellStartRef.current = null
+          setButtonSkipDwellProgress(0)
         }
         frameRef.current = requestAnimationFrame(tick)
         return
@@ -410,74 +448,187 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
       const gazeX_px = x * window.innerWidth
       const gazeY_px = y * window.innerHeight
 
-      let foundHoveredDot = null
-      for (const pt of CALIBRATION_POINTS) {
-        if (capturedRef.current.has(pt.id)) continue
+      // Maintain smoothed gaze coordinates for stable button hover detection
+      if (!smoothedGazeRef.current) {
+        smoothedGazeRef.current = { x, y }
+      } else {
+        smoothedGazeRef.current.x = smoothedGazeRef.current.x * 0.85 + x * 0.15
+        smoothedGazeRef.current.y = smoothedGazeRef.current.y * 0.85 + y * 0.15
+      }
 
-        const el = document.querySelector(`[data-point-id="${pt.id}"]`)
-        if (!el) continue
+      const sgx = smoothedGazeRef.current.x * window.innerWidth
+      const sgy = smoothedGazeRef.current.y * window.innerHeight
 
-        const rect = el.getBoundingClientRect()
-        // Compute exact center of the dot element in screen pixels
-        const targetX_px = rect.left + rect.width / 2
-        const targetY_px = rect.top + rect.height / 2
+      const resetBtnEl = document.getElementById('btn-calibration-reset')
+      const skipBtnEl = document.getElementById('btn-calibration-skip')
 
-        const dx = gazeX_px - targetX_px
-        const dy = gazeY_px - targetY_px
-        const dist = Math.sqrt(dx * dx + dy * dy)
+      let isResetHovered = false
+      if (resetBtnEl) {
+        const rect = resetBtnEl.getBoundingClientRect()
+        const padding = 40
+        isResetHovered = (
+          sgx >= rect.left - padding &&
+          sgx <= rect.right + padding &&
+          sgy >= rect.top - padding &&
+          sgy <= rect.bottom + padding
+        )
+      }
 
-        // Hit tolerance: exact dot radius + 40px padding for ease of use
-        const hitTolerance = rect.width / 2 + 40
+      let isSkipHovered = false
+      if (skipBtnEl) {
+        const rect = skipBtnEl.getBoundingClientRect()
+        const padding = 40
+        isSkipHovered = (
+          sgx >= rect.left - padding &&
+          sgx <= rect.right + padding &&
+          sgy >= rect.top - padding &&
+          sgy <= rect.bottom + padding
+        )
+      }
 
-        if (dist < hitTolerance) {
-          foundHoveredDot = pt
-          break
+      // Resolve overlaps
+      if (isResetHovered && isSkipHovered) {
+        if (resetBtnEl && skipBtnEl) {
+          const rectReset = resetBtnEl.getBoundingClientRect()
+          const rectSkip = skipBtnEl.getBoundingClientRect()
+          const distToReset = Math.abs(sgx - (rectReset.left + rectReset.width / 2))
+          const distToSkip = Math.abs(sgx - (rectSkip.left + rectSkip.width / 2))
+          if (distToReset < distToSkip) {
+            isSkipHovered = false
+          } else {
+            isResetHovered = false
+          }
         }
       }
 
-      if (foundHoveredDot) {
-        if (hoveredDotIdRef.current !== foundHoveredDot.id) {
-          // Entered a new dot — reset timer and samples
-          hoveredDotIdRef.current = foundHoveredDot.id
-          setHoveredDotId(foundHoveredDot.id)
-          entryTimeRef.current = Date.now()
-          setProgress(0)
-          currentSamplesRef.current = []
-        } else {
-          // ONLY accumulate progress automatically if we have actual tracker stream data
-          if (hasActiveStream) {
-            const elapsed = Date.now() - entryTimeRef.current
-            const currentProgress = Math.min(elapsed / CALIBRATION_DWELL_MS, 1)
-            setProgress(currentProgress)
+      // Handle Reset Button Dwell
+      if (isResetHovered) {
+        if (btnResetDwellStartRef.current === null) {
+          btnResetDwellStartRef.current = Date.now()
+        }
+        const dwellElapsed = Date.now() - btnResetDwellStartRef.current
+        const dwellProg = Math.min(dwellElapsed / 1000, 1)
+        setButtonResetDwellProgress(dwellProg)
 
-            // Collect gaze sample on every frame during dwell
-            if (gazePos.x != null && gazePos.y != null) {
-              currentSamplesRef.current.push({ x: gazePos.x, y: gazePos.y })
-            }
-
-            if (elapsed >= CALIBRATION_DWELL_MS) {
-              // ── Dot captured ─────────────────────────────────────
-              const samples = currentSamplesRef.current
-              let meanX = foundHoveredDot.x
-              let meanY = foundHoveredDot.y
-              if (samples.length > 0) {
-                meanX = samples.reduce((s, p) => s + p.x, 0) / samples.length
-                meanY = samples.reduce((s, p) => s + p.y, 0) / samples.length
-              }
-              captureDot(foundHoveredDot.id, meanX, meanY, false)
-            }
-          } else {
-            // Hovering with mouse fallback: no auto-dwell capture to avoid bad calibration correction
-            setProgress(0)
-          }
+        if (dwellElapsed >= 1000) {
+          btnResetDwellStartRef.current = null
+          setButtonResetDwellProgress(0)
+          handleResetAppCalibration()
+          frameRef.current = requestAnimationFrame(tick)
+          return
         }
       } else {
+        if (btnResetDwellStartRef.current !== null) {
+          btnResetDwellStartRef.current = null
+          setButtonResetDwellProgress(0)
+        }
+      }
+
+      // Handle Skip Button Dwell
+      if (isSkipHovered) {
+        if (btnSkipDwellStartRef.current === null) {
+          btnSkipDwellStartRef.current = Date.now()
+        }
+        const dwellElapsed = Date.now() - btnSkipDwellStartRef.current
+        const dwellProg = Math.min(dwellElapsed / 1000, 1)
+        setButtonSkipDwellProgress(dwellProg)
+
+        if (dwellElapsed >= 1000) {
+          btnSkipDwellStartRef.current = null
+          setButtonSkipDwellProgress(0)
+          playSuccessChime()
+          if (originalCorrectionRef.current && window.gazeAPI?.gazeCorrection) {
+            window.gazeAPI.gazeCorrection.set(originalCorrectionRef.current)
+          }
+          onComplete?.(null)
+          return
+        }
+      } else {
+        if (btnSkipDwellStartRef.current !== null) {
+          btnSkipDwellStartRef.current = null
+          setButtonSkipDwellProgress(0)
+        }
+      }
+
+      // Skip checking calibration dots if user is dwelling/focusing on header buttons
+      if (isResetHovered || isSkipHovered) {
         if (hoveredDotIdRef.current !== null) {
           hoveredDotIdRef.current = null
           setHoveredDotId(null)
           entryTimeRef.current = null
           setProgress(0)
           currentSamplesRef.current = []
+        }
+      } else {
+        let foundHoveredDot = null
+        for (const pt of CALIBRATION_POINTS) {
+          if (capturedRef.current.has(pt.id)) continue
+
+          const el = document.querySelector(`[data-point-id="${pt.id}"]`)
+          if (!el) continue
+
+          const rect = el.getBoundingClientRect()
+          // Compute exact center of the dot element in screen pixels
+          const targetX_px = rect.left + rect.width / 2
+          const targetY_px = rect.top + rect.height / 2
+
+          const dx = gazeX_px - targetX_px
+          const dy = gazeY_px - targetY_px
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          // Hit tolerance: exact dot radius + 120px padding for ease of use (increased for better alignment handling)
+          const hitTolerance = rect.width / 2 + 120
+
+          if (dist < hitTolerance) {
+            foundHoveredDot = pt
+            break
+          }
+        }
+
+        if (foundHoveredDot) {
+          if (hoveredDotIdRef.current !== foundHoveredDot.id) {
+            // Entered a new dot — reset timer and samples
+            hoveredDotIdRef.current = foundHoveredDot.id
+            setHoveredDotId(foundHoveredDot.id)
+            entryTimeRef.current = Date.now()
+            setProgress(0)
+            currentSamplesRef.current = []
+          } else {
+            // ONLY accumulate progress automatically if we have actual tracker stream data
+            if (hasActiveStream) {
+              const elapsed = Date.now() - entryTimeRef.current
+              const currentProgress = Math.min(elapsed / CALIBRATION_DWELL_MS, 1)
+              setProgress(currentProgress)
+
+              // Collect gaze sample on every frame during dwell
+              if (gazePos.x != null && gazePos.y != null) {
+                currentSamplesRef.current.push({ x: gazePos.x, y: gazePos.y })
+              }
+
+              if (elapsed >= CALIBRATION_DWELL_MS) {
+                // ── Dot captured ─────────────────────────────────────
+                const samples = currentSamplesRef.current
+                let meanX = foundHoveredDot.x
+                let meanY = foundHoveredDot.y
+                if (samples.length > 0) {
+                  meanX = samples.reduce((s, p) => s + p.x, 0) / samples.length
+                  meanY = samples.reduce((s, p) => s + p.y, 0) / samples.length
+                }
+                captureDot(foundHoveredDot.id, meanX, meanY, false)
+              }
+            } else {
+              // Hovering with mouse fallback: no auto-dwell capture to avoid bad calibration correction
+              setProgress(0)
+            }
+          }
+        } else {
+          if (hoveredDotIdRef.current !== null) {
+            hoveredDotIdRef.current = null
+            setHoveredDotId(null)
+            entryTimeRef.current = null
+            setProgress(0)
+            currentSamplesRef.current = []
+          }
         }
       }
 
@@ -504,26 +655,61 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
       const cursorEl = cursorRef.current
 
       if (gazePos && gazePos.x != null) {
-        const gx = gazePos.x * window.innerWidth
-        const gy = gazePos.y * window.innerHeight
+        // Apply exponential smoothing to coordinates to filter eye jitter
+        if (!smoothedGazeRef.current) {
+          smoothedGazeRef.current = { x: gazePos.x, y: gazePos.y }
+        } else {
+          smoothedGazeRef.current.x = smoothedGazeRef.current.x * 0.85 + gazePos.x * 0.15
+          smoothedGazeRef.current.y = smoothedGazeRef.current.y * 0.85 + gazePos.y * 0.15
+        }
+
+        const gx = smoothedGazeRef.current.x * window.innerWidth
+        const gy = smoothedGazeRef.current.y * window.innerHeight
 
         if (cursorEl) {
           cursorEl.style.transform = `translate(${gx}px, ${gy}px)`
           cursorEl.style.display = 'block'
         }
 
-        // Check Continue Button
+        // Check Continue Button (with 40px target expansion padding)
         let isContinueHovered = false
         if (btnEl) {
           const rect = btnEl.getBoundingClientRect()
-          isContinueHovered = (gx >= rect.left && gx <= rect.right && gy >= rect.top && gy <= rect.bottom)
+          const padding = 40
+          isContinueHovered = (
+            gx >= rect.left - padding &&
+            gx <= rect.right + padding &&
+            gy >= rect.top - padding &&
+            gy <= rect.bottom + padding
+          )
         }
 
-        // Check Recalibrate Button
+        // Check Recalibrate Button (with 40px target expansion padding)
         let isRetryHovered = false
         if (retryBtnEl) {
           const rect = retryBtnEl.getBoundingClientRect()
-          isRetryHovered = (gx >= rect.left && gx <= rect.right && gy >= rect.top && gy <= rect.bottom)
+          const padding = 40
+          isRetryHovered = (
+            gx >= rect.left - padding &&
+            gx <= rect.right + padding &&
+            gy >= rect.top - padding &&
+            gy <= rect.bottom + padding
+          )
+        }
+
+        // Resolve overlap conflicts by prioritizing the closer button horizontally
+        if (isContinueHovered && isRetryHovered) {
+          if (btnEl && retryBtnEl) {
+            const rectContinue = btnEl.getBoundingClientRect()
+            const rectRetry = retryBtnEl.getBoundingClientRect()
+            const distToContinue = Math.abs(gx - (rectContinue.left + rectContinue.width / 2))
+            const distToRetry = Math.abs(gx - (rectRetry.left + rectRetry.width / 2))
+            if (distToContinue < distToRetry) {
+              isRetryHovered = false
+            } else {
+              isContinueHovered = false
+            }
+          }
         }
 
         // Handle Continue Button dwell
@@ -568,6 +754,7 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
           }
         }
       } else {
+        smoothedGazeRef.current = null // Reset smoothed coordinates on gaze loss
         if (cursorEl) {
           cursorEl.style.display = 'none'
         }
@@ -627,6 +814,33 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
               {captured.size} / {CALIBRATION_POINTS.length} Captured
             </div>
             <button
+              id="btn-calibration-reset"
+              className="calibration-screen__reset-btn"
+              onClick={handleResetAppCalibration}
+              title="Reset all app calibration adjustments back to raw coordinates"
+            >
+              <div className="reset-btn__dwell-wrapper">
+                <svg viewBox="0 0 36 36" className="reset-btn__dwell-svg">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255, 75, 75, 0.15)" strokeWidth="5" />
+                  <circle 
+                    cx="18" cy="18" r="15" 
+                    fill="none" 
+                    stroke="hsl(355, 85%, 65%)" 
+                    strokeWidth="5" 
+                    strokeDasharray={2 * Math.PI * 15}
+                    strokeDashoffset={2 * Math.PI * 15 * (1 - buttonResetDwellProgress)}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    className="reset-btn__dwell-path"
+                  />
+                </svg>
+              </div>
+              <span className="reset-btn__text">
+                {buttonResetDwellProgress > 0 ? "Dwelling to Reset..." : "Reset Calibration"}
+              </span>
+            </button>
+            <button
+              id="btn-calibration-skip"
               className="calibration-screen__skip-btn"
               onClick={() => {
                 // Restore original calibration if skipped
@@ -637,7 +851,25 @@ export function CalibrationScreen({ onComplete, gazeRef = null, routerRef = null
               }}
               title="Skip calibration and open the communication board"
             >
-              Skip Calibration
+              <div className="skip-btn__dwell-wrapper">
+                <svg viewBox="0 0 36 36" className="skip-btn__dwell-svg">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="5" />
+                  <circle 
+                    cx="18" cy="18" r="15" 
+                    fill="none" 
+                    stroke="#ffffff" 
+                    strokeWidth="5" 
+                    strokeDasharray={2 * Math.PI * 15}
+                    strokeDashoffset={2 * Math.PI * 15 * (1 - buttonSkipDwellProgress)}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    className="skip-btn__dwell-path"
+                  />
+                </svg>
+              </div>
+              <span className="skip-btn__text">
+                {buttonSkipDwellProgress > 0 ? "Dwelling to Skip..." : "Skip Calibration"}
+              </span>
             </button>
           </div>
         </div>

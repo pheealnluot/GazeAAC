@@ -125,6 +125,48 @@ contextBridge.exposeInMainWorld('gazeAPI', {
     ipcRenderer.send('ipc:window-control', action)
   },
 
+  enterOverlayMode() {
+    ipcRenderer.send('ipc:enter-overlay-mode')
+  },
+
+  exitOverlayMode() {
+    ipcRenderer.send('ipc:exit-overlay-mode')
+  },
+
+  launchChrome(url) {
+    return ipcRenderer.invoke('ipc:launch-chrome', url)
+  },
+
+  closeChrome() {
+    return ipcRenderer.invoke('ipc:close-chrome')
+  },
+
+  chromeGoBack() {
+    return ipcRenderer.invoke('ipc:chrome-go-back')
+  },
+
+  chromeGoForward() {
+    return ipcRenderer.invoke('ipc:chrome-go-forward')
+  },
+
+  chromeReload() {
+    return ipcRenderer.invoke('ipc:chrome-reload')
+  },
+
+  simulateClick(x, y) {
+    return ipcRenderer.invoke('ipc:simulate-click', { x, y })
+  },
+
+  setIgnoreMouseEvents(ignore, options) {
+    ipcRenderer.send('ipc:set-ignore-mouse-events', ignore, options)
+  },
+
+  onChromeExited(handler) {
+    const wrap = () => handler()
+    ipcRenderer.on('ipc:chrome-exited', wrap)
+    return () => ipcRenderer.removeListener('ipc:chrome-exited', wrap)
+  },
+
   /**
    * The active gaze source: 'tobii' when the real Tobii SDK is running,
    * 'mock' when using MockGazeEmitter. Updated after ipc:gaze-stream-start.
@@ -425,5 +467,20 @@ contextBridge.exposeInMainWorld('gazeAPI', {
   },
   fetchUrl(url) {
     return ipcRenderer.invoke('ipc:fetch-url', url)
+  },
+  getWebviewPreloadPath() {
+    return ipcRenderer.invoke('ipc:get-webview-preload-path')
+  },
+  clearMovieTimeCache() {
+    return ipcRenderer.invoke('ipc:clear-movietime-cache')
+  },
+  chromeVideoStatus() {
+    return ipcRenderer.invoke('ipc:chrome-video-status')
+  },
+  chromeControlVideo(command) {
+    return ipcRenderer.invoke('ipc:chrome-control-video', command)
+  },
+  chromeBringToFront() {
+    return ipcRenderer.invoke('ipc:chrome-bring-to-front')
   }
 })

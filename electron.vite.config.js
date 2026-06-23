@@ -24,7 +24,14 @@ export default defineConfig({
       outDir: 'out/preload',
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'electron/preload.js')
+          index: resolve(__dirname, 'electron/preload.js'),
+          webview_preload: resolve(__dirname, 'electron/webview_preload.js')
+        },
+        output: {
+          format: 'cjs',
+          entryFileNames: '[name].cjs',
+          chunkFileNames: '[name].cjs',
+          assetFileNames: '[name].[ext]'
         }
       }
     }

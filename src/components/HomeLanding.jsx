@@ -13,9 +13,23 @@ import './HomeLanding.css'
  * window.gazeAPI.startStream (same API as the TelemetryRouter, but
  * without routing overhead). Mouse-hover mode is also supported.
  */
-export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenSettings, gazeCursorRef, registerHitTargets, gazeState, onDwellRef }) {
+export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onSelectQA, onOpenSettings, onOpenCaregiver, gazeCursorRef, registerHitTargets, gazeState, onDwellRef }) {
   const { settings } = useGazeSettings()
   const [showGearPopover, setShowGearPopover] = useState(false)
+  const gearContainerRef = useRef(null)
+
+  useEffect(() => {
+    if (!showGearPopover) return
+    const handleOutsideClick = (e) => {
+      if (gearContainerRef.current && !gearContainerRef.current.contains(e.target)) {
+        setShowGearPopover(false)
+      }
+    }
+    document.addEventListener('click', handleOutsideClick)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+    }
+  }, [showGearPopover])
 
   const dwellMs = settings.dwellMs ?? 800
 
@@ -27,6 +41,7 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
   const aacRef = useRef(null)
   const movieRef = useRef(null)
   const gamesRef = useRef(null)
+  const qaRef = useRef(null)
 
   useEffect(() => {
     // Delay measurement to ensure DOM is rendered
@@ -34,7 +49,7 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
       const cells = []
       const vw = window.innerWidth
       const vh = window.innerHeight
-      for (const [id, ref] of [['aac', aacRef], ['movie', movieRef], ['games', gamesRef]]) {
+      for (const [id, ref] of [['aac', aacRef], ['movie', movieRef], ['games', gamesRef], ['qa', qaRef]]) {
         const el = ref.current
         if (!el) continue
         const r = el.getBoundingClientRect()
@@ -51,7 +66,7 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
       const cells = []
       const vw = window.innerWidth
       const vh = window.innerHeight
-      for (const [id, ref] of [['aac', aacRef], ['movie', movieRef], ['games', gamesRef]]) {
+      for (const [id, ref] of [['aac', aacRef], ['movie', movieRef], ['games', gamesRef], ['qa', qaRef]]) {
         const el = ref.current
         if (!el) continue
         const r = el.getBoundingClientRect()
@@ -70,9 +85,10 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
       if (cellId === 'aac') onSelectAAC()
       if (cellId === 'movie') onSelectMovie()
       if (cellId === 'games') onSelectGames?.()
+      if (cellId === 'qa') onSelectQA?.()
     }
     return () => { if (onDwellRef) onDwellRef.current = null }
-  }, [onDwellRef, onSelectAAC, onSelectMovie, onSelectGames])
+  }, [onDwellRef, onSelectAAC, onSelectMovie, onSelectGames, onSelectQA])
 
   // ── Dwell ring geometry (perimeter of the tile, approximated as ellipse) ──
   // We use a bottom progress bar instead of a full ring for the tiles (simpler
@@ -101,7 +117,10 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
 
       {/* Floating settings gear — top-right corner */}
       {onOpenSettings && (
-        <div className="home-landing__gear-wrap">
+        <div 
+          ref={gearContainerRef}
+          className="home-landing__gear-wrap"
+        >
           <button
             id="home-settings-btn"
             className="home-landing__gear-btn"
@@ -114,7 +133,7 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
             <div
               className="home-landing__gear-popover"
               role="menu"
-              onMouseLeave={() => setShowGearPopover(false)}
+              style={{ background: '#1a1d28', opacity: 1 }}
             >
               <button
                 className="home-landing__gear-popover-item"
@@ -143,6 +162,14 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
                 onClick={() => { onOpenSettings('movietime'); setShowGearPopover(false) }}
               >
                 🎬 Movie Time Settings
+              </button>
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0.4rem 0' }} />
+              <button
+                className="home-landing__gear-popover-item"
+                role="menuitem"
+                onClick={() => { onOpenCaregiver?.(); setShowGearPopover(false) }}
+              >
+                ⚙️ User Settings
               </button>
             </div>
           )}
@@ -190,6 +217,17 @@ export function HomeLanding({ onSelectAAC, onSelectMovie, onSelectGames, onOpenS
             progress={getProgress('games')}
             isGazed={gazeTarget === 'games'}
             onClick={onSelectGames}
+          />
+          <HomeTile
+            id="qa"
+            ref={qaRef}
+            variant="qa"
+            icon="❓"
+            label="Q&A"
+            desc="Interactive Quizzes"
+            progress={getProgress('qa')}
+            isGazed={gazeTarget === 'qa'}
+            onClick={onSelectQA}
           />
         </div>
 
